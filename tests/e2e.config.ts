@@ -318,7 +318,12 @@ export const e2eConfig = e2eConfigSchema.parse({
       action: "click",
       selector: { strategy: "class", value: "btn-primary" },
     },
-    { action: "wait", ms: 2000 },
+    {
+      action: "waitFor",
+      kind: "selector",
+      selector: { strategy: "href", value: "/tenants/my-test" },
+      state: "visible",
+    },
     {
       action: "click",
       selector: { strategy: "href", value: "/tenants/my-test" },
