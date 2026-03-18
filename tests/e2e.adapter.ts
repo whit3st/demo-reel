@@ -55,6 +55,10 @@ const resolveLocator = (page: Page, selector: SelectorConfig): Locator => {
     return page.locator(`.${selector.value}`);
   }
 
+  if (selector.strategy === 'href') {
+    return page.locator(`a[href="${selector.value}"]`);
+  }
+
   const exhaustiveCheck: never = selector.strategy;
   throw new Error(`Unsupported selector strategy: ${exhaustiveCheck}`);
 };

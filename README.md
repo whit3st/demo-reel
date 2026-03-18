@@ -62,7 +62,7 @@ export const e2eConfig = e2eConfigSchema.parse({
 });
 ```
 
-- Each selector includes a `strategy` of `testId`, `id`, or `class`.
+- Each selector includes a `strategy` of `testId`, `id`, `class`, or `href`.
 - Use raw selector names for `id`/`class` (no leading `#` or `.`).
 - Add more steps and they will run in order.
 

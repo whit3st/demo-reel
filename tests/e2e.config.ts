@@ -66,7 +66,7 @@ const typingSchema = z.object({
   enterDelayMs: z.number().int().min(0)
 });
 
-const selectorStrategySchema = z.enum(['testId', 'id', 'class']);
+const selectorStrategySchema = z.enum(['testId', 'id', 'class', 'href']);
 const selectorSchema = z
   .object({
     strategy: selectorStrategySchema,
