@@ -56,7 +56,7 @@ const resolveLocator = (page: Page, selector: SelectorConfig): Locator => {
   }
 
   if (selector.strategy === 'href') {
-    return page.locator(`a[href="${selector.value}"]`);
+    return page.locator(`a[href="${selector.value}"]`).first();
   }
 
   const exhaustiveCheck: never = selector.strategy;
@@ -389,6 +389,14 @@ const applyStartDelayIfNeeded = async (
   return true;
 };
 
+const buildTimeoutOption = (timeoutMs?: number) => {
+  if (typeof timeoutMs === 'number') {
+    return { timeout: timeoutMs };
+  }
+
+  return {};
+};
+
 const runStep = async (
   page: Page,
   step: E2EStep,
@@ -405,6 +413,48 @@ const runStep = async (
   if (step.action === 'wait') {
     await page.waitForTimeout(step.ms);
     return startDelayApplied;
+  }
+
+  if (step.action === 'waitFor') {
+    if (step.kind === 'selector') {
+      const target = resolveLocator(page, step.selector);
+      await target.waitFor({
+        state: step.state,
+        ...buildTimeoutOption(step.timeoutMs)
+      });
+      return startDelayApplied;
+    }
+
+    if (step.kind === 'url') {
+      await page.waitForURL(step.url, {
+        waitUntil: step.waitUntil,
+        ...buildTimeoutOption(step.timeoutMs)
+      });
+      return startDelayApplied;
+    }
+
+    if (step.kind === 'loadState') {
+      await page.waitForLoadState(step.state, buildTimeoutOption(step.timeoutMs));
+      return startDelayApplied;
+    }
+
+    if (step.kind === 'request') {
+      await page.waitForRequest(step.url, buildTimeoutOption(step.timeoutMs));
+      return startDelayApplied;
+    }
+
+    if (step.kind === 'response') {
+      await page.waitForResponse(step.url, buildTimeoutOption(step.timeoutMs));
+      return startDelayApplied;
+    }
+
+    if (step.kind === 'function') {
+      await page.waitForFunction(step.expression, step.arg, {
+        polling: step.polling,
+        ...buildTimeoutOption(step.timeoutMs)
+      });
+      return startDelayApplied;
+    }
   }
 
   if (step.action === 'click') {

@@ -81,6 +81,12 @@ Supported actions (selector targets are raw names):
 - `upload`: `{ action: 'upload', selector: { strategy, value }, filePath, delayBeforeMs?, delayAfterMs? }`
 - `drag`: `{ action: 'drag', source: { strategy, value }, target: { strategy, value }, delayBeforeMs?, delayAfterMs? }`
 - `wait`: `{ action: 'wait', ms }`
+- `waitFor`: `{ action: 'waitFor', kind: 'selector', selector: { strategy, value }, state?, timeoutMs? }`
+- `waitFor`: `{ action: 'waitFor', kind: 'url', url, waitUntil?, timeoutMs? }`
+- `waitFor`: `{ action: 'waitFor', kind: 'loadState', state?, timeoutMs? }`
+- `waitFor`: `{ action: 'waitFor', kind: 'request', url, timeoutMs? }`
+- `waitFor`: `{ action: 'waitFor', kind: 'response', url, timeoutMs? }`
+- `waitFor`: `{ action: 'waitFor', kind: 'function', expression, arg?, polling?, timeoutMs? }`
 
 ## Video Settings
 
