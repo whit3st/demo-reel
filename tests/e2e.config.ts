@@ -5,16 +5,37 @@ const sizeSchema = z.object({
   height: z.number().int().positive()
 });
 
-const cursorSchema = z.object({
+const cursorBaseSchema = z.object({
   start: z.object({
     x: z.number().int().nonnegative(),
     y: z.number().int().nonnegative()
-  }),
+  })
+});
+
+const cursorDotSchema = z.object({
+  type: z.literal('dot'),
   size: z.number().int().positive(),
   borderWidth: z.number().int().positive(),
   borderColor: z.string().min(1),
   shadowColor: z.string().min(1)
 });
+
+const cursorSvgSchema = z.object({
+  type: z.literal('svg'),
+  svg: z.object({
+    markup: z.string().min(1),
+    width: z.number().positive(),
+    height: z.number().positive(),
+    hotspot: z.object({
+      x: z.number().min(0),
+      y: z.number().min(0)
+    })
+  })
+});
+
+const cursorSchema = cursorBaseSchema.and(
+  z.discriminatedUnion('type', [cursorDotSchema, cursorSvgSchema])
+);
 
 const motionSchema = z
   .object({
@@ -181,10 +202,14 @@ export const e2eConfig = e2eConfigSchema.parse({
   },
   cursor: {
     start: { x: 160, y: 160 },
-    size: 12,
-    borderWidth: 2,
-    borderColor: "#ffffff",
-    shadowColor: "rgba(0, 0, 0, 0.7)",
+    type: "svg",
+    svg: {
+      markup:
+        "<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" viewBox=\"0 0 94.85 122.88\" style=\"enable-background:new 0 0 94.85 122.88\" xml:space=\"preserve\"><g><path d=\"M60.56,122.49c-1.63,0.83-3.68,0.29-4.56-1.22L38.48,91.1l-17.38,19.51c-5.24,5.88-12.16,7.34-12.85-1.57L0,1.59h0 C-0.04,1.03,0.2,0.46,0.65,0.13C1.17-0.1,1.78-0.02,2.24,0.3l0,0l88.92,60.87c7.37,5.05,2.65,10.31-5.06,11.91l-25.58,5.3 l17.37,30.26c0.86,1.51,0.31,3.56-1.22,4.55L60.56,122.49L60.56,122.49L60.56,122.49z\"/></g></svg>",
+      width: 18,
+      height: 23,
+      hotspot: { x: 0, y: 0 }
+    }
   },
   motion: {
     moveDurationMs: 600,

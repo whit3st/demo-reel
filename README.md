@@ -22,10 +22,13 @@ export const e2eConfig = e2eConfigSchema.parse({
   video: { enabled: true, size: { width: 1920, height: 1080 } },
   cursor: {
     start: { x: 160, y: 160 },
-    size: 12,
-    borderWidth: 2,
-    borderColor: '#ffffff',
-    shadowColor: 'rgba(0, 0, 0, 0.7)'
+    type: 'svg',
+    svg: {
+      markup: '<svg ...>...</svg>',
+      width: 18,
+      height: 23,
+      hotspot: { x: 0, y: 0 }
+    }
   },
   motion: {
     moveDurationMs: 600,
@@ -89,6 +92,9 @@ applied in `playwright.config.ts`.
 The cursor overlay and mouse motion are driven by the `cursor` and
 `motion` blocks in `tests/e2e.config.ts`. Motion uses a deterministic
 cubic-bezier path with ease-in/out timing.
+
+Set `cursor.type` to `dot` if you prefer the original circle cursor; it
+uses `size`, `borderWidth`, `borderColor`, and `shadowColor`.
 
 Typing is driven by the `typing` block. Each character gets a
 deterministic delay based on whether it is a space, punctuation, or

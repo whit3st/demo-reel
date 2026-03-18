@@ -111,31 +111,58 @@ const cursorScript = (cursor: CursorConfig) => {
 
     const style = document.createElement('style');
     style.id = styleId;
-    style.textContent = `
+
+    const baseStyle = `
 #__pw_cursor {
   position: fixed;
   top: 0;
   left: 0;
-  width: ${cursor.size}px;
-  height: ${cursor.size}px;
-  border: ${cursor.borderWidth}px solid ${cursor.borderColor};
-  border-radius: 999px;
-  box-shadow: 0 0 0 1px ${cursor.shadowColor};
   pointer-events: none;
   z-index: 2147483647;
   transform: translate(-100px, -100px);
 }
 `;
+
+    if (cursor.type === 'svg') {
+      style.textContent = `${baseStyle}
+#__pw_cursor {
+  width: ${cursor.svg.width}px;
+  height: ${cursor.svg.height}px;
+}
+#__pw_cursor svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+`;
+    } else {
+      style.textContent = `${baseStyle}
+#__pw_cursor {
+  width: ${cursor.size}px;
+  height: ${cursor.size}px;
+  border: ${cursor.borderWidth}px solid ${cursor.borderColor};
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px ${cursor.shadowColor};
+}
+`;
+    }
+
     (document.head || document.documentElement).appendChild(style);
 
     const cursorEl = document.createElement('div');
     cursorEl.id = cursorId;
+    if (cursor.type === 'svg') {
+      cursorEl.innerHTML = cursor.svg.markup;
+    }
     (document.body || document.documentElement).appendChild(cursorEl);
 
-    const offset = cursor.size / 2;
+    const offset =
+      cursor.type === 'svg'
+        ? { x: cursor.svg.hotspot.x, y: cursor.svg.hotspot.y }
+        : { x: cursor.size / 2, y: cursor.size / 2 };
 
     const update = (x: number, y: number) => {
-      cursorEl.style.transform = `translate(${x - offset}px, ${y - offset}px)`;
+      cursorEl.style.transform = `translate(${x - offset.x}px, ${y - offset.y}px)`;
     };
 
     update(cursor.start.x, cursor.start.y);
