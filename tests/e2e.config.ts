@@ -10,6 +10,8 @@ const cursorBaseSchema = z.object({
     x: z.number().int().nonnegative(),
     y: z.number().int().nonnegative(),
   }),
+  persistPosition: z.boolean(),
+  storageKey: z.string().min(1).optional(),
 });
 
 const cursorDotSchema = z.object({
@@ -258,6 +260,8 @@ export const e2eConfig = e2eConfigSchema.parse({
   },
   cursor: {
     start: { x: 160, y: 160 },
+    persistPosition: true,
+    storageKey: "demo-reel.cursor-position",
     type: "svg",
     svg: {
       markup:

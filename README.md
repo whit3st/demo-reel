@@ -22,6 +22,8 @@ export const e2eConfig = e2eConfigSchema.parse({
   video: { enabled: true, size: { width: 1920, height: 1080 } },
   cursor: {
     start: { x: 160, y: 160 },
+    persistPosition: true,
+    storageKey: 'demo-reel.cursor-position',
     type: 'svg',
     svg: {
       markup: '<svg ...>...</svg>',
@@ -101,6 +103,11 @@ cubic-bezier path with ease-in/out timing.
 
 Set `cursor.type` to `dot` if you prefer the original circle cursor; it
 uses `size`, `borderWidth`, `borderColor`, and `shadowColor`.
+
+When `cursor.persistPosition` is enabled, the cursor position is stored
+in `localStorage`, which is same-origin only. That is why cursor
+persistence only works within the same origin unless you switch to a
+test-runner-based approach.
 
 Typing is driven by the `typing` block. Each character gets a
 deterministic delay based on whether it is a space, punctuation, or

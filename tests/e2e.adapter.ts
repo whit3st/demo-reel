@@ -107,6 +107,43 @@ const resolveCursorStart = (page: Page, start: Point): Point => {
 const cursorScript = (cursor: CursorConfig) => {
   const cursorId = '__pw_cursor';
   const styleId = '__pw_cursor_style';
+  const storageKey = cursor.persistPosition
+    ? cursor.storageKey || 'demo-reel.cursor-position'
+    : null;
+
+  const readStoredPosition = () => {
+    if (!storageKey) {
+      return null;
+    }
+
+    try {
+      const stored = window.localStorage.getItem(storageKey);
+      if (!stored) {
+        return null;
+      }
+
+      const parsed = JSON.parse(stored) as { x?: number; y?: number };
+      if (typeof parsed.x !== 'number' || typeof parsed.y !== 'number') {
+        return null;
+      }
+
+      return { x: parsed.x, y: parsed.y };
+    } catch {
+      return null;
+    }
+  };
+
+  const writeStoredPosition = (x: number, y: number) => {
+    if (!storageKey) {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify({ x, y }));
+    } catch {
+      return;
+    }
+  };
 
   const addCursor = () => {
     if (document.getElementById(cursorId)) {
@@ -165,11 +202,31 @@ const cursorScript = (cursor: CursorConfig) => {
         ? { x: cursor.svg.hotspot.x, y: cursor.svg.hotspot.y }
         : { x: cursor.size / 2, y: cursor.size / 2 };
 
-    const update = (x: number, y: number) => {
-      cursorEl.style.transform = `translate(${x - offset.x}px, ${y - offset.y}px)`;
+    const clamp = (value: number, min: number, max: number) => {
+      return Math.min(max, Math.max(min, value));
     };
 
-    update(cursor.start.x, cursor.start.y);
+    const clampToViewport = (x: number, y: number) => {
+      const maxX = Math.max(0, window.innerWidth - 1);
+      const maxY = Math.max(0, window.innerHeight - 1);
+      return {
+        x: clamp(x, 0, maxX),
+        y: clamp(y, 0, maxY)
+      };
+    };
+
+    const update = (x: number, y: number) => {
+      const clamped = clampToViewport(x, y);
+      cursorEl.style.transform = `translate(${clamped.x - offset.x}px, ${clamped.y - offset.y}px)`;
+      writeStoredPosition(clamped.x, clamped.y);
+    };
+
+    const stored = readStoredPosition();
+    if (stored) {
+      update(stored.x, stored.y);
+    } else {
+      update(cursor.start.x, cursor.start.y);
+    }
 
     document.addEventListener('mousemove', (event) => {
       update(event.clientX, event.clientY);
