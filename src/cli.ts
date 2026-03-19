@@ -89,7 +89,7 @@ async function main(): Promise<void> {
       for (const file of files) {
         console.log(`\n▶ ${file}`);
         const loaded = await loadConfig(file, options.outputDir);
-        await runVideoScenario(loaded.config, loaded.outputPath, options);
+        await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
       }
     } else if (scenario) {
       // Run specific scenario
@@ -104,7 +104,7 @@ async function main(): Promise<void> {
       }
       
       const loaded = await loadConfig(configPath, options.outputDir);
-      await runVideoScenario(loaded.config, loaded.outputPath, options);
+      await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
     } else {
       // Run default config
       const configPath = await findConfig();
@@ -120,7 +120,7 @@ async function main(): Promise<void> {
       }
       
       const loaded = await loadConfig(configPath, options.outputDir);
-      await runVideoScenario(loaded.config, loaded.outputPath, options);
+      await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
     }
     
     process.exit(0);

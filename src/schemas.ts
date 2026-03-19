@@ -242,6 +242,12 @@ export const videoConfigSchema = z.object({
   size: sizeSchema,
 });
 
+export const audioConfigSchema = z.object({
+  narration: z.string().min(1).optional(),        // Path to MP3 file
+  background: z.string().min(1).optional(),       // Path to MP3 file
+  backgroundVolume: z.number().min(0).max(1).optional(), // 0.0 to 1.0
+});
+
 export const demoReelConfigSchema = z.object({
   viewport: sizeSchema,
   video: videoConfigSchema,
@@ -250,11 +256,13 @@ export const demoReelConfigSchema = z.object({
   typing: typingSchema,
   timing: timingSchema,
   steps: z.array(stepSchema).min(1),
-  // New output-related fields
+  // Output-related fields
   name: z.string().min(1).optional(),
   outputDir: z.string().min(1).optional(),
   outputPath: z.string().min(1).optional(),
   concurrency: z.number().int().min(1).optional(),
+  // Audio support
+  audio: audioConfigSchema.optional(),
 });
 
 // Export types
@@ -264,6 +272,7 @@ export type MotionConfig = z.infer<typeof motionSchema>;
 export type TimingConfig = z.infer<typeof timingSchema>;
 export type TypingConfig = z.infer<typeof typingSchema>;
 export type VideoConfig = z.infer<typeof videoConfigSchema>;
+export type AudioConfig = z.infer<typeof audioConfigSchema>;
 export type SelectorStrategy = z.infer<typeof selectorStrategySchema>;
 export type SelectorConfig = z.infer<typeof selectorSchema>;
 export type Step = z.infer<typeof stepSchema>;

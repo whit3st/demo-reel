@@ -5,6 +5,7 @@ export type {
   TimingConfig,
   TypingConfig,
   VideoConfig,
+  AudioConfig,
   SelectorStrategy,
   SelectorConfig,
   Step,

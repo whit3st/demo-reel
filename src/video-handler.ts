@@ -1,8 +1,9 @@
 import { mkdir } from 'fs/promises';
-import { dirname, join } from 'path';
+import { dirname, join, resolve } from 'path';
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 import type { DemoReelConfig } from './schemas.js';
 import { runDemo } from './runner.js';
+import { mergeAudioVideo, type AudioConfig } from './audio-processor.js';
 
 export interface VideoResult {
   page: Page;
@@ -34,7 +35,7 @@ export async function startRecording(config: DemoReelConfig): Promise<VideoResul
   };
 }
 
-export async function stopRecording(result: VideoResult, outputPath: string): Promise<string> {
+export async function stopRecording(result: VideoResult): Promise<string> {
   const { page, context, browser } = result;
   
   // Close page first to finish video recording
@@ -55,12 +56,43 @@ export async function stopRecording(result: VideoResult, outputPath: string): Pr
     throw new Error('No video was recorded');
   }
   
+  return tempVideoPath;
+}
+
+export async function processVideoWithAudio(
+  tempVideoPath: string,
+  outputPath: string,
+  audio: AudioConfig | undefined,
+  configPath: string
+): Promise<string> {
   // Ensure output directory exists
   await mkdir(dirname(outputPath), { recursive: true });
   
-  // Copy video to final destination
-  const { copyFile } = await import('fs/promises');
-  await copyFile(tempVideoPath, outputPath);
+  if (!audio || (!audio.narration && !audio.background)) {
+    // No audio - just copy video
+    const { copyFile } = await import('fs/promises');
+    await copyFile(tempVideoPath, outputPath);
+    return outputPath;
+  }
+  
+  // Resolve audio paths relative to config file
+  const resolvedAudio: AudioConfig = {};
+  const configDir = dirname(configPath);
+  
+  if (audio.narration) {
+    resolvedAudio.narration = resolve(configDir, audio.narration);
+  }
+  if (audio.background) {
+    resolvedAudio.background = resolve(configDir, audio.background);
+    resolvedAudio.backgroundVolume = audio.backgroundVolume ?? 0.3;
+  }
+  
+  // Mix audio with video
+  await mergeAudioVideo({
+    videoPath: tempVideoPath,
+    outputPath,
+    audio: resolvedAudio,
+  });
   
   return outputPath;
 }
@@ -68,6 +100,7 @@ export async function stopRecording(result: VideoResult, outputPath: string): Pr
 export async function runVideoScenario(
   config: DemoReelConfig,
   outputPath: string,
+  configPath: string,
   options: {
     verbose?: boolean;
     dryRun?: boolean;
@@ -96,10 +129,26 @@ export async function runVideoScenario(
     await runDemo(recording.page, config);
     
     if (verbose) {
-      console.log('Finalizing video...');
+      console.log('Stopping recording...');
     }
     
-    const finalPath = await stopRecording(recording, outputPath);
+    const tempVideoPath = await stopRecording(recording);
+    
+    if (verbose) {
+      if (config.audio?.narration || config.audio?.background) {
+        console.log('Mixing audio...');
+      } else {
+        console.log('Finalizing video...');
+      }
+    }
+    
+    const finalPath = await processVideoWithAudio(
+      tempVideoPath,
+      outputPath,
+      config.audio,
+      configPath
+    );
+    
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
     
     console.log(`✓ Video created (${duration}s) → ${finalPath}`);
