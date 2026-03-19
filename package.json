@@ -1,11 +1,50 @@
 {
-  "name": "pw-demo",
-  "private": true,
+  "name": "demo-reel",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Create demo videos from web apps using Playwright",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "demo-reel": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
-    "test:e2e": "playwright test"
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "keywords": [
+    "demo",
+    "video",
+    "playwright",
+    "automation",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "playwright": "^1.58.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
-    "zod": "^4.3.6"
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "glob": "^10.3.0",
+    "zod": "^3.22.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

@@ -1,13 +1,13 @@
-import { type Locator, type Page } from '@playwright/test';
-import {
-  type CursorConfig,
-  type E2EConfig,
-  type MotionConfig,
-  type E2EStep,
-  type SelectorConfig,
-  type TimingConfig,
-  type TypingConfig
-} from './e2e.config';
+import type { Locator, Page } from 'playwright';
+import type {
+  CursorConfig,
+  DemoReelConfig,
+  MotionConfig,
+  Step,
+  SelectorConfig,
+  TimingConfig,
+  TypingConfig,
+} from './schemas.js';
 
 type Point = {
   x: number;
@@ -63,15 +63,7 @@ const resolveLocator = (page: Page, selector: SelectorConfig): Locator => {
   throw new Error(`Unsupported selector strategy: ${exhaustiveCheck}`);
 };
 
-const punctuationCharacters = new Set([
-  '.',
-  ',',
-  '!',
-  '?',
-  ':',
-  ';',
-  '-'
-]);
+const punctuationCharacters = new Set(['.', ',', '!', '?', ':', ';', '-']);
 
 const getTypingDelay = (character: string, typing: TypingConfig, baseDelay: number) => {
   if (character === '\n') {
@@ -100,10 +92,11 @@ const resolveCursorStart = (page: Page, start: Point): Point => {
 
   return {
     x: clamp(start.x, 0, maxX),
-    y: clamp(start.y, 0, maxY)
+    y: clamp(start.y, 0, maxY),
   };
 };
 
+// Cursor script that runs in browser context - uses Playwright's addInitScript
 const cursorScript = (cursor: CursorConfig) => {
   const cursorId = '__pw_cursor';
   const styleId = '__pw_cursor_style';
@@ -165,10 +158,10 @@ const cursorScript = (cursor: CursorConfig) => {
 `;
 
     if (cursor.type === 'svg') {
-      style.textContent = `${baseStyle}
+      style.textContent = baseStyle + `
 #__pw_cursor {
-  width: ${cursor.svg.width}px;
-  height: ${cursor.svg.height}px;
+  width: ` + cursor.svg.width + `px;
+  height: ` + cursor.svg.height + `px;
 }
 #__pw_cursor svg {
   width: 100%;
@@ -177,13 +170,13 @@ const cursorScript = (cursor: CursorConfig) => {
 }
 `;
     } else {
-      style.textContent = `${baseStyle}
+      style.textContent = baseStyle + `
 #__pw_cursor {
-  width: ${cursor.size}px;
-  height: ${cursor.size}px;
-  border: ${cursor.borderWidth}px solid ${cursor.borderColor};
+  width: ` + cursor.size + `px;
+  height: ` + cursor.size + `px;
+  border: ` + cursor.borderWidth + `px solid ` + cursor.borderColor + `;
   border-radius: 999px;
-  box-shadow: 0 0 0 1px ${cursor.shadowColor};
+  box-shadow: 0 0 0 1px ` + cursor.shadowColor + `;
 }
 `;
     }
@@ -211,13 +204,13 @@ const cursorScript = (cursor: CursorConfig) => {
       const maxY = Math.max(0, window.innerHeight - 1);
       return {
         x: clamp(x, 0, maxX),
-        y: clamp(y, 0, maxY)
+        y: clamp(y, 0, maxY),
       };
     };
 
     const update = (x: number, y: number) => {
       const clamped = clampToViewport(x, y);
-      cursorEl.style.transform = `translate(${clamped.x - offset.x}px, ${clamped.y - offset.y}px)`;
+      cursorEl.style.transform = 'translate(' + (clamped.x - offset.x) + 'px, ' + (clamped.y - offset.y) + 'px)';
       writeStoredPosition(clamped.x, clamped.y);
     };
 
@@ -228,7 +221,7 @@ const cursorScript = (cursor: CursorConfig) => {
       update(cursor.start.x, cursor.start.y);
     }
 
-    document.addEventListener('mousemove', (event) => {
+    document.addEventListener('mousemove', (event: MouseEvent) => {
       update(event.clientX, event.clientY);
     });
   };
@@ -278,7 +271,7 @@ const getLocatorCenter = async (locator: Locator) => {
 
   return {
     x: box.x + box.width / 2,
-    y: box.y + box.height / 2
+    y: box.y + box.height / 2,
   };
 };
 
@@ -297,7 +290,7 @@ const cubicBezierPoint = (
 
   return {
     x: uuu * p0.x + 3 * uu * t * p1.x + 3 * u * tt * p2.x + ttt * p3.x,
-    y: uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y
+    y: uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y,
   };
 };
 
@@ -310,7 +303,7 @@ const easeInOutCubic = (t: number) => {
 };
 
 const easingLookup = {
-  easeInOutCubic
+  easeInOutCubic,
 } as const;
 
 const getBezierControlPoints = (
@@ -336,12 +329,12 @@ const getBezierControlPoints = (
   return {
     control1: {
       x: start.x + dx * 0.25 + perpendicular.x * offset,
-      y: start.y + dy * 0.25 + perpendicular.y * offset
+      y: start.y + dy * 0.25 + perpendicular.y * offset,
     },
     control2: {
       x: start.x + dx * 0.75 + perpendicular.x * offset,
-      y: start.y + dy * 0.75 + perpendicular.y * offset
-    }
+      y: start.y + dy * 0.75 + perpendicular.y * offset,
+    },
   };
 };
 
@@ -456,12 +449,12 @@ const buildTimeoutOption = (timeoutMs?: number) => {
 
 const runStep = async (
   page: Page,
-  step: E2EStep,
-  config: E2EConfig,
+  step: Step,
+  config: DemoReelConfig,
   state: MouseState,
   cursorStart: Point,
   startDelayApplied: boolean
-) => {
+): Promise<boolean> => {
   if (step.action === 'goto') {
     await page.goto(step.url, step.waitUntil ? { waitUntil: step.waitUntil } : undefined);
     return applyStartDelayIfNeeded(page, config.timing, startDelayApplied);
@@ -477,7 +470,7 @@ const runStep = async (
       const target = resolveLocator(page, step.selector);
       await target.waitFor({
         state: step.state,
-        ...buildTimeoutOption(step.timeoutMs)
+        ...buildTimeoutOption(step.timeoutMs),
       });
       return startDelayApplied;
     }
@@ -485,7 +478,7 @@ const runStep = async (
     if (step.kind === 'url') {
       await page.waitForURL(step.url, {
         waitUntil: step.waitUntil,
-        ...buildTimeoutOption(step.timeoutMs)
+        ...buildTimeoutOption(step.timeoutMs),
       });
       return startDelayApplied;
     }
@@ -508,7 +501,7 @@ const runStep = async (
     if (step.kind === 'function') {
       await page.waitForFunction(step.expression, step.arg, {
         polling: step.polling,
-        ...buildTimeoutOption(step.timeoutMs)
+        ...buildTimeoutOption(step.timeoutMs),
       });
       return startDelayApplied;
     }
@@ -658,11 +651,11 @@ const runStep = async (
   return startDelayApplied;
 };
 
-export const runE2E = async (page: Page, config: E2EConfig) => {
+export const runDemo = async (page: Page, config: DemoReelConfig) => {
   const resolvedCursor = await installCursorOverlay(page, config.cursor);
   const mouseState: MouseState = {
     initialized: false,
-    position: { x: 0, y: 0 }
+    position: { x: 0, y: 0 },
   };
   let startDelayApplied = false;
 

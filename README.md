@@ -1,119 +1,158 @@
-# Playwright E2E (Config-Driven)
+# Demo Reel
 
-This repo contains a single Playwright test that records a video of a
-config-driven flow (goto + click), with a visible cursor overlay and
-human-like mouse movement.
+Create beautiful demo videos from web apps using Playwright. Perfect for showcasing features, creating onboarding tutorials, or documenting workflows.
+
+## Installation
+
+```bash
+npm install -D demo-reel playwright
+```
+
+Or use without installing:
+
+```bash
+npx demo-reel --config ./my-demo.ts
+```
 
 ## Quick Start
 
-- Install deps: `pnpm install`
-- Run the test: `pnpm test:e2e`
+1. Create a config file `demo-reel.config.ts`:
 
-Videos are written to `test-results/`.
+```typescript
+import { defineConfig } from 'demo-reel';
 
-## Configure the Run
-
-Edit `tests/e2e.config.ts`. It defines a Zod schema and the config that
-drives the Playwright adapter.
-
-```
-export const e2eConfig = e2eConfigSchema.parse({
+export default defineConfig({
   viewport: { width: 1920, height: 1080 },
-  video: { enabled: true, size: { width: 1920, height: 1080 } },
-  cursor: {
-    start: { x: 160, y: 160 },
-    persistPosition: true,
-    storageKey: 'demo-reel.cursor-position',
-    type: 'svg',
-    svg: {
-      markup: '<svg ...>...</svg>',
-      width: 18,
-      height: 23,
-      hotspot: { x: 0, y: 0 }
-    }
+  video: {
+    enabled: true,
+    size: { width: 1920, height: 1080 },
   },
-  motion: {
-    moveDurationMs: 600,
-    moveStepsMin: 25,
-    stepsPerPx: 12,
-    clickDelayMs: 60,
-    curve: {
-      offsetRatio: 0.1,
-      offsetMin: 4,
-      offsetMax: 80,
-      easing: 'easeInOutCubic'
-    }
-  },
-  typing: {
-    baseDelayMs: 70,
-    spaceDelayMs: 120,
-    punctuationDelayMs: 180,
-    enterDelayMs: 200
-  },
-  timing: {
-    afterGotoDelayMs: 2000,
-    endDelayMs: 2000
-  },
+  name: 'my-demo',
   steps: [
     { action: 'goto', url: 'https://example.com' },
-    {
-      action: 'click',
-      selector: { strategy: 'testId', value: 'replace-with-button-testid' }
-    }
-  ]
+    { action: 'wait', ms: 2000 },
+  ],
 });
 ```
 
-- Each selector includes a `strategy` of `testId`, `id`, `class`, or `href`.
-- Use raw selector names for `id`/`class` (no leading `#` or `.`).
-- Add more steps and they will run in order.
+2. Run it:
 
-## Step Actions
+```bash
+npx demo-reel
+```
 
-Supported actions (selector targets are raw names):
+## CLI Usage
 
-- `goto`: `{ action: 'goto', url, waitUntil? }`
-- `click`: `{ action: 'click', selector: { strategy, value }, delayBeforeMs?, delayAfterMs? }`
-- `hover`: `{ action: 'hover', selector: { strategy, value }, delayBeforeMs?, delayAfterMs? }`
-- `type`: `{ action: 'type', selector: { strategy, value }, text, delayMs?, delayBeforeMs?, delayAfterMs? }`
-- `press`: `{ action: 'press', selector: { strategy, value }, key, delayBeforeMs?, delayAfterMs? }`
-- `scroll`: `{ action: 'scroll', selector: { strategy, value }, x, y, delayBeforeMs?, delayAfterMs? }`
-- `select`: `{ action: 'select', selector: { strategy, value }, value, delayBeforeMs?, delayAfterMs? }`
-- `check`: `{ action: 'check', selector: { strategy, value }, checked, delayBeforeMs?, delayAfterMs? }`
-- `upload`: `{ action: 'upload', selector: { strategy, value }, filePath, delayBeforeMs?, delayAfterMs? }`
-- `drag`: `{ action: 'drag', source: { strategy, value }, target: { strategy, value }, delayBeforeMs?, delayAfterMs? }`
-- `wait`: `{ action: 'wait', ms }`
-- `waitFor`: `{ action: 'waitFor', kind: 'selector', selector: { strategy, value }, state?, timeoutMs? }`
-- `waitFor`: `{ action: 'waitFor', kind: 'url', url, waitUntil?, timeoutMs? }`
-- `waitFor`: `{ action: 'waitFor', kind: 'loadState', state?, timeoutMs? }`
-- `waitFor`: `{ action: 'waitFor', kind: 'request', url, timeoutMs? }`
-- `waitFor`: `{ action: 'waitFor', kind: 'response', url, timeoutMs? }`
-- `waitFor`: `{ action: 'waitFor', kind: 'function', expression, arg?, polling?, timeoutMs? }`
+```bash
+# Run default config (demo-reel.config.ts)
+npx demo-reel
 
-## Video Settings
+# Run a specific scenario
+npx demo-reel onboarding
 
-Video recording and viewport are read from `tests/e2e.config.ts` and
-applied in `playwright.config.ts`.
+# Run all scenarios
+npx demo-reel --all
 
-## Cursor Overlay + Humanized Mouse
+# Dry run (validate config)
+npx demo-reel --dry-run
 
-The cursor overlay and mouse motion are driven by the `cursor` and
-`motion` blocks in `tests/e2e.config.ts`. Motion uses a deterministic
-cubic-bezier path with ease-in/out timing.
+# Show browser window (non-headless)
+npx demo-reel --headed
 
-Set `cursor.type` to `dot` if you prefer the original circle cursor; it
-uses `size`, `borderWidth`, `borderColor`, and `shadowColor`.
+# Override output directory
+npx demo-reel --output-dir ./public/videos
+```
 
-When `cursor.persistPosition` is enabled, the cursor position is stored
-in `localStorage`, which is same-origin only. That is why cursor
-persistence only works within the same origin unless you switch to a
-test-runner-based approach.
+## Configuration
 
-Typing is driven by the `typing` block. Each character gets a
-deterministic delay based on whether it is a space, punctuation, or
-newline.
+### Config File Discovery
 
-## Built-In Delays
+The CLI looks for configs in this order:
+1. `demo-reel.config.ts` (default)
+2. `<scenario>.demo.ts` (when specifying a scenario name)
+3. All `*.demo.ts` files (with `--all` flag)
 
-The test waits for `timing.afterGotoDelayMs` after the first `goto` and
-for `timing.endDelayMs` at the end to keep the video open.
+### Output Naming
+
+Videos are named based on this priority:
+1. `outputPath` in config (full path)
+2. `name` + `outputDir` in config
+3. Config filename (e.g., `onboarding.demo.ts` → `onboarding.webm`)
+4. Default: `demo-reel.webm`
+
+### Available Steps
+
+- `goto` - Navigate to URL
+- `click` - Click an element
+- `hover` - Hover over element
+- `type` - Type text into input
+- `press` - Press a key
+- `scroll` - Scroll element
+- `select` - Select option(s)
+- `check` - Check/uncheck checkbox
+- `upload` - Upload file(s)
+- `drag` - Drag element to target
+- `wait` - Wait for duration
+- `waitFor` - Wait for condition (selector, URL, loadState, request, response, function)
+
+### Selector Strategies
+
+```typescript
+// By test ID (data-testid attribute)
+{ strategy: 'testId', value: 'submit-button' }
+
+// By ID (without #)
+{ strategy: 'id', value: 'username' }
+
+// By class (without .)
+{ strategy: 'class', value: 'btn-primary' }
+
+// By href
+{ strategy: 'href', value: '/dashboard' }
+```
+
+## CI/CD Integration
+
+Example GitHub Actions workflow:
+
+```yaml
+name: Generate Demo Videos
+
+on: push
+
+jobs:
+  demos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npx playwright install chromium
+      - run: npx demo-reel --all
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-videos
+          path: ./videos/*.webm
+```
+
+## Features
+
+### Human-Like Cursor Movement
+- Smooth Bezier curve paths with ease-in/out timing
+- Configurable speed, curve offset, and step count
+- Visual cursor overlay (SVG or dot style)
+
+### Natural Typing
+- Variable delays based on character type
+- Longer pauses for spaces, punctuation, and newlines
+
+### Smart Delays
+- Built-in delays after page navigation
+- Per-step delays before/after actions
+- Final delay to keep video open
+
+## License
+
+MIT
