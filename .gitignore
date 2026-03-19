@@ -4,3 +4,6 @@ test-videos
 .demo-reel-temp
 *.demo.ts
 !templates/*.demo.ts
+
+# Example app for testing
+example-app/
