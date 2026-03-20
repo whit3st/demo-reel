@@ -81,6 +81,7 @@ export async function processVideoWithAudio(
   
   if (audio.narration) {
     resolvedAudio.narration = resolve(configDir, audio.narration);
+    resolvedAudio.narrationDelay = audio.narrationDelay;
   }
   if (audio.background) {
     resolvedAudio.background = resolve(configDir, audio.background);
