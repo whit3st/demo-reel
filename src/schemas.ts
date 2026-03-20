@@ -244,6 +244,7 @@ export const videoConfigSchema = z.object({
 
 export const audioConfigSchema = z.object({
   narration: z.string().min(1).optional(),        // Path to MP3 file
+  narrationDelay: z.number().min(0).optional(),  // Delay in milliseconds before narration starts
   background: z.string().min(1).optional(),       // Path to MP3 file
   backgroundVolume: z.number().min(0).max(1).optional(), // 0.0 to 1.0
 });
@@ -263,6 +264,8 @@ export const demoReelConfigSchema = z.object({
   concurrency: z.number().int().min(1).optional(),
   // Audio support
   audio: audioConfigSchema.optional(),
+  // Timestamp option for output filename (default: false for CI/CD compatibility)
+  timestamp: z.boolean().optional(),
 });
 
 // Export types

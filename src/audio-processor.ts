@@ -3,6 +3,7 @@ import { resolve } from 'path';
 
 export interface AudioConfig {
   narration?: string;        // Path to MP3 file
+  narrationDelay?: number;   // Delay in milliseconds before narration starts
   background?: string;       // Path to MP3 file  
   backgroundVolume?: number; // 0.0 to 1.0, default 0.3
 }
@@ -81,6 +82,7 @@ function buildFfmpegArgs(
   ];
   
   let filterComplex = '';
+  const narrationDelay = audio.narrationDelay ?? 0;
   
   // Add narration if provided
   if (audio.narration) {
@@ -96,7 +98,15 @@ function buildFfmpegArgs(
   if (audio.narration && audio.background) {
     // Both narration and background
     const bgVolume = audio.backgroundVolume ?? 0.3;
-    filterComplex = `[1:a]volume=${bgVolume}[bg];[bg][2:a]amix=inputs=2:duration=first:dropout_transition=0[out]`;
+    
+    if (narrationDelay > 0) {
+      // Delay the narration
+      const delayMs = narrationDelay;
+      filterComplex = `[1:a]adelay=${delayMs}|${delayMs}[delayed];[delayed]volume=1[narr];[2:a]volume=${bgVolume}[bg];[narr][bg]amix=inputs=2:duration=first:dropout_transition=0[out]`;
+    } else {
+      filterComplex = `[1:a]volume=1[narr];[2:a]volume=${bgVolume}[bg];[narr][bg]amix=inputs=2:duration=first:dropout_transition=0[out]`;
+    }
+    
     args.push(
       '-filter_complex', filterComplex,
       '-map', '0:v',  // Video from first input
@@ -110,8 +120,16 @@ function buildFfmpegArgs(
       '-map', '0:v',
       '-map', '[aout]'
     );
+  } else if (audio.narration && narrationDelay > 0) {
+    // Only narration with delay
+    const delayMs = narrationDelay;
+    args.push(
+      '-filter_complex', `[1:a]adelay=${delayMs}|${delayMs}[aout]`,
+      '-map', '0:v',
+      '-map', '[aout]'
+    );
   }
-  // If only narration, no filter needed - FFmpeg will auto-map
+  // If only narration without delay, no filter needed - FFmpeg will auto-map
   
   // Output settings - re-encode to H.264 for MP4 compatibility
   args.push(

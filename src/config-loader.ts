@@ -63,11 +63,17 @@ function resolveOutputPath(
     return resolve(dirname(configPath), config.outputPath);
   }
   
-  // Priority 2: name + timestamp + outputDir (or CLI override)
+  // Priority 2: name + optional timestamp + outputDir (or CLI override)
   const outputDir = cliOutputDir || config.outputDir || dirname(configPath);
   const baseName = config.name || getBaseNameFromConfig(configPath);
-  const timestamp = formatTimestamp(new Date());
-  return join(resolve(outputDir), `${baseName}-${timestamp}.webm`);
+  const useTimestamp = config.timestamp ?? false; // Default to false for CI/CD compatibility
+  
+  if (useTimestamp) {
+    const timestamp = formatTimestamp(new Date());
+    return join(resolve(outputDir), `${baseName}-${timestamp}.webm`);
+  }
+  
+  return join(resolve(outputDir), `${baseName}.webm`);
 }
 
 function getBaseNameFromConfig(configPath: string): string {
