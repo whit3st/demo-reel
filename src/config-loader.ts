@@ -68,12 +68,15 @@ function resolveOutputPath(
   const baseName = config.name || getBaseNameFromConfig(configPath);
   const useTimestamp = config.timestamp ?? false; // Default to false for CI/CD compatibility
   
+  // Use MP4 when audio is present (WebM doesn't support AAC audio codec)
+  const extension = (config.audio?.narration || config.audio?.background) ? '.mp4' : '.webm';
+  
   if (useTimestamp) {
     const timestamp = formatTimestamp(new Date());
-    return join(resolve(outputDir), `${baseName}-${timestamp}.webm`);
+    return join(resolve(outputDir), `${baseName}-${timestamp}${extension}`);
   }
   
-  return join(resolve(outputDir), `${baseName}.webm`);
+  return join(resolve(outputDir), `${baseName}${extension}`);
 }
 
 function getBaseNameFromConfig(configPath: string): string {
