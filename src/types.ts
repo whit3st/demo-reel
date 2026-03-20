@@ -6,6 +6,7 @@ export type {
   TypingConfig,
   VideoConfig,
   AudioConfig,
+  AuthConfig,
   SelectorStrategy,
   SelectorConfig,
   Step,

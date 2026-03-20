@@ -4,6 +4,7 @@ import { chromium, type Browser, type BrowserContext, type Page } from 'playwrig
 import type { DemoReelConfig } from './schemas.js';
 import { runDemo } from './runner.js';
 import { mergeAudioVideo, type AudioConfig } from './audio-processor.js';
+import { loadCookies, saveCookies } from './auth.js';
 
 export interface VideoResult {
   page: Page;
@@ -12,7 +13,7 @@ export interface VideoResult {
   tempVideoPath: string;
 }
 
-export async function startRecording(config: DemoReelConfig): Promise<VideoResult> {
+export async function startRecording(config: DemoReelConfig, configPath: string): Promise<VideoResult> {
   const browser = await chromium.launch({ headless: true });
   
   const context = await browser.newContext({
@@ -25,6 +26,16 @@ export async function startRecording(config: DemoReelConfig): Promise<VideoResul
       : undefined,
   });
   
+  // Load cookies if auth persistence is enabled
+  if (config.auth?.persistCookies) {
+    const configDir = dirname(configPath);
+    const cookieFile = config.auth.cookieFile;
+    const cookiesLoaded = await loadCookies(context, cookieFile, configDir);
+    if (cookiesLoaded) {
+      console.log('✓ Restored session from saved cookies');
+    }
+  }
+  
   const page = await context.newPage();
   
   return {
@@ -35,7 +46,7 @@ export async function startRecording(config: DemoReelConfig): Promise<VideoResul
   };
 }
 
-export async function stopRecording(result: VideoResult): Promise<string> {
+export async function stopRecording(result: VideoResult, saveCookiesFn?: () => Promise<void>): Promise<string> {
   const { page, context, browser } = result;
   
   // Close page first to finish video recording
@@ -47,6 +58,11 @@ export async function stopRecording(result: VideoResult): Promise<string> {
   
   if (video) {
     tempVideoPath = await video.path();
+  }
+  
+  // Save cookies if callback provided (before closing context)
+  if (saveCookiesFn) {
+    await saveCookiesFn();
   }
   
   await context.close();
@@ -120,7 +136,7 @@ export async function runVideoScenario(
     console.log('Starting browser and recording...');
   }
   
-  const recording = await startRecording(config);
+    const recording = await startRecording(config, configPath);
   
   try {
     if (verbose) {
@@ -133,7 +149,19 @@ export async function runVideoScenario(
       console.log('Stopping recording...');
     }
     
-    const tempVideoPath = await stopRecording(recording);
+    // Prepare cookie save function if auth persistence is enabled
+    const saveCookiesFn = config.auth?.persistCookies
+      ? async () => {
+          const configDir = dirname(configPath);
+          const cookieFile = config.auth?.cookieFile;
+          await saveCookies(recording.context, cookieFile, configDir);
+          if (verbose) {
+            console.log('✓ Saved session cookies');
+          }
+        }
+      : undefined;
+    
+    const tempVideoPath = await stopRecording(recording, saveCookiesFn);
     
     if (verbose) {
       if (config.audio?.narration || config.audio?.background) {

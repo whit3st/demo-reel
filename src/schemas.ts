@@ -249,6 +249,13 @@ export const audioConfigSchema = z.object({
   backgroundVolume: z.number().min(0).max(1).optional(), // 0.0 to 1.0
 });
 
+export const authConfigSchema = z.object({
+  persistCookies: z.boolean().optional(),  // Save and restore cookies between runs
+  cookieFile: z.string().min(1).optional(), // Custom cookie file path (default: .demo-reel-cookies.json)
+  loginUrl: z.string().url().optional(),   // URL to check if authenticated (if not, login steps run)
+  successUrl: z.string().url().optional(), // URL indicating successful login
+});
+
 export const demoReelConfigSchema = z.object({
   viewport: sizeSchema,
   video: videoConfigSchema,
@@ -266,6 +273,8 @@ export const demoReelConfigSchema = z.object({
   audio: audioConfigSchema.optional(),
   // Timestamp option for output filename (default: false for CI/CD compatibility)
   timestamp: z.boolean().optional(),
+  // Authentication persistence
+  auth: authConfigSchema.optional(),
 });
 
 // Export types
@@ -276,6 +285,7 @@ export type TimingConfig = z.infer<typeof timingSchema>;
 export type TypingConfig = z.infer<typeof typingSchema>;
 export type VideoConfig = z.infer<typeof videoConfigSchema>;
 export type AudioConfig = z.infer<typeof audioConfigSchema>;
+export type AuthConfig = z.infer<typeof authConfigSchema>;
 export type SelectorStrategy = z.infer<typeof selectorStrategySchema>;
 export type SelectorConfig = z.infer<typeof selectorSchema>;
 export type Step = z.infer<typeof stepSchema>;
