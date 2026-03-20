@@ -45,6 +45,11 @@ async function loadConfigFile(configPath: string): Promise<DemoReelConfig> {
   throw new Error(`Unsupported config file extension: ${ext}`);
 }
 
+function formatTimestamp(date: Date): string {
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
+}
+
 function resolveOutputPath(
   config: DemoReelConfig,
   configPath: string,
@@ -58,10 +63,11 @@ function resolveOutputPath(
     return resolve(dirname(configPath), config.outputPath);
   }
   
-  // Priority 2: name + outputDir (or CLI override)
+  // Priority 2: name + timestamp + outputDir (or CLI override)
   const outputDir = cliOutputDir || config.outputDir || dirname(configPath);
   const baseName = config.name || getBaseNameFromConfig(configPath);
-  return join(resolve(outputDir), `${baseName}.webm`);
+  const timestamp = formatTimestamp(new Date());
+  return join(resolve(outputDir), `${baseName}-${timestamp}.webm`);
 }
 
 function getBaseNameFromConfig(configPath: string): string {
