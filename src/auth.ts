@@ -165,11 +165,20 @@ export async function restoreLocalStorage(
  */
 export async function validateSession(
   page: Page,
-  validateConfig: AuthValidateConfig
+  validateConfig: AuthValidateConfig,
+  verbose?: boolean
 ): Promise<boolean> {
   try {
     // Navigate to protected URL
+    if (verbose) {
+      console.log(`  → Navigating to: ${validateConfig.protectedUrl}`);
+    }
     await page.goto(validateConfig.protectedUrl, { waitUntil: 'networkidle' });
+    
+    const currentUrl = page.url();
+    if (verbose) {
+      console.log(`  → Current URL: ${currentUrl}`);
+    }
     
     // Wait a bit for any redirects or dynamic content
     await page.waitForTimeout(1000);
@@ -177,33 +186,58 @@ export async function validateSession(
     // Try to find the success indicator element
     const selector = validateConfig.successIndicator;
     let locator;
+    let selectorString: string;
     
     switch (selector.strategy) {
       case 'testId':
         locator = page.getByTestId(selector.value);
+        selectorString = `[data-testid="${selector.value}"]`;
         break;
       case 'id':
         locator = page.locator(`#${selector.value}`);
+        selectorString = `#${selector.value}`;
         break;
       case 'class':
         locator = page.locator(`.${selector.value}`);
+        selectorString = `.${selector.value}`;
         break;
       case 'href':
         locator = page.locator(`[href="${selector.value}"]`);
+        selectorString = `[href="${selector.value}"]`;
         break;
     }
     
+    if (verbose) {
+      console.log(`  → Looking for: ${selectorString}`);
+    }
+    
+    // Count matching elements for debugging
+    const count = await locator.count().catch(() => 0);
+    if (verbose) {
+      console.log(`  → Found ${count} matching element(s)`);
+    }
+    
     // Wait for element to be visible with timeout (indicates successful auth)
+    // Use .first() to avoid strict mode violation when multiple elements match
     let isVisible = false;
     try {
-      await locator.waitFor({ state: 'visible', timeout: 5000 });
+      await locator.first().waitFor({ state: 'visible', timeout: 5000 });
       isVisible = true;
-    } catch {
+      if (verbose) {
+        console.log('  → Element is visible!');
+      }
+    } catch (error) {
       isVisible = false;
+      if (verbose) {
+        console.log(`  → Element not visible (timeout): ${error instanceof Error ? error.message : 'unknown error'}`);
+      }
     }
     
     return isVisible;
-  } catch {
+  } catch (error) {
+    if (verbose) {
+      console.log(`  → Validation error: ${error instanceof Error ? error.message : 'unknown error'}`);
+    }
     return false;
   }
 }

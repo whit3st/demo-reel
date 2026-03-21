@@ -61,7 +61,7 @@ export async function handleAuth(
     await restoreSession(context, page, existingSession, storage);
     
     // Validate session by checking protected URL
-    const isValid = await validateSession(page, validate);
+    const isValid = await validateSession(page, validate, verbose);
     
     if (isValid) {
       if (verbose) {
@@ -94,7 +94,7 @@ export async function handleAuth(
   }
   
   // Validate login was successful
-  const loginSuccess = await validateSession(page, validate);
+  const loginSuccess = await validateSession(page, validate, verbose);
   
   if (!loginSuccess) {
     throw new Error('Login failed: could not find success indicator after login steps');

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2-beta.2] - 2026-03-21
+
+### Fixed
+- Fixed strict mode violation error when multiple elements match success indicator selector
+  - Use `.first()` to handle multiple matching elements
+  - Added verbose logging to help debug validation issues
+
 ## [0.1.2-beta.1] - 2026-03-21
 
 ### Fixed
