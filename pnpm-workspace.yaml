@@ -1,0 +1,15 @@
+allowBuilds:
+  '-': true
+  '[': true
+  ']': true
+  a: true
+  c: true
+  e: true
+  f: true
+  ffmpeg-static: true
+  g: true
+  i: true
+  m: true
+  p: true
+  s: true
+  t: true

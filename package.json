@@ -1,7 +1,7 @@
 {
   "name": "demo-reel",
-"version": "0.1.2-beta.2",
-"type": "module",
+  "version": "0.1.2-beta.2",
+  "type": "module",
   "description": "Create demo videos from web apps using Playwright",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -18,7 +18,10 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "prepublishOnly": "npm run build"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "prepublishOnly": "pnpm run build && pnpm test"
   },
   "files": [
     "dist",
@@ -38,14 +41,17 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "typescript": "^5.0.0"
+    "@vitest/ui": "^4.1.0",
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.0"
   },
   "dependencies": {
     "ffmpeg-static": "^5.2.0",
-    "glob": "^10.3.0",
+    "glob": "^13.0.6",
     "zod": "^3.22.0"
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "packageManager": "pnpm@10.32.1"
 }
