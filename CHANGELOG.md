@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2-beta.1] - 2026-03-21
+
+### Fixed
+- Session validation now properly waits for success indicator element
+  - Changed from `isVisible()` (instant check) to `waitFor()` with 5 second timeout
+  - Changed page load from `domcontentloaded` to `networkidle` for better reliability
+
 ## [0.1.2-beta.0] - 2026-03-21
 
 ### Added

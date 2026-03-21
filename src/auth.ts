@@ -169,7 +169,7 @@ export async function validateSession(
 ): Promise<boolean> {
   try {
     // Navigate to protected URL
-    await page.goto(validateConfig.protectedUrl, { waitUntil: 'domcontentloaded' });
+    await page.goto(validateConfig.protectedUrl, { waitUntil: 'networkidle' });
     
     // Wait a bit for any redirects or dynamic content
     await page.waitForTimeout(1000);
@@ -193,8 +193,15 @@ export async function validateSession(
         break;
     }
     
-    // Check if element is visible (indicates successful auth)
-    const isVisible = await locator.isVisible().catch(() => false);
+    // Wait for element to be visible with timeout (indicates successful auth)
+    let isVisible = false;
+    try {
+      await locator.waitFor({ state: 'visible', timeout: 5000 });
+      isVisible = true;
+    } catch {
+      isVisible = false;
+    }
+    
     return isVisible;
   } catch {
     return false;
