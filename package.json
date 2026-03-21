@@ -16,7 +16,8 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsgo",
+    "build:tsc": "tsc",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -41,6 +42,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@typescript/native-preview": "7.0.0-dev.20260321.1",
     "@vitest/ui": "^4.1.0",
     "typescript": "^5.0.0",
     "vitest": "^4.1.0"

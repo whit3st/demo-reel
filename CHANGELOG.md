@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.3] - 2026-03-21
 
 ### Added
+- **TypeScript Go Port (tsgo)**: Now using Microsoft's native TypeScript compiler
+  - 3x faster builds (0.64s vs 1.86s)
+  - Native Go implementation of TypeScript compiler
+  - Experimental but working well for this codebase
+  - Fallback to tsc available with `pnpm build:tsc`
 - **Session Persistence**: Complete authentication system with session capture and restoration
   - New `auth` configuration with `loginSteps`, `validate`, `storage`, and `behavior` options
   - Automatic session validation before running demos
