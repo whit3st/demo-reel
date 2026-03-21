@@ -1,6 +1,6 @@
 {
   "name": "demo-reel",
-  "version": "0.1.2-beta.2",
+  "version": "0.1.3",
   "type": "module",
   "description": "Create demo videos from web apps using Playwright",
   "main": "./dist/index.js",

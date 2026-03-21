@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-03-21
+
+### Added
+- **Session Persistence**: Complete authentication system with session capture and restoration
+  - New `auth` configuration with `loginSteps`, `validate`, `storage`, and `behavior` options
+  - Automatic session validation before running demos
+  - Support for cookies and localStorage capture
+  - Multiple named sessions support for different apps/users
+  - Smart re-authentication when sessions expire
+  - Force re-auth option to bypass saved sessions
+  - Clear invalid sessions automatically
+  - Comprehensive test suite (37 tests)
+
+### Changed
+- **Breaking**: Old auth config format deprecated (`persistCookies`, `cookieFile`, `loginUrl`, `successUrl`)
+- Sessions now stored in structured JSON format in `.demo-reel-sessions/` directory
+- Better session isolation with named sessions per demo configuration
+- Added vitest testing framework
+
+### Fixed
+- Session validation properly waits for success indicator element with `waitFor()` and 5 second timeout
+- Fixed strict mode violation error when multiple elements match success indicator selector (uses `.first()`)
+- Changed page load from `domcontentloaded` to `networkidle` for better reliability
+- Added verbose logging to help debug validation issues
+
 ## [0.1.2-beta.2] - 2026-03-21
 
 ### Fixed
