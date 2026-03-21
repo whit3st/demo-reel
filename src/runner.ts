@@ -241,6 +241,19 @@ const installCursorOverlay = async (page: Page, cursor: CursorConfig) => {
   return resolvedCursor;
 };
 
+const ensureCursorOverlay = async (page: Page, resolvedCursor: CursorConfig & { start: Point }) => {
+  try {
+    const cursorExists = await page.evaluate(() => {
+      return document.getElementById('__pw_cursor') !== null;
+    });
+    if (!cursorExists) {
+      await page.evaluate(cursorScript, resolvedCursor);
+    }
+  } catch {
+    // Page navigated during evaluation, will be recreated on next step
+  }
+};
+
 const ensureMouseStart = async (
   page: Page,
   state: MouseState,
@@ -447,16 +460,132 @@ const buildTimeoutOption = (timeoutMs?: number) => {
   return {};
 };
 
+const runStepSimple = async (
+  page: Page,
+  step: Step
+): Promise<void> => {
+  if (step.action === 'goto') {
+    await page.goto(step.url, step.waitUntil ? { waitUntil: step.waitUntil } : undefined);
+    return;
+  }
+
+  if (step.action === 'wait') {
+    await page.waitForTimeout(step.ms);
+    return;
+  }
+
+  if (step.action === 'waitFor') {
+    if (step.kind === 'selector') {
+      const target = resolveLocator(page, step.selector);
+      await target.waitFor({
+        state: step.state,
+        ...buildTimeoutOption(step.timeoutMs),
+      });
+      return;
+    }
+
+    if (step.kind === 'url') {
+      await page.waitForURL(step.url, {
+        waitUntil: step.waitUntil,
+        ...buildTimeoutOption(step.timeoutMs),
+      });
+      return;
+    }
+
+    if (step.kind === 'loadState') {
+      await page.waitForLoadState(step.state, buildTimeoutOption(step.timeoutMs));
+      return;
+    }
+
+    if (step.kind === 'request') {
+      await page.waitForRequest(step.url, buildTimeoutOption(step.timeoutMs));
+      return;
+    }
+
+    if (step.kind === 'response') {
+      await page.waitForResponse(step.url, buildTimeoutOption(step.timeoutMs));
+      return;
+    }
+
+    if (step.kind === 'function') {
+      await page.waitForFunction(step.expression, step.arg, {
+        polling: step.polling,
+        ...buildTimeoutOption(step.timeoutMs),
+      });
+      return;
+    }
+  }
+
+  if (step.action === 'click') {
+    const target = resolveLocator(page, step.selector);
+    await target.click();
+    return;
+  }
+
+  if (step.action === 'hover') {
+    const target = resolveLocator(page, step.selector);
+    await target.hover();
+    return;
+  }
+
+  if (step.action === 'type') {
+    const target = resolveLocator(page, step.selector);
+    await target.fill(step.text);
+    return;
+  }
+
+  if (step.action === 'press') {
+    const target = resolveLocator(page, step.selector);
+    await target.press(step.key);
+    return;
+  }
+
+  if (step.action === 'scroll') {
+    const target = resolveLocator(page, step.selector);
+    await target.evaluate((el: HTMLElement | SVGElement, args: { x: number; y: number }) => {
+      el.scrollBy(args.x, args.y);
+    }, { x: step.x, y: step.y });
+    return;
+  }
+
+  if (step.action === 'select') {
+    const target = resolveLocator(page, step.selector);
+    await target.selectOption(step.value);
+    return;
+  }
+
+  if (step.action === 'check') {
+    const target = resolveLocator(page, step.selector);
+    await target.setChecked(step.checked);
+    return;
+  }
+
+  if (step.action === 'upload') {
+    const target = resolveLocator(page, step.selector);
+    await target.setInputFiles(step.filePath);
+    return;
+  }
+
+  if (step.action === 'drag') {
+    const source = resolveLocator(page, step.source);
+    const target = resolveLocator(page, step.target);
+    await source.dragTo(target);
+    return;
+  }
+};
+
 const runStep = async (
   page: Page,
   step: Step,
   config: DemoReelConfig,
   state: MouseState,
   cursorStart: Point,
+  resolvedCursor: CursorConfig & { start: Point },
   startDelayApplied: boolean
 ): Promise<boolean> => {
   if (step.action === 'goto') {
     await page.goto(step.url, step.waitUntil ? { waitUntil: step.waitUntil } : undefined);
+    await ensureCursorOverlay(page, resolvedCursor);
     return applyStartDelayIfNeeded(page, config.timing, startDelayApplied);
   }
 
@@ -485,6 +614,7 @@ const runStep = async (
 
     if (step.kind === 'loadState') {
       await page.waitForLoadState(step.state, buildTimeoutOption(step.timeoutMs));
+      await ensureCursorOverlay(page, resolvedCursor);
       return startDelayApplied;
     }
 
@@ -651,6 +781,12 @@ const runStep = async (
   return startDelayApplied;
 };
 
+export const runPreSteps = async (page: Page, preSteps: Step[]) => {
+  for (const step of preSteps) {
+    await runStepSimple(page, step);
+  }
+};
+
 export const runDemo = async (page: Page, config: DemoReelConfig) => {
   const resolvedCursor = await installCursorOverlay(page, config.cursor);
   const mouseState: MouseState = {
@@ -666,6 +802,7 @@ export const runDemo = async (page: Page, config: DemoReelConfig) => {
       config,
       mouseState,
       resolvedCursor.start,
+      resolvedCursor,
       startDelayApplied
     );
   }

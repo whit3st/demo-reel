@@ -264,6 +264,8 @@ export const demoReelConfigSchema = z.object({
   typing: typingSchema,
   timing: timingSchema,
   steps: z.array(stepSchema).min(1),
+  // Pre-steps: run before recording starts (e.g., login)
+  preSteps: z.array(stepSchema).optional(),
   // Output-related fields
   name: z.string().min(1).optional(),
   outputDir: z.string().min(1).optional(),
