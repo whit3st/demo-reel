@@ -249,11 +249,37 @@ export const audioConfigSchema = z.object({
   backgroundVolume: z.number().min(0).max(1).optional(), // 0.0 to 1.0
 });
 
+export const storageTypeSchema = z.enum(['cookies', 'localStorage']);
+
+export const authStorageConfigSchema = z.object({
+  name: z.string().min(1),                    // Session identifier (allows multiple sessions)
+  types: z.array(storageTypeSchema).min(1),   // Storage types to capture
+  file: z.string().min(1).optional(),         // Optional: custom file path
+});
+
+export const authValidateConfigSchema = z.object({
+  protectedUrl: z.string().url(),              // URL to test session validity
+  successIndicator: selectorSchema,            // Element that exists when session is valid
+});
+
+export const authBehaviorConfigSchema = z.object({
+  autoReauth: z.boolean().optional(),          // Auto re-login on 401/unauthorized
+  forceReauth: z.boolean().optional(),         // Force fresh login (ignore saved session)
+  clearInvalid: z.boolean().optional(),        // Delete saved session when invalid
+});
+
 export const authConfigSchema = z.object({
-  persistCookies: z.boolean().optional(),  // Save and restore cookies between runs
-  cookieFile: z.string().min(1).optional(), // Custom cookie file path (default: .demo-reel-cookies.json)
-  loginUrl: z.string().url().optional(),   // URL to check if authenticated (if not, login steps run)
-  successUrl: z.string().url().optional(), // URL indicating successful login
+  // Login flow - runs when no valid session exists
+  loginSteps: z.array(stepSchema).min(1),
+  
+  // Session validation configuration
+  validate: authValidateConfigSchema,
+  
+  // Storage configuration
+  storage: authStorageConfigSchema,
+  
+  // Behavior settings (all optional with defaults)
+  behavior: authBehaviorConfigSchema.optional(),
 });
 
 export const demoReelConfigSchema = z.object({
@@ -287,6 +313,10 @@ export type TimingConfig = z.infer<typeof timingSchema>;
 export type TypingConfig = z.infer<typeof typingSchema>;
 export type VideoConfig = z.infer<typeof videoConfigSchema>;
 export type AudioConfig = z.infer<typeof audioConfigSchema>;
+export type StorageType = z.infer<typeof storageTypeSchema>;
+export type AuthStorageConfig = z.infer<typeof authStorageConfigSchema>;
+export type AuthValidateConfig = z.infer<typeof authValidateConfigSchema>;
+export type AuthBehaviorConfig = z.infer<typeof authBehaviorConfigSchema>;
 export type AuthConfig = z.infer<typeof authConfigSchema>;
 export type SelectorStrategy = z.infer<typeof selectorStrategySchema>;
 export type SelectorConfig = z.infer<typeof selectorSchema>;

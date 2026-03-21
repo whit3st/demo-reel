@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2-beta.0] - 2026-03-21
+
+### Added
+- **Session Persistence**: Intelligent authentication with session capture and restoration
+  - New `auth` configuration with `loginSteps`, `validate`, `storage`, and `behavior` options
+  - Automatic session validation before running demos
+  - Support for cookies and localStorage capture
+  - Multiple named sessions support for different apps/users
+  - Smart re-authentication when sessions expire
+  - Force re-auth option to bypass saved sessions
+  - Clear invalid sessions automatically
+
+### Changed
+- **Breaking**: Old auth config format deprecated (`persistCookies`, `cookieFile`, `loginUrl`, `successUrl`)
+- Sessions now stored in structured JSON format in `.demo-reel-sessions/` directory
+- Better session isolation with named sessions per demo configuration
+
+### Technical
+- New `auth.ts` module for session management
+- Updated video handler with integrated auth flow
+- New types exported: `StorageType`, `AuthStorageConfig`, `AuthValidateConfig`, `AuthBehaviorConfig`
+
 ## [0.1.1-beta.1] - 2024-03-19
 
 ### Fixed

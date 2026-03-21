@@ -1,10 +1,17 @@
 import { mkdir } from 'fs/promises';
 import { dirname, join, resolve } from 'path';
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
-import type { DemoReelConfig } from './schemas.js';
-import { runDemo } from './runner.js';
+import type { DemoReelConfig, AuthConfig, AuthBehaviorConfig } from './schemas.js';
+import { runDemo, runStepSimple } from './runner.js';
 import { mergeAudioVideo, type AudioConfig } from './audio-processor.js';
-import { loadCookies, saveCookies } from './auth.js';
+import { 
+  loadSession, 
+  saveSession, 
+  clearSession,
+  validateSession, 
+  captureSession, 
+  restoreSession
+} from './auth.js';
 
 export interface VideoResult {
   page: Page;
@@ -13,7 +20,103 @@ export interface VideoResult {
   tempVideoPath: string;
 }
 
-export async function startRecording(config: DemoReelConfig, configPath: string): Promise<VideoResult> {
+// Default behavior settings
+const DEFAULT_BEHAVIOR: Required<AuthBehaviorConfig> = {
+  autoReauth: true,
+  forceReauth: false,
+  clearInvalid: true,
+};
+
+/**
+ * Handle authentication flow - check session, validate, login if needed
+ */
+export async function handleAuth(
+  context: BrowserContext,
+  page: Page,
+  authConfig: AuthConfig,
+  configPath: string,
+  verbose?: boolean
+): Promise<boolean> {
+  const configDir = dirname(configPath);
+  const behavior = { ...DEFAULT_BEHAVIOR, ...authConfig.behavior };
+  const { storage, validate, loginSteps } = authConfig;
+  
+  // Force reauth if requested
+  if (behavior.forceReauth) {
+    if (verbose) {
+      console.log('→ Force re-authentication requested');
+    }
+    await clearSession(storage.name, configDir);
+  }
+  
+  // Try to load existing session
+  const existingSession = await loadSession(storage.name, configDir);
+  
+  if (existingSession && !behavior.forceReauth) {
+    if (verbose) {
+      console.log('→ Found saved session, validating...');
+    }
+    
+    // Restore session to browser
+    await restoreSession(context, page, existingSession, storage);
+    
+    // Validate session by checking protected URL
+    const isValid = await validateSession(page, validate);
+    
+    if (isValid) {
+      if (verbose) {
+        console.log('✓ Session is valid');
+      }
+      return true;
+    }
+    
+    // Session is invalid
+    if (verbose) {
+      console.log('✗ Session is invalid or expired');
+    }
+    
+    if (behavior.clearInvalid) {
+      await clearSession(storage.name, configDir);
+      if (verbose) {
+        console.log('→ Cleared invalid session');
+      }
+    }
+  }
+  
+  // No valid session - run login steps
+  if (verbose) {
+    console.log('→ Running login steps...');
+  }
+  
+  // Run each login step
+  for (const step of loginSteps) {
+    await runStepSimple(page, step);
+  }
+  
+  // Validate login was successful
+  const loginSuccess = await validateSession(page, validate);
+  
+  if (!loginSuccess) {
+    throw new Error('Login failed: could not find success indicator after login steps');
+  }
+  
+  if (verbose) {
+    console.log('✓ Login successful');
+  }
+  
+  // Capture and save session
+  const sessionData = await captureSession(context, storage);
+  await saveSession(sessionData, configDir);
+  
+  if (verbose) {
+    const storageTypes = storage.types.join(', ');
+    console.log(`✓ Saved session (${storageTypes})`);
+  }
+  
+  return true;
+}
+
+export async function startRecording(config: DemoReelConfig, _configPath: string): Promise<VideoResult> {
   const browser = await chromium.launch({ headless: true });
   
   const context = await browser.newContext({
@@ -26,16 +129,6 @@ export async function startRecording(config: DemoReelConfig, configPath: string)
       : undefined,
   });
   
-  // Load cookies if auth persistence is enabled
-  if (config.auth?.persistCookies) {
-    const configDir = dirname(configPath);
-    const cookieFile = config.auth.cookieFile;
-    const cookiesLoaded = await loadCookies(context, cookieFile, configDir);
-    if (cookiesLoaded) {
-      console.log('✓ Restored session from saved cookies');
-    }
-  }
-  
   const page = await context.newPage();
   
   return {
@@ -46,7 +139,7 @@ export async function startRecording(config: DemoReelConfig, configPath: string)
   };
 }
 
-export async function stopRecording(result: VideoResult, saveCookiesFn?: () => Promise<void>): Promise<string> {
+export async function stopRecording(result: VideoResult, saveSessionFn?: () => Promise<void>): Promise<string> {
   const { page, context, browser } = result;
   
   // Close page first to finish video recording
@@ -60,9 +153,9 @@ export async function stopRecording(result: VideoResult, saveCookiesFn?: () => P
     tempVideoPath = await video.path();
   }
   
-  // Save cookies if callback provided (before closing context)
-  if (saveCookiesFn) {
-    await saveCookiesFn();
+  // Save session if callback provided (before closing context)
+  if (saveSessionFn) {
+    await saveSessionFn();
   }
   
   await context.close();
@@ -136,9 +229,17 @@ export async function runVideoScenario(
     console.log('Starting browser and recording...');
   }
   
-    const recording = await startRecording(config, configPath);
+  const recording = await startRecording(config, configPath);
   
   try {
+    // Handle authentication if configured
+    if (config.auth) {
+      if (verbose) {
+        console.log('Handling authentication...');
+      }
+      await handleAuth(recording.context, recording.page, config.auth, configPath, verbose);
+    }
+    
     if (verbose) {
       console.log('Running demo scenario...');
     }
@@ -149,19 +250,19 @@ export async function runVideoScenario(
       console.log('Stopping recording...');
     }
     
-    // Prepare cookie save function if auth persistence is enabled
-    const saveCookiesFn = config.auth?.persistCookies
+    // Prepare session save function if auth is configured
+    const saveSessionFn = config.auth
       ? async () => {
           const configDir = dirname(configPath);
-          const cookieFile = config.auth?.cookieFile;
-          await saveCookies(recording.context, cookieFile, configDir);
+          const sessionData = await captureSession(recording.context, config.auth!.storage);
+          await saveSession(sessionData, configDir);
           if (verbose) {
-            console.log('✓ Saved session cookies');
+            console.log('✓ Saved session state');
           }
         }
       : undefined;
     
-    const tempVideoPath = await stopRecording(recording, saveCookiesFn);
+    const tempVideoPath = await stopRecording(recording, saveSessionFn);
     
     if (verbose) {
       if (config.audio?.narration || config.audio?.background) {

@@ -460,7 +460,7 @@ const buildTimeoutOption = (timeoutMs?: number) => {
   return {};
 };
 
-const runStepSimple = async (
+export const runStepSimple = async (
   page: Page,
   step: Step
 ): Promise<void> => {
