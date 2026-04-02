@@ -15,4 +15,9 @@ export type {
   SelectorConfig,
   Step,
   DemoReelConfig,
+  DemoReelConfigInput,
+  CursorPresetOrConfig,
+  MotionPresetOrConfig,
+  TypingPresetOrConfig,
+  TimingPresetOrConfig,
 } from './schemas.js';

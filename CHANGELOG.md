@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Built-in Presets**: Simplified configuration with preset shortcuts for cursor, motion, typing, and timing
+  - Cursor presets: `'dot'`, `'arrow'`, `'none'`
+  - Motion presets: `'smooth'`, `'snappy'`, `'instant'`
+  - Typing presets: `'humanlike'`, `'fast'`, `'instant'`
+  - Timing presets: `'normal'`, `'fast'`, `'instant'`
+  - Use string shortcuts (e.g., `cursor: 'dot'`) or full objects (e.g., `cursor: { type: 'dot', size: 16 }`)
+- **`init` Command**: New `demo-reel init` command creates `example.demo.ts` template
+- **Documentation**: Added descriptive `.describe()` calls on all Zod schema fields for IDE tooltips
+
+### Changed
+- **`demo-reel` (no args)**: Now runs all `*.demo.ts` files instead of requiring `--all` flag
+- **Simplified CLI**: Removed default config file concept; scenarios are always `*.demo.ts` files
+- **Type Exports**: Added `DemoReelConfigInput` type for autocomplete with preset strings
+
+### Technical
+- New `presets.ts` module with preset definitions
+- Restructured schema to separate input types (for autocomplete) from output types (after transform)
+- `defineConfig()` accepts preset strings and transforms them at parse time
+- `demoReelConfigInputSchema` exported for IDE type inference
+
 ## [0.1.3] - 2026-03-21
 
 ### Added

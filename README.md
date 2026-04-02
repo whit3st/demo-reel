@@ -21,16 +21,50 @@ npm install -D demo-reel playwright
 
 ## Quick Start
 
-### 1. Create a Config File
+### 1. Initialize a Demo Scenario
 
-Create `demo-reel.config.ts` in your project root:
+```bash
+npx demo-reel init
+```
+
+This creates `example.demo.ts` in your project.
+
+### 2. Run the Demo
+
+```bash
+npx demo-reel
+```
+
+Output: `videos/example.mp4`
+
+## CLI Usage
+
+```bash
+demo-reel init                        # Create example.demo.ts
+demo-reel                             # Run all *.demo.ts files
+demo-reel onboarding                  # Run onboarding.demo.ts
+demo-reel --all                       # Run all *.demo.ts files
+demo-reel --dry-run                   # Validate config without recording
+demo-reel --headed                    # Show browser window
+demo-reel -o ./public/videos          # Override output directory
+demo-reel --verbose                   # Show detailed output
+```
+
+## Configuration
+
+### Scenario Files
+
+Demo scenarios are `.demo.ts` files containing your configuration:
 
 ```typescript
 import { defineConfig } from 'demo-reel';
 
 export default defineConfig({
   viewport: { width: 1920, height: 1080 },
-  video: { enabled: true, size: { width: 1920, height: 1080 } },
+  video: {
+    enabled: true,
+    size: { width: 1920, height: 1080 },
+  },
   name: 'my-demo',
   steps: [
     { action: 'goto', url: 'https://example.com' },
@@ -39,41 +73,61 @@ export default defineConfig({
 });
 ```
 
-### 2. Run the Demo
+### Built-in Presets
 
-```bash
-npx demo-reel
+Demo Reel includes presets for cursor, motion, typing, and timing. Use string shortcuts for quick setup:
+
+```typescript
+export default defineConfig({
+  cursor: 'dot',      // 'dot' | 'arrow' | 'none'
+  motion: 'smooth',   // 'smooth' | 'snappy' | 'instant'
+  typing: 'humanlike', // 'humanlike' | 'fast' | 'instant'
+  timing: 'normal',  // 'normal' | 'fast' | 'instant'
+  // ...
+});
 ```
 
-Output: `videos/my-demo.mp4`
+Or customize individual settings:
 
-## CLI Usage
-
-```bash
-# Run default config
-npx demo-reel
-
-# Run specific scenario
-npx demo-reel onboarding
-
-# Run all scenarios
-npx demo-reel --all
-
-# Validate config without recording
-npx demo-reel --dry-run
-
-# Verbose output
-npx demo-reel --verbose
+```typescript
+export default defineConfig({
+  cursor: { type: 'dot', size: 16, borderWidth: 2 },
+  motion: { moveDurationMs: 400, clickDelayMs: 50 },
+  // ...
+});
 ```
 
-## Configuration
+#### Cursor Presets
 
-### Config File Discovery
+| Preset | Description |
+|--------|-------------|
+| `dot` | Colored dot cursor (12px, white border) |
+| `arrow` | Classic SVG arrow cursor |
+| `none` | No cursor overlay |
 
-The CLI looks for configs in this order:
-1. `demo-reel.config.ts` (default)
-2. `<scenario>.demo.ts` (when specifying scenario name)
-3. All `*.demo.ts` files (with `--all` flag)
+#### Motion Presets
+
+| Preset | Description |
+|--------|-------------|
+| `smooth` | Natural curved movement (600ms, 25+ steps) |
+| `snappy` | Faster direct movement (300ms, 15 steps) |
+| `instant` | Teleporting (no animation) |
+
+#### Typing Presets
+
+| Preset | Description |
+|--------|-------------|
+| `humanlike` | Realistic variable delays (80ms base) |
+| `fast` | Quick natural typing (40ms base) |
+| `instant` | No delay |
+
+#### Timing Presets
+
+| Preset | Description |
+|--------|-------------|
+| `normal` | Balanced delays (2000ms goto/ end) |
+| `fast` | Reduced waits (1000ms) |
+| `instant` | Minimal delays (0ms) |
 
 ### Available Steps
 
@@ -84,7 +138,7 @@ The CLI looks for configs in this order:
 - `press` - Press a key
 - `scroll` - Scroll element
 - `wait` - Wait for duration
-- `waitFor` - Wait for condition
+- `waitFor` - Wait for condition (selector, URL, function, etc.)
 
 ### Selector Strategies
 

@@ -1,14 +1,40 @@
 #!/usr/bin/env node
-import { loadConfig, findConfig, loadScenario, findScenarioFiles } from './config-loader.js';
+import { loadConfig, loadScenario, findScenarioFiles } from './config-loader.js';
 import { runVideoScenario } from './video-handler.js';
+import { writeFile } from 'fs/promises';
+import { join } from 'path';
 
 interface CliOptions {
   verbose: boolean;
   dryRun: boolean;
   all: boolean;
+  init?: boolean;
   outputDir?: string;
   headed?: boolean;
 }
+
+const EXAMPLE_SCENARIO = `import { defineConfig } from 'demo-reel';
+
+export default defineConfig({
+  viewport: { width: 1920, height: 1080 },
+  video: {
+    enabled: true,
+    size: { width: 1920, height: 1080 },
+  },
+
+  name: 'example',
+
+  cursor: 'dot',
+  motion: 'smooth',
+  typing: 'humanlike',
+  timing: 'normal',
+
+  steps: [
+    { action: 'goto', url: 'https://example.com' },
+    { action: 'wait', ms: 1000 },
+  ],
+});
+`;
 
 function parseArgs(): { scenario?: string; options: CliOptions } {
   const args = process.argv.slice(2);
@@ -35,6 +61,8 @@ function parseArgs(): { scenario?: string; options: CliOptions } {
     } else if (arg === '--help' || arg === '-h') {
       showHelp();
       process.exit(0);
+    } else if (arg === 'init') {
+      options.init = true;
     } else if (!arg.startsWith('-')) {
       scenario = arg;
     }
@@ -48,33 +76,40 @@ function showHelp(): void {
 demo-reel - Create demo videos from web apps
 
 Usage:
-  demo-reel [scenario] [options]
+  demo-reel [command] [options]
 
-Arguments:
-  scenario                  Name of scenario to run (e.g., "onboarding")
-                            Looks for: <scenario>.demo.ts or <scenario>.config.ts
+Commands:
+  init                         Create example .demo.ts scenario file
+  [scenario]                   Run a specific scenario
 
 Options:
-  --all                     Run all *.demo.ts files in the project
-  --output-dir, -o <dir>    Override output directory for videos
-  --dry-run                 Validate config without recording
-  --headed                  Show browser window (non-headless)
-  --verbose, -v             Show detailed output
-  --help, -h                Show this help message
+  --all                        Run all *.demo.ts files in the project
+  --output-dir, -o <dir>       Override output directory for videos
+  --dry-run                    Validate config without recording
+  --headed                     Show browser window (non-headless)
+  --verbose, -v                Show detailed output
+  --help, -h                   Show this help message
 
 Examples:
-  demo-reel                          # Run demo-reel.config.ts
-  demo-reel onboarding               # Run onboarding.demo.ts
-  demo-reel --all                    # Run all *.demo.ts files
-  demo-reel --dry-run                # Validate config without recording
-  demo-reel -o ./public/videos       # Override output directory
+  demo-reel init                        # Create example.demo.ts
+  demo-reel                             # Run all *.demo.ts files
+  demo-reel onboarding                  # Run onboarding.demo.ts
+  demo-reel --dry-run                   # Validate without recording
+  demo-reel -o ./public/videos          # Override output directory
 `);
 }
 
 async function main(): Promise<void> {
   const { scenario, options } = parseArgs();
-  
+
   try {
+    if (options.init) {
+      const demoPath = join(process.cwd(), 'example.demo.ts');
+      await writeFile(demoPath, EXAMPLE_SCENARIO, 'utf-8');
+      console.log(`Created ${demoPath}`);
+      process.exit(0);
+    }
+
     if (options.all) {
       // Run all demo scenarios
       const files = await findScenarioFiles();
@@ -106,21 +141,22 @@ async function main(): Promise<void> {
       const loaded = await loadConfig(configPath, options.outputDir);
       await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
     } else {
-      // Run default config
-      const configPath = await findConfig();
+      // Run all scenarios
+      const files = await findScenarioFiles();
       
-      if (!configPath) {
-        console.error('No config file found. Looked for:');
-        console.error('  - demo-reel.config.ts');
-        console.error('  - demo-reel.config.js');
-        console.error('  - demo-reel.config.mjs');
-        console.error('  - demo-reel.config.json');
-        console.error('\nRun with --help for more options.');
+      if (files.length === 0) {
+        console.error('No *.demo.ts files found');
+        console.error('Run "demo-reel init" to create an example scenario');
         process.exit(1);
       }
       
-      const loaded = await loadConfig(configPath, options.outputDir);
-      await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
+      console.log(`Found ${files.length} scenario(s)`);
+      
+      for (const file of files) {
+        console.log(`\n▶ ${file}`);
+        const loaded = await loadConfig(file, options.outputDir);
+        await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
+      }
     }
     
     process.exit(0);
