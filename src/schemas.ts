@@ -6,6 +6,14 @@ export const sizeSchema = z.object({
   height: z.number().int().positive().describe("Height in pixels"),
 });
 
+export const resolutionPresetSchema = z
+  .enum(["HD", "FHD", "2K", "4K"])
+  .describe("Resolution preset: HD (1280x720), FHD (1920x1080), 2K (2560x1440), 4K (3840x2160)");
+
+export const resolutionSchema = z
+  .union([resolutionPresetSchema, sizeSchema])
+  .describe("Resolution preset or custom size");
+
 export const cursorPresetSchema = z
   .enum(["dot", "arrow", "none"])
   .describe(
@@ -296,8 +304,7 @@ export const stepSchema = z
   .or(waitForStepUnion);
 
 export const videoConfigSchema = z.object({
-  enabled: z.boolean().describe("Enable video recording"),
-  size: sizeSchema.describe("Video dimensions"),
+  resolution: resolutionSchema.describe("Video resolution (also sets viewport)"),
 });
 
 export const outputFormatSchema = z.enum(["webm", "mp4"]).describe("Output file format");
@@ -360,9 +367,22 @@ function resolveTiming(val: z.infer<typeof timingPresetOrConfigSchema>): TimingC
   return typeof val === "string" ? timingPresets[val as keyof typeof timingPresets] : val;
 }
 
+const resolutionPresets: Record<
+  z.infer<typeof resolutionPresetSchema>,
+  z.infer<typeof sizeSchema>
+> = {
+  HD: { width: 1280, height: 720 },
+  FHD: { width: 1920, height: 1080 },
+  "2K": { width: 2560, height: 1440 },
+  "4K": { width: 3840, height: 2160 },
+};
+
+function resolveResolution(val: z.infer<typeof resolutionSchema>): z.infer<typeof sizeSchema> {
+  return typeof val === "string" ? resolutionPresets[val] : val;
+}
+
 export const demoReelConfigInputSchema = z
   .object({
-    viewport: sizeSchema.describe("Browser viewport dimensions"),
     video: videoConfigSchema.describe("Video recording settings"),
     cursor: cursorPresetOrConfigSchema.describe(
       "Cursor preset name or custom cursor configuration",
@@ -413,6 +433,10 @@ export const demoReelConfigInputSchema = z
 
 export const demoReelConfigSchema = demoReelConfigInputSchema.transform((val) => ({
   ...val,
+  video: {
+    ...val.video,
+    resolution: resolveResolution(val.video.resolution),
+  },
   cursor: resolveCursor(val.cursor),
   motion: resolveMotion(val.motion),
   typing: resolveTyping(val.typing),
@@ -423,6 +447,8 @@ export type CursorPresetOrConfig = z.infer<typeof cursorPresetOrConfigSchema>;
 export type MotionPresetOrConfig = z.infer<typeof motionPresetOrConfigSchema>;
 export type TypingPresetOrConfig = z.infer<typeof typingPresetOrConfigSchema>;
 export type TimingPresetOrConfig = z.infer<typeof timingPresetOrConfigSchema>;
+export type ResolutionPreset = z.infer<typeof resolutionPresetSchema>;
+export type ResolutionConfig = z.infer<typeof resolutionSchema>;
 export type DemoReelConfigInput = z.infer<typeof demoReelConfigInputSchema>;
 
 // Export types

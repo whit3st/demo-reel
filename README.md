@@ -61,10 +61,8 @@ Demo scenarios are `.demo.ts` files containing your configuration:
 import { defineConfig } from "demo-reel";
 
 export default defineConfig({
-  viewport: { width: 1920, height: 1080 },
   video: {
-    enabled: true,
-    size: { width: 1920, height: 1080 },
+    resolution: "FHD", // HD | FHD | 2K | 4K or custom size
   },
   name: "my-demo",
   outputFormat: "webm", // 'webm' | 'mp4'
@@ -130,6 +128,23 @@ export default defineConfig({
 | `normal`  | Balanced delays (2000ms goto/ end) |
 | `fast`    | Reduced waits (1000ms)             |
 | `instant` | Minimal delays (0ms)               |
+
+### Video Resolution
+
+Choose a preset or provide a custom size:
+
+```typescript
+video: { resolution: "FHD" }
+// or
+video: { resolution: { width: 2560, height: 1440 } }
+```
+
+| Preset | Resolution |
+| ------ | ---------- |
+| `HD`   | 1280x720   |
+| `FHD`  | 1920x1080  |
+| `2K`   | 2560x1440  |
+| `4K`   | 3840x2160  |
 
 ### Available Steps
 

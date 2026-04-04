@@ -1,5 +1,4 @@
 export type {
-  SizeConfig,
   CursorConfig,
   MotionConfig,
   TimingConfig,
@@ -20,4 +19,6 @@ export type {
   MotionPresetOrConfig,
   TypingPresetOrConfig,
   TimingPresetOrConfig,
+  ResolutionPreset,
+  ResolutionConfig,
 } from "./schemas.js";

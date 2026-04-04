@@ -80,7 +80,6 @@ export function defineConfig(config: DemoReelConfig): DemoReelConfig {
 
 ```typescript
 interface DemoReelConfig {
-  viewport: ViewportConfig;
   video: VideoConfig;
   cursor: CursorConfig;
   motion: MotionConfig;

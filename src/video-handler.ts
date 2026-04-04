@@ -129,7 +129,7 @@ export async function startBrowser(
   const browser = await chromium.launch({ headless: !headed });
 
   const context = await browser.newContext({
-    viewport: config.viewport,
+    viewport: config.video.resolution,
   });
 
   const page = await context.newPage();
@@ -153,13 +153,11 @@ export async function startRecording(
   const browser = await chromium.launch({ headless: !headed });
 
   const context = await browser.newContext({
-    viewport: config.viewport,
-    recordVideo: config.video.enabled
-      ? {
-          dir: join(process.cwd(), ".demo-reel-temp"),
-          size: config.video.size,
-        }
-      : undefined,
+    viewport: config.video.resolution,
+    recordVideo: {
+      dir: join(process.cwd(), ".demo-reel-temp"),
+      size: config.video.resolution,
+    },
   });
 
   const page = await context.newPage();

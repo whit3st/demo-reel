@@ -48,10 +48,8 @@ function setupSignalHandlers(): void {
 const EXAMPLE_SCENARIO = `import { defineConfig } from 'demo-reel';
 
 export default defineConfig({
-  viewport: { width: 1920, height: 1080 },
   video: {
-    enabled: true,
-    size: { width: 1920, height: 1080 },
+    resolution: "FHD",
   },
 
   name: 'example',

@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`demo-reel` (no args)**: Now runs all `*.demo.ts` files instead of requiring `--all` flag
 - **Simplified CLI**: Removed default config file concept; scenarios are always `*.demo.ts` files
 - **Type Exports**: Added `DemoReelConfigInput` type for autocomplete with preset strings
+- **Video Resolution Config**: Removed `viewport` and `video.enabled`; use `video.resolution`
 
 ### Technical
 
