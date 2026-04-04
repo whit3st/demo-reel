@@ -1,17 +1,17 @@
-import { mkdir } from 'fs/promises';
-import { dirname, join, resolve } from 'path';
-import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
-import type { DemoReelConfig, AuthConfig, AuthBehaviorConfig } from './schemas.js';
-import { runDemo, runStepSimple } from './runner.js';
-import { mergeAudioVideo, type AudioConfig } from './audio-processor.js';
-import { 
-  loadSession, 
-  saveSession, 
+import { mkdir } from "fs/promises";
+import { dirname, join, resolve } from "path";
+import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
+import type { DemoReelConfig, AuthConfig, AuthBehaviorConfig } from "./schemas.js";
+import { runDemo, runStepSimple } from "./runner.js";
+import { mergeAudioVideo, type AudioConfig } from "./audio-processor.js";
+import {
+  loadSession,
+  saveSession,
   clearSession,
-  validateSession, 
-  captureSession, 
-  restoreSession
-} from './auth.js';
+  validateSession,
+  captureSession,
+  restoreSession,
+} from "./auth.js";
 
 export interface VideoResult {
   page: Page;
@@ -41,161 +41,170 @@ export async function handleAuth(
   page: Page,
   authConfig: AuthConfig,
   configPath: string,
-  verbose?: boolean
+  verbose?: boolean,
 ): Promise<boolean> {
   const configDir = dirname(configPath);
   const behavior = { ...DEFAULT_BEHAVIOR, ...authConfig.behavior };
   const { storage, validate, loginSteps } = authConfig;
-  
+
   // Force reauth if requested
   if (behavior.forceReauth) {
     if (verbose) {
-      console.log('→ Force re-authentication requested');
+      console.log("→ Force re-authentication requested");
     }
     await clearSession(storage.name, configDir);
   }
-  
+
   // Try to load existing session
   const existingSession = await loadSession(storage.name, configDir);
-  
+
   if (existingSession && !behavior.forceReauth) {
     if (verbose) {
-      console.log('→ Found saved session, validating...');
+      console.log("→ Found saved session, validating...");
     }
-    
+
     // Restore session to browser
     await restoreSession(context, page, existingSession, storage);
-    
+
     // Validate session by checking protected URL
     const isValid = await validateSession(page, validate, verbose);
-    
+
     if (isValid) {
       if (verbose) {
-        console.log('✓ Session is valid');
+        console.log("✓ Session is valid");
       }
       return true;
     }
-    
+
     // Session is invalid
     if (verbose) {
-      console.log('✗ Session is invalid or expired');
+      console.log("✗ Session is invalid or expired");
     }
-    
+
     if (behavior.clearInvalid) {
       await clearSession(storage.name, configDir);
       if (verbose) {
-        console.log('→ Cleared invalid session');
+        console.log("→ Cleared invalid session");
       }
     }
   }
-  
+
   // No valid session - run login steps
   if (verbose) {
-    console.log('→ Running login steps...');
+    console.log("→ Running login steps...");
   }
-  
+
   // Run each login step
   for (const step of loginSteps) {
     await runStepSimple(page, step);
   }
-  
+
   // Validate login was successful
   const loginSuccess = await validateSession(page, validate, verbose);
-  
+
   if (!loginSuccess) {
-    throw new Error('Login failed: could not find success indicator after login steps');
+    throw new Error("Login failed: could not find success indicator after login steps");
   }
-  
+
   if (verbose) {
-    console.log('✓ Login successful');
+    console.log("✓ Login successful");
   }
-  
+
   // Capture and save session
   const sessionData = await captureSession(context, storage);
   await saveSession(sessionData, configDir);
-  
+
   if (verbose) {
-    const storageTypes = storage.types.join(', ');
+    const storageTypes = storage.types.join(", ");
     console.log(`✓ Saved session (${storageTypes})`);
   }
-  
+
   return true;
 }
 
-export async function startBrowser(config: DemoReelConfig, headed: boolean = false): Promise<VideoResult> {
+export async function startBrowser(
+  config: DemoReelConfig,
+  headed: boolean = false,
+): Promise<VideoResult> {
   const browser = await chromium.launch({ headless: !headed });
-  
+
   const context = await browser.newContext({
     viewport: config.viewport,
   });
-  
+
   const page = await context.newPage();
-  
+
   if (onBrowserCreated) {
     onBrowserCreated(browser, context);
   }
-  
+
   return {
     page,
     context,
     browser,
-    tempVideoPath: '',
+    tempVideoPath: "",
   };
 }
 
-export async function startRecording(config: DemoReelConfig, headed: boolean = false): Promise<VideoResult> {
+export async function startRecording(
+  config: DemoReelConfig,
+  headed: boolean = false,
+): Promise<VideoResult> {
   const browser = await chromium.launch({ headless: !headed });
-  
+
   const context = await browser.newContext({
     viewport: config.viewport,
     recordVideo: config.video.enabled
       ? {
-          dir: join(process.cwd(), '.demo-reel-temp'),
+          dir: join(process.cwd(), ".demo-reel-temp"),
           size: config.video.size,
         }
       : undefined,
   });
-  
+
   const page = await context.newPage();
-  
+
   if (onBrowserCreated) {
     onBrowserCreated(browser, context);
   }
-  
+
   return {
     page,
     context,
     browser,
-    tempVideoPath: '',
+    tempVideoPath: "",
   };
 }
 
-export async function stopRecording(result: VideoResult, saveSessionFn?: () => Promise<void>): Promise<string> {
+export async function stopRecording(
+  result: VideoResult,
+  saveSessionFn?: () => Promise<void>,
+): Promise<string> {
   const { page, context, browser } = result;
-  
+
   // Close page first to finish video recording
   await page.close();
-  
+
   // Get the video path before closing context
   const video = page.video();
-  let tempVideoPath = '';
-  
+  let tempVideoPath = "";
+
   if (video) {
     tempVideoPath = await video.path();
   }
-  
+
   // Save session if callback provided (before closing context)
   if (saveSessionFn) {
     await saveSessionFn();
   }
-  
+
   await context.close();
   await browser.close();
-  
+
   if (!tempVideoPath) {
-    throw new Error('No video was recorded');
+    throw new Error("No video was recorded");
   }
-  
+
   return tempVideoPath;
 }
 
@@ -203,22 +212,22 @@ export async function processVideoWithAudio(
   tempVideoPath: string,
   outputPath: string,
   audio: AudioConfig | undefined,
-  configPath: string
+  configPath: string,
 ): Promise<string> {
   // Ensure output directory exists
   await mkdir(dirname(outputPath), { recursive: true });
-  
+
   if (!audio || (!audio.narration && !audio.background)) {
     // No audio - just copy video
-    const { copyFile } = await import('fs/promises');
+    const { copyFile } = await import("fs/promises");
     await copyFile(tempVideoPath, outputPath);
     return outputPath;
   }
-  
+
   // Resolve audio paths relative to config file
   const resolvedAudio: AudioConfig = {};
   const configDir = dirname(configPath);
-  
+
   if (audio.narration) {
     resolvedAudio.narration = resolve(configDir, audio.narration);
     resolvedAudio.narrationDelay = audio.narrationDelay;
@@ -227,14 +236,14 @@ export async function processVideoWithAudio(
     resolvedAudio.background = resolve(configDir, audio.background);
     resolvedAudio.backgroundVolume = audio.backgroundVolume ?? 0.3;
   }
-  
+
   // Mix audio with video
   await mergeAudioVideo({
     videoPath: tempVideoPath,
     outputPath,
     audio: resolvedAudio,
   });
-  
+
   return outputPath;
 }
 
@@ -246,62 +255,62 @@ export async function runVideoScenario(
     verbose?: boolean;
     dryRun?: boolean;
     headed?: boolean;
-  } = {}
+  } = {},
 ): Promise<string> {
   const { verbose, dryRun, headed } = options;
-  
+
   if (dryRun) {
-    console.log('✓ Config validated successfully (dry run)');
+    console.log("✓ Config validated successfully (dry run)");
     return outputPath;
   }
-  
+
   const startTime = Date.now();
-  
+
   if (config.auth) {
     if (verbose) {
-      console.log('Starting browser for authentication (no recording)...');
+      console.log("Starting browser for authentication (no recording)...");
     }
-    
+
     const authBrowser = await startBrowser(config, headed);
-    
+
     try {
       await handleAuth(authBrowser.context, authBrowser.page, config.auth, configPath, verbose);
     } finally {
       await authBrowser.context.close();
       await authBrowser.browser.close();
     }
-    
+
     if (verbose) {
-      console.log('Starting browser and recording...');
+      console.log("Starting browser and recording...");
     }
   } else {
     if (verbose) {
-      console.log('Starting browser and recording...');
+      console.log("Starting browser and recording...");
     }
   }
-  
-  const recording = config.auth 
+
+  const recording = config.auth
     ? await startRecording(config, headed)
     : await startBrowser(config, headed);
-  
+
   try {
     if (config.auth) {
       if (verbose) {
-        console.log('Restoring session for recording...');
+        console.log("Restoring session for recording...");
       }
       await handleAuth(recording.context, recording.page, config.auth, configPath, verbose);
     }
-    
+
     if (verbose) {
-      console.log('Running demo scenario...');
+      console.log("Running demo scenario...");
     }
-    
+
     await runDemo(recording.page, config);
-    
+
     if (verbose) {
-      console.log('Stopping recording...');
+      console.log("Stopping recording...");
     }
-    
+
     // Prepare session save function if auth is configured
     const saveSessionFn = config.auth
       ? async () => {
@@ -309,32 +318,32 @@ export async function runVideoScenario(
           const sessionData = await captureSession(recording.context, config.auth!.storage);
           await saveSession(sessionData, configDir);
           if (verbose) {
-            console.log('✓ Saved session state');
+            console.log("✓ Saved session state");
           }
         }
       : undefined;
-    
+
     const tempVideoPath = await stopRecording(recording, saveSessionFn);
-    
+
     if (verbose) {
       if (config.audio?.narration || config.audio?.background) {
-        console.log('Mixing audio...');
+        console.log("Mixing audio...");
       } else {
-        console.log('Finalizing video...');
+        console.log("Finalizing video...");
       }
     }
-    
+
     const finalPath = await processVideoWithAudio(
       tempVideoPath,
       outputPath,
       config.audio,
-      configPath
+      configPath,
     );
-    
+
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-    
+
     console.log(`✓ Video created (${duration}s) → ${finalPath}`);
-    
+
     return finalPath;
   } catch (error) {
     // Clean up on error

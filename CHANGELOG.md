@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - **Built-in Presets**: Simplified configuration with preset shortcuts for cursor, motion, typing, and timing
   - Cursor presets: `'dot'`, `'arrow'`, `'none'`
   - Motion presets: `'smooth'`, `'snappy'`, `'instant'`
@@ -23,11 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Output Format**: `outputFormat` lets you choose `webm` or `mp4` (audio requires `mp4`)
 
 ### Changed
+
 - **`demo-reel` (no args)**: Now runs all `*.demo.ts` files instead of requiring `--all` flag
 - **Simplified CLI**: Removed default config file concept; scenarios are always `*.demo.ts` files
 - **Type Exports**: Added `DemoReelConfigInput` type for autocomplete with preset strings
 
 ### Technical
+
 - New `presets.ts` module with preset definitions
 - Restructured schema to separate input types (for autocomplete) from output types (after transform)
 - `defineConfig()` accepts preset strings and transforms them at parse time
@@ -36,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.3] - 2026-03-21
 
 ### Added
+
 - **TypeScript Go Port (tsgo)**: Now using Microsoft's native TypeScript compiler
   - 3x faster builds (0.64s vs 1.86s)
   - Native Go implementation of TypeScript compiler
@@ -52,12 +56,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Comprehensive test suite (37 tests)
 
 ### Changed
+
 - **Breaking**: Old auth config format deprecated (`persistCookies`, `cookieFile`, `loginUrl`, `successUrl`)
 - Sessions now stored in structured JSON format in `.demo-reel-sessions/` directory
 - Better session isolation with named sessions per demo configuration
 - Added vitest testing framework
 
 ### Fixed
+
 - Session validation properly waits for success indicator element with `waitFor()` and 5 second timeout
 - Fixed strict mode violation error when multiple elements match success indicator selector (uses `.first()`)
 - Changed page load from `domcontentloaded` to `networkidle` for better reliability
@@ -66,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.2-beta.2] - 2026-03-21
 
 ### Fixed
+
 - Fixed strict mode violation error when multiple elements match success indicator selector
   - Use `.first()` to handle multiple matching elements
   - Added verbose logging to help debug validation issues
@@ -73,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.2-beta.1] - 2026-03-21
 
 ### Fixed
+
 - Session validation now properly waits for success indicator element
   - Changed from `isVisible()` (instant check) to `waitFor()` with 5 second timeout
   - Changed page load from `domcontentloaded` to `networkidle` for better reliability
@@ -80,6 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.2-beta.0] - 2026-03-21
 
 ### Added
+
 - **Session Persistence**: Intelligent authentication with session capture and restoration
   - New `auth` configuration with `loginSteps`, `validate`, `storage`, and `behavior` options
   - Automatic session validation before running demos
@@ -90,11 +99,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Clear invalid sessions automatically
 
 ### Changed
+
 - **Breaking**: Old auth config format deprecated (`persistCookies`, `cookieFile`, `loginUrl`, `successUrl`)
 - Sessions now stored in structured JSON format in `.demo-reel-sessions/` directory
 - Better session isolation with named sessions per demo configuration
 
 ### Technical
+
 - New `auth.ts` module for session management
 - Updated video handler with integrated auth flow
 - New types exported: `StorageType`, `AuthStorageConfig`, `AuthValidateConfig`, `AuthBehaviorConfig`
@@ -102,11 +113,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.1-beta.1] - 2024-03-19
 
 ### Fixed
+
 - Audio mixing now outputs MP4 format instead of WebM (WebM doesn't support AAC audio codec)
 
 ## [0.1.1-beta.0] - 2024-03-19
 
 ### Added
+
 - **Audio Support**: Add narration and background music to demo videos
   - Support for MP3 audio files
   - Mix narration with background music
@@ -117,6 +130,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Video continues playing even if audio ends first
 
 ### Technical
+
 - Added `ffmpeg-static` as a required dependency
 - New `audio-processor.ts` module for FFmpeg operations
 - Updated video handler to support audio mixing
@@ -125,21 +139,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2024-03-19
 
 ### Added
+
 - Initial release of demo-reel
 - CLI tool for creating demo videos from web apps
 - `defineConfig()` API for TypeScript-first configuration
-- Support for multiple scenario files (*.demo.ts)
+- Support for multiple scenario files (\*.demo.ts)
 - Video recording via Playwright
 - Human-like cursor movement with Bezier curves
 - Natural typing with variable delays
 - Custom cursor overlay (SVG or dot style)
 - Configurable viewport and video size
-- Config discovery: demo-reel.config.ts, *.demo.ts, --all flag
+- Config discovery: demo-reel.config.ts, \*.demo.ts, --all flag
 - CI/CD ready with proper exit codes
 - Dry-run mode for config validation
 - Published to npm
 
 ### Features
+
 - 12 step types: goto, click, hover, type, press, scroll, select, check, upload, drag, wait, waitFor
 - 4 selector strategies: testId, id, class, href
 - Configurable motion, typing, and timing settings

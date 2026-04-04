@@ -1,13 +1,26 @@
 {
   "name": "demo-reel",
   "version": "0.1.3",
-  "type": "module",
   "description": "Create demo videos from web apps using Playwright",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "keywords": [
+    "automation",
+    "cli",
+    "demo",
+    "playwright",
+    "video"
+  ],
+  "license": "MIT",
+  "author": "",
   "bin": {
     "demo-reel": "dist/cli.js"
   },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -26,21 +39,11 @@
     "format": "oxfmt . --write",
     "prepublishOnly": "pnpm run build && pnpm test"
   },
-  "files": [
-    "dist",
-    "templates"
-  ],
-  "keywords": [
-    "demo",
-    "video",
-    "playwright",
-    "automation",
-    "cli"
-  ],
-  "author": "",
-  "license": "MIT",
-  "peerDependencies": {
-    "playwright": "^1.58.0"
+  "dependencies": {
+    "demo-reel": "link:../../.local/share/pnpm/global/5/node_modules/demo-reel",
+    "ffmpeg-static": "^5.2.0",
+    "glob": "^13.0.6",
+    "zod": "^3.22.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -51,11 +54,8 @@
     "typescript": "^5.0.0",
     "vitest": "^4.1.0"
   },
-  "dependencies": {
-    "demo-reel": "link:../../.local/share/pnpm/global/5/node_modules/demo-reel",
-    "ffmpeg-static": "^5.2.0",
-    "glob": "^13.0.6",
-    "zod": "^3.22.0"
+  "peerDependencies": {
+    "playwright": "^1.58.0"
   },
   "engines": {
     "node": ">=18.0.0"

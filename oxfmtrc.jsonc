@@ -27,5 +27,5 @@
   "escapeQuotes": "always",
 
   // Whether to ignore formatter directives in comments
-  "ignoreDirectives": false
+  "ignoreDirectives": false,
 }

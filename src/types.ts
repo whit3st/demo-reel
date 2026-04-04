@@ -20,4 +20,4 @@ export type {
   MotionPresetOrConfig,
   TypingPresetOrConfig,
   TimingPresetOrConfig,
-} from './schemas.js';
+} from "./schemas.js";

@@ -1,10 +1,5 @@
 import { z } from "zod";
-import {
-  cursorPresets,
-  motionPresets,
-  typingPresets,
-  timingPresets,
-} from "./presets.js";
+import { cursorPresets, motionPresets, typingPresets, timingPresets } from "./presets.js";
 
 export const sizeSchema = z.object({
   width: z.number().int().positive().describe("Width in pixels"),
@@ -40,11 +35,7 @@ export const cursorBaseSchema = z.object({
     })
     .describe("Initial cursor position on page"),
   persistPosition: z.boolean().describe("Keep cursor position between steps"),
-  storageKey: z
-    .string()
-    .min(1)
-    .optional()
-    .describe("Storage key for cursor position"),
+  storageKey: z.string().min(1).optional().describe("Storage key for cursor position"),
 });
 
 export const cursorDotSchema = z.object({
@@ -76,43 +67,16 @@ export const cursorSchema = cursorBaseSchema.and(
 
 export const motionSchema = z
   .object({
-    moveDurationMs: z
-      .number()
-      .int()
-      .positive()
-      .describe("Total duration of cursor movement in ms"),
-    moveStepsMin: z
-      .number()
-      .int()
-      .positive()
-      .describe("Minimum steps for cursor movement"),
-    stepsPerPx: z
-      .number()
-      .positive()
-      .describe("Steps per pixel (higher = smoother but slower)"),
-    clickDelayMs: z
-      .number()
-      .int()
-      .nonnegative()
-      .describe("Delay before/after click in ms"),
+    moveDurationMs: z.number().int().positive().describe("Total duration of cursor movement in ms"),
+    moveStepsMin: z.number().int().positive().describe("Minimum steps for cursor movement"),
+    stepsPerPx: z.number().positive().describe("Steps per pixel (higher = smoother but slower)"),
+    clickDelayMs: z.number().int().nonnegative().describe("Delay before/after click in ms"),
     curve: z
       .object({
-        offsetRatio: z
-          .number()
-          .min(0)
-          .max(1)
-          .describe("Random offset ratio for natural movement"),
-        offsetMin: z
-          .number()
-          .min(0)
-          .describe("Minimum random offset in pixels"),
-        offsetMax: z
-          .number()
-          .min(0)
-          .describe("Maximum random offset in pixels"),
-        easing: z
-          .enum(["easeInOutCubic"])
-          .describe("Easing function for cursor movement"),
+        offsetRatio: z.number().min(0).max(1).describe("Random offset ratio for natural movement"),
+        offsetMin: z.number().min(0).describe("Minimum random offset in pixels"),
+        offsetMax: z.number().min(0).describe("Maximum random offset in pixels"),
+        easing: z.enum(["easeInOutCubic"]).describe("Easing function for cursor movement"),
       })
       .describe("Bezier curve settings for natural cursor path"),
   })
@@ -121,39 +85,15 @@ export const motionSchema = z
   });
 
 export const timingSchema = z.object({
-  afterGotoDelayMs: z
-    .number()
-    .int()
-    .min(0)
-    .describe("Wait time after navigation in ms"),
-  endDelayMs: z
-    .number()
-    .int()
-    .min(0)
-    .describe("Wait time at end of demo in ms"),
+  afterGotoDelayMs: z.number().int().min(0).describe("Wait time after navigation in ms"),
+  endDelayMs: z.number().int().min(0).describe("Wait time at end of demo in ms"),
 });
 
 export const typingSchema = z.object({
-  baseDelayMs: z
-    .number()
-    .int()
-    .min(0)
-    .describe("Base delay between keystrokes in ms"),
-  spaceDelayMs: z
-    .number()
-    .int()
-    .min(0)
-    .describe("Additional delay for space key in ms"),
-  punctuationDelayMs: z
-    .number()
-    .int()
-    .min(0)
-    .describe("Additional delay for punctuation in ms"),
-  enterDelayMs: z
-    .number()
-    .int()
-    .min(0)
-    .describe("Additional delay for enter key in ms"),
+  baseDelayMs: z.number().int().min(0).describe("Base delay between keystrokes in ms"),
+  spaceDelayMs: z.number().int().min(0).describe("Additional delay for space key in ms"),
+  punctuationDelayMs: z.number().int().min(0).describe("Additional delay for punctuation in ms"),
+  enterDelayMs: z.number().int().min(0).describe("Additional delay for enter key in ms"),
 });
 
 export const selectorStrategySchema = z
@@ -163,10 +103,7 @@ export const selectorStrategySchema = z
 export const selectorSchema = z
   .object({
     strategy: selectorStrategySchema.describe("How to locate the element"),
-    value: z
-      .string()
-      .min(1)
-      .describe("Selector value (without # or . for id/class)"),
+    value: z.string().min(1).describe("Selector value (without # or . for id/class)"),
     index: z
       .number()
       .int()
@@ -188,18 +125,8 @@ export const selectorSchema = z
   });
 
 export const stepDelaySchema = z.object({
-  delayBeforeMs: z
-    .number()
-    .int()
-    .min(0)
-    .optional()
-    .describe("Delay before step executes in ms"),
-  delayAfterMs: z
-    .number()
-    .int()
-    .min(0)
-    .optional()
-    .describe("Delay after step completes in ms"),
+  delayBeforeMs: z.number().int().min(0).optional().describe("Delay before step executes in ms"),
+  delayAfterMs: z.number().int().min(0).optional().describe("Delay after step completes in ms"),
 });
 
 export const gotoStepSchema = z.object({
@@ -225,16 +152,8 @@ export const typeStepSchema = stepDelaySchema.extend({
   action: z.literal("type").describe("Type text into element"),
   selector: selectorSchema.describe("Input element to type into"),
   text: z.string().describe("Text to type"),
-  delayMs: z
-    .number()
-    .int()
-    .min(0)
-    .optional()
-    .describe("Delay between keystrokes in ms"),
-  clear: z
-    .boolean()
-    .optional()
-    .describe("Clear existing value before typing"),
+  delayMs: z.number().int().min(0).optional().describe("Delay between keystrokes in ms"),
+  clear: z.boolean().optional().describe("Clear existing value before typing"),
 });
 
 export const pressStepSchema = stepDelaySchema.extend({
@@ -291,30 +210,18 @@ export const waitForSelectorStepSchema = z.object({
     .enum(["attached", "detached", "visible", "hidden"])
     .optional()
     .describe("Expected element state"),
-  timeoutMs: z
-    .number()
-    .int()
-    .min(0)
-    .optional()
-    .describe("Timeout in ms (0 = no timeout)"),
+  timeoutMs: z.number().int().min(0).optional().describe("Timeout in ms (0 = no timeout)"),
 });
 
 export const waitForURLStepSchema = z.object({
   action: z.literal("waitFor").describe("Wait for URL"),
   kind: z.literal("url").describe("Wait for URL pattern"),
-  url: z
-    .union([z.string().url(), z.instanceof(RegExp)])
-    .describe("URL pattern or regex to match"),
+  url: z.union([z.string().url(), z.instanceof(RegExp)]).describe("URL pattern or regex to match"),
   waitUntil: z
     .enum(["load", "domcontentloaded", "networkidle"])
     .optional()
     .describe("When to consider navigation complete"),
-  timeoutMs: z
-    .number()
-    .int()
-    .min(0)
-    .optional()
-    .describe("Timeout in ms (0 = no timeout)"),
+  timeoutMs: z.number().int().min(0).optional().describe("Timeout in ms (0 = no timeout)"),
 });
 
 export const waitForLoadStateStepSchema = z.object({
@@ -324,40 +231,21 @@ export const waitForLoadStateStepSchema = z.object({
     .enum(["load", "domcontentloaded", "networkidle"])
     .optional()
     .describe("Load state to wait for"),
-  timeoutMs: z
-    .number()
-    .int()
-    .min(0)
-    .optional()
-    .describe("Timeout in ms (0 = no timeout)"),
+  timeoutMs: z.number().int().min(0).optional().describe("Timeout in ms (0 = no timeout)"),
 });
 
 export const waitForRequestStepSchema = z.object({
   action: z.literal("waitFor").describe("Wait for network request"),
   kind: z.literal("request").describe("Wait for request"),
-  url: z
-    .union([z.string().min(1), z.instanceof(RegExp)])
-    .describe("URL pattern or regex to match"),
-  timeoutMs: z
-    .number()
-    .int()
-    .min(0)
-    .optional()
-    .describe("Timeout in ms (0 = no timeout)"),
+  url: z.union([z.string().min(1), z.instanceof(RegExp)]).describe("URL pattern or regex to match"),
+  timeoutMs: z.number().int().min(0).optional().describe("Timeout in ms (0 = no timeout)"),
 });
 
 export const waitForResponseStepSchema = z.object({
   action: z.literal("waitFor").describe("Wait for network response"),
   kind: z.literal("response").describe("Wait for response"),
-  url: z
-    .union([z.string().min(1), z.instanceof(RegExp)])
-    .describe("URL pattern or regex to match"),
-  timeoutMs: z
-    .number()
-    .int()
-    .min(0)
-    .optional()
-    .describe("Timeout in ms (0 = no timeout)"),
+  url: z.union([z.string().min(1), z.instanceof(RegExp)]).describe("URL pattern or regex to match"),
+  timeoutMs: z.number().int().min(0).optional().describe("Timeout in ms (0 = no timeout)"),
 });
 
 export const waitForFunctionStepSchema = z.object({
@@ -369,12 +257,7 @@ export const waitForFunctionStepSchema = z.object({
     .union([z.literal("raf"), z.number().int().positive()])
     .optional()
     .describe("Polling interval (raf = animation frames)"),
-  timeoutMs: z
-    .number()
-    .int()
-    .min(0)
-    .optional()
-    .describe("Timeout in ms (0 = no timeout)"),
+  timeoutMs: z.number().int().min(0).optional().describe("Timeout in ms (0 = no timeout)"),
 });
 
 export const waitForStepSchema = z.discriminatedUnion("kind", [
@@ -417,26 +300,12 @@ export const videoConfigSchema = z.object({
   size: sizeSchema.describe("Video dimensions"),
 });
 
-export const outputFormatSchema = z
-  .enum(["webm", "mp4"])
-  .describe("Output file format");
+export const outputFormatSchema = z.enum(["webm", "mp4"]).describe("Output file format");
 
 export const audioConfigSchema = z.object({
-  narration: z
-    .string()
-    .min(1)
-    .optional()
-    .describe("Path to narration MP3 file"),
-  narrationDelay: z
-    .number()
-    .min(0)
-    .optional()
-    .describe("Delay before narration starts in ms"),
-  background: z
-    .string()
-    .min(1)
-    .optional()
-    .describe("Path to background music MP3 file"),
+  narration: z.string().min(1).optional().describe("Path to narration MP3 file"),
+  narrationDelay: z.number().min(0).optional().describe("Delay before narration starts in ms"),
+  background: z.string().min(1).optional().describe("Path to background music MP3 file"),
   backgroundVolume: z
     .number()
     .min(0)
@@ -452,146 +321,88 @@ export const storageTypeSchema = z
 export const authStorageConfigSchema = z.object({
   name: z.string().min(1).describe("Session identifier name"),
   types: z.array(storageTypeSchema).min(1).describe("Storage types to persist"),
-  file: z
-    .string()
-    .min(1)
-    .optional()
-    .describe("Custom file path for session storage"),
+  file: z.string().min(1).optional().describe("Custom file path for session storage"),
 });
 
 export const authValidateConfigSchema = z.object({
   protectedUrl: z.string().url().describe("URL to test session validity"),
-  successIndicator: selectorSchema.describe(
-    "Element that appears when session is valid",
-  ),
+  successIndicator: selectorSchema.describe("Element that appears when session is valid"),
 });
 
 export const authBehaviorConfigSchema = z.object({
   autoReauth: z.boolean().optional().describe("Automatically re-login on 401"),
-  forceReauth: z
-    .boolean()
-    .optional()
-    .describe("Force fresh login, ignore saved session"),
-  clearInvalid: z
-    .boolean()
-    .optional()
-    .describe("Delete saved session when invalid"),
+  forceReauth: z.boolean().optional().describe("Force fresh login, ignore saved session"),
+  clearInvalid: z.boolean().optional().describe("Delete saved session when invalid"),
 });
 
 export const authConfigSchema = z.object({
   loginSteps: z.array(stepSchema).min(1).describe("Steps to perform login"),
   validate: authValidateConfigSchema.describe("Session validation settings"),
   storage: authStorageConfigSchema.describe("Session persistence settings"),
-  behavior: authBehaviorConfigSchema
-    .optional()
-    .describe("Authentication behavior options"),
+  behavior: authBehaviorConfigSchema.optional().describe("Authentication behavior options"),
 });
 
-export const cursorPresetOrConfigSchema = z.union([
-  cursorPresetSchema,
-  cursorSchema,
-]);
-export const motionPresetOrConfigSchema = z.union([
-  motionPresetSchema,
-  motionSchema,
-]);
-export const typingPresetOrConfigSchema = z.union([
-  typingPresetSchema,
-  typingSchema,
-]);
-export const timingPresetOrConfigSchema = z.union([
-  timingPresetSchema,
-  timingSchema,
-]);
+export const cursorPresetOrConfigSchema = z.union([cursorPresetSchema, cursorSchema]);
+export const motionPresetOrConfigSchema = z.union([motionPresetSchema, motionSchema]);
+export const typingPresetOrConfigSchema = z.union([typingPresetSchema, typingSchema]);
+export const timingPresetOrConfigSchema = z.union([timingPresetSchema, timingSchema]);
 
-function resolveCursor(
-  val: z.infer<typeof cursorPresetOrConfigSchema>,
-): CursorConfig {
-  return typeof val === "string"
-    ? cursorPresets[val as keyof typeof cursorPresets]
-    : val;
+function resolveCursor(val: z.infer<typeof cursorPresetOrConfigSchema>): CursorConfig {
+  return typeof val === "string" ? cursorPresets[val as keyof typeof cursorPresets] : val;
 }
-function resolveMotion(
-  val: z.infer<typeof motionPresetOrConfigSchema>,
-): MotionConfig {
-  return typeof val === "string"
-    ? motionPresets[val as keyof typeof motionPresets]
-    : val;
+function resolveMotion(val: z.infer<typeof motionPresetOrConfigSchema>): MotionConfig {
+  return typeof val === "string" ? motionPresets[val as keyof typeof motionPresets] : val;
 }
-function resolveTyping(
-  val: z.infer<typeof typingPresetOrConfigSchema>,
-): TypingConfig {
-  return typeof val === "string"
-    ? typingPresets[val as keyof typeof typingPresets]
-    : val;
+function resolveTyping(val: z.infer<typeof typingPresetOrConfigSchema>): TypingConfig {
+  return typeof val === "string" ? typingPresets[val as keyof typeof typingPresets] : val;
 }
-function resolveTiming(
-  val: z.infer<typeof timingPresetOrConfigSchema>,
-): TimingConfig {
-  return typeof val === "string"
-    ? timingPresets[val as keyof typeof timingPresets]
-    : val;
+function resolveTiming(val: z.infer<typeof timingPresetOrConfigSchema>): TimingConfig {
+  return typeof val === "string" ? timingPresets[val as keyof typeof timingPresets] : val;
 }
 
 export const demoReelConfigInputSchema = z
   .object({
-  viewport: sizeSchema.describe("Browser viewport dimensions"),
-  video: videoConfigSchema.describe("Video recording settings"),
-  cursor: cursorPresetOrConfigSchema.describe(
-    "Cursor preset name or custom cursor configuration",
-  ),
-  motion: motionPresetOrConfigSchema.describe(
-    "Motion preset name or custom motion configuration",
-  ),
-  typing: typingPresetOrConfigSchema.describe(
-    "Typing preset name or custom typing configuration",
-  ),
-  timing: timingPresetOrConfigSchema.describe(
-    "Timing preset name or custom timing configuration",
-  ),
-  steps: z.array(stepSchema).min(1).describe("Demo scenario steps to execute"),
-  preSteps: z
-    .array(stepSchema)
-    .optional()
-    .describe("Steps to run before recording (e.g., login)"),
-  name: z
-    .string()
-    .min(1)
-    .optional()
-    .describe("Output file name without extension"),
-  outputDir: z
-    .string()
-    .min(1)
-    .optional()
-    .describe("Output directory for video files"),
-  outputPath: z
-    .string()
-    .min(1)
-    .optional()
-    .describe("Full output file path (overrides name/outputDir)"),
-  outputFormat: outputFormatSchema
-    .optional()
-    .describe("Output file format (default: webm, or mp4 when audio is used)"),
-  concurrency: z
-    .number()
-    .int()
-    .min(1)
-    .optional()
-    .describe("Number of videos to generate concurrently"),
-  audio: audioConfigSchema.optional().describe("Audio/narration settings"),
-  timestamp: z
-    .boolean()
-    .optional()
-    .describe("Add timestamp to output filename"),
-  auth: authConfigSchema
-    .optional()
-    .describe("Authentication/session persistence settings"),
+    viewport: sizeSchema.describe("Browser viewport dimensions"),
+    video: videoConfigSchema.describe("Video recording settings"),
+    cursor: cursorPresetOrConfigSchema.describe(
+      "Cursor preset name or custom cursor configuration",
+    ),
+    motion: motionPresetOrConfigSchema.describe(
+      "Motion preset name or custom motion configuration",
+    ),
+    typing: typingPresetOrConfigSchema.describe(
+      "Typing preset name or custom typing configuration",
+    ),
+    timing: timingPresetOrConfigSchema.describe(
+      "Timing preset name or custom timing configuration",
+    ),
+    steps: z.array(stepSchema).min(1).describe("Demo scenario steps to execute"),
+    preSteps: z
+      .array(stepSchema)
+      .optional()
+      .describe("Steps to run before recording (e.g., login)"),
+    name: z.string().min(1).optional().describe("Output file name without extension"),
+    outputDir: z.string().min(1).optional().describe("Output directory for video files"),
+    outputPath: z
+      .string()
+      .min(1)
+      .optional()
+      .describe("Full output file path (overrides name/outputDir)"),
+    outputFormat: outputFormatSchema
+      .optional()
+      .describe("Output file format (default: webm, or mp4 when audio is used)"),
+    concurrency: z
+      .number()
+      .int()
+      .min(1)
+      .optional()
+      .describe("Number of videos to generate concurrently"),
+    audio: audioConfigSchema.optional().describe("Audio/narration settings"),
+    timestamp: z.boolean().optional().describe("Add timestamp to output filename"),
+    auth: authConfigSchema.optional().describe("Authentication/session persistence settings"),
   })
   .superRefine((value, ctx) => {
-    if (
-      value.outputFormat === "webm" &&
-      (value.audio?.narration || value.audio?.background)
-    ) {
+    if (value.outputFormat === "webm" && (value.audio?.narration || value.audio?.background)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Audio output requires outputFormat to be mp4",
@@ -600,15 +411,13 @@ export const demoReelConfigInputSchema = z
     }
   });
 
-export const demoReelConfigSchema = demoReelConfigInputSchema.transform(
-  (val) => ({
-    ...val,
-    cursor: resolveCursor(val.cursor),
-    motion: resolveMotion(val.motion),
-    typing: resolveTyping(val.typing),
-    timing: resolveTiming(val.timing),
-  }),
-);
+export const demoReelConfigSchema = demoReelConfigInputSchema.transform((val) => ({
+  ...val,
+  cursor: resolveCursor(val.cursor),
+  motion: resolveMotion(val.motion),
+  typing: resolveTyping(val.typing),
+  timing: resolveTiming(val.timing),
+}));
 
 export type CursorPresetOrConfig = z.infer<typeof cursorPresetOrConfigSchema>;
 export type MotionPresetOrConfig = z.infer<typeof motionPresetOrConfigSchema>;

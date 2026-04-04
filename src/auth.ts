@@ -1,11 +1,7 @@
 import { mkdir, readFile, writeFile, unlink } from "fs/promises";
 import { join } from "path";
 import type { Page, BrowserContext } from "playwright";
-import type {
-  AuthStorageConfig,
-  AuthValidateConfig,
-  StorageType,
-} from "./schemas.js";
+import type { AuthStorageConfig, AuthValidateConfig, StorageType } from "./schemas.js";
 
 // Session data structure
 export interface SessionData {
@@ -26,10 +22,7 @@ export interface SessionData {
 
 const DEFAULT_SESSIONS_DIR = ".demo-reel-sessions";
 
-function getSessionFilePath(
-  sessionName: string,
-  cwd: string = process.cwd(),
-): string {
+function getSessionFilePath(sessionName: string, cwd: string = process.cwd()): string {
   return join(cwd, DEFAULT_SESSIONS_DIR, `${sessionName}.json`);
 }
 
@@ -83,9 +76,7 @@ export async function clearSession(
 /**
  * Capture cookies from browser context
  */
-export async function captureCookies(
-  context: BrowserContext,
-): Promise<SessionData["cookies"]> {
+export async function captureCookies(context: BrowserContext): Promise<SessionData["cookies"]> {
   const cookies = await context.cookies();
   return cookies.map((cookie) => ({
     name: cookie.name,
@@ -132,9 +123,7 @@ export async function captureLocalStorage(
     }
   }
 
-  return Object.keys(localStorageData).length > 0
-    ? localStorageData
-    : undefined;
+  return Object.keys(localStorageData).length > 0 ? localStorageData : undefined;
 }
 
 /**
@@ -225,9 +214,7 @@ export async function validateSession(
     }
 
     if (locator) {
-      locator = selector.index !== undefined
-        ? locator.nth(selector.index)
-        : locator.first();
+      locator = selector.index !== undefined ? locator.nth(selector.index) : locator.first();
     }
 
     if (verbose) {
@@ -272,10 +259,7 @@ export async function validateSession(
 /**
  * Check if a specific storage type is configured
  */
-export function hasStorageType(
-  storageConfig: AuthStorageConfig,
-  type: StorageType,
-): boolean {
+export function hasStorageType(storageConfig: AuthStorageConfig, type: StorageType): boolean {
   return storageConfig.types.includes(type);
 }
 
@@ -307,10 +291,7 @@ export async function restoreSession(
   }
 
   // Restore localStorage if configured and data exists
-  if (
-    hasStorageType(storageConfig, "localStorage") &&
-    sessionData.localStorage
-  ) {
+  if (hasStorageType(storageConfig, "localStorage") && sessionData.localStorage) {
     await restoreLocalStorage(page, sessionData.localStorage);
   }
 }
@@ -387,10 +368,7 @@ export async function saveCookies(
   }
 }
 
-export async function isAuthenticated(
-  page: Page,
-  loginUrl?: string,
-): Promise<boolean> {
+export async function isAuthenticated(page: Page, loginUrl?: string): Promise<boolean> {
   if (!loginUrl) {
     const url = page.url();
     return !url.includes("/login") && !url.includes("/signin");

@@ -7,6 +7,7 @@ Create beautiful demo videos from web apps using Playwright. Perfect for showcas
 Demo Reel is a developer-first tool for creating professional demo videos from web applications. Unlike manual screen recording, Demo Reel uses Playwright automation to create pixel-perfect, reproducible demos.
 
 **Key Benefits:**
+
 - **Code as Config**: Demo configurations are TypeScript files
 - **Version Controlled**: Track demo changes in git
 - **CI/CD Ready**: Generate videos in automated pipelines
@@ -57,7 +58,7 @@ demo-reel --verbose                   # Show detailed output
 Demo scenarios are `.demo.ts` files containing your configuration:
 
 ```typescript
-import { defineConfig } from 'demo-reel';
+import { defineConfig } from "demo-reel";
 
 export default defineConfig({
   viewport: { width: 1920, height: 1080 },
@@ -65,11 +66,11 @@ export default defineConfig({
     enabled: true,
     size: { width: 1920, height: 1080 },
   },
-  name: 'my-demo',
-  outputFormat: 'webm', // 'webm' | 'mp4'
+  name: "my-demo",
+  outputFormat: "webm", // 'webm' | 'mp4'
   steps: [
-    { action: 'goto', url: 'https://example.com' },
-    { action: 'wait', ms: 2000 },
+    { action: "goto", url: "https://example.com" },
+    { action: "wait", ms: 2000 },
   ],
 });
 ```
@@ -80,10 +81,10 @@ Demo Reel includes presets for cursor, motion, typing, and timing. Use string sh
 
 ```typescript
 export default defineConfig({
-  cursor: 'dot',      // 'dot' | 'arrow' | 'none'
-  motion: 'smooth',   // 'smooth' | 'snappy' | 'instant'
-  typing: 'humanlike', // 'humanlike' | 'fast' | 'instant'
-  timing: 'normal',  // 'normal' | 'fast' | 'instant'
+  cursor: "dot", // 'dot' | 'arrow' | 'none'
+  motion: "smooth", // 'smooth' | 'snappy' | 'instant'
+  typing: "humanlike", // 'humanlike' | 'fast' | 'instant'
+  timing: "normal", // 'normal' | 'fast' | 'instant'
   // ...
 });
 ```
@@ -92,7 +93,7 @@ Or customize individual settings:
 
 ```typescript
 export default defineConfig({
-  cursor: { type: 'dot', size: 16, borderWidth: 2 },
+  cursor: { type: "dot", size: 16, borderWidth: 2 },
   motion: { moveDurationMs: 400, clickDelayMs: 50 },
   // ...
 });
@@ -100,35 +101,35 @@ export default defineConfig({
 
 #### Cursor Presets
 
-| Preset | Description |
-|--------|-------------|
-| `dot` | Colored dot cursor (12px, white border) |
-| `arrow` | Classic SVG arrow cursor |
-| `none` | No cursor overlay |
+| Preset  | Description                             |
+| ------- | --------------------------------------- |
+| `dot`   | Colored dot cursor (12px, white border) |
+| `arrow` | Classic SVG arrow cursor                |
+| `none`  | No cursor overlay                       |
 
 #### Motion Presets
 
-| Preset | Description |
-|--------|-------------|
-| `smooth` | Natural curved movement (600ms, 25+ steps) |
-| `snappy` | Faster direct movement (300ms, 15 steps) |
-| `instant` | Teleporting (no animation) |
+| Preset    | Description                                |
+| --------- | ------------------------------------------ |
+| `smooth`  | Natural curved movement (600ms, 25+ steps) |
+| `snappy`  | Faster direct movement (300ms, 15 steps)   |
+| `instant` | Teleporting (no animation)                 |
 
 #### Typing Presets
 
-| Preset | Description |
-|--------|-------------|
+| Preset      | Description                           |
+| ----------- | ------------------------------------- |
 | `humanlike` | Realistic variable delays (80ms base) |
-| `fast` | Quick natural typing (40ms base) |
-| `instant` | No delay |
+| `fast`      | Quick natural typing (40ms base)      |
+| `instant`   | No delay                              |
 
 #### Timing Presets
 
-| Preset | Description |
-|--------|-------------|
-| `normal` | Balanced delays (2000ms goto/ end) |
-| `fast` | Reduced waits (1000ms) |
-| `instant` | Minimal delays (0ms) |
+| Preset    | Description                        |
+| --------- | ---------------------------------- |
+| `normal`  | Balanced delays (2000ms goto/ end) |
+| `fast`    | Reduced waits (1000ms)             |
+| `instant` | Minimal delays (0ms)               |
 
 ### Available Steps
 

@@ -1,22 +1,22 @@
-import type { CursorConfig, MotionConfig, TypingConfig, TimingConfig } from './schemas.js';
+import type { CursorConfig, MotionConfig, TypingConfig, TimingConfig } from "./schemas.js";
 
-type CursorPresetName = 'dot' | 'arrow' | 'none';
-type MotionPresetName = 'smooth' | 'snappy' | 'instant';
-type TypingPresetName = 'humanlike' | 'fast' | 'instant';
-type TimingPresetName = 'normal' | 'fast' | 'instant';
+type CursorPresetName = "dot" | "arrow" | "none";
+type MotionPresetName = "smooth" | "snappy" | "instant";
+type TypingPresetName = "humanlike" | "fast" | "instant";
+type TimingPresetName = "normal" | "fast" | "instant";
 
 export const cursorPresets: Record<CursorPresetName, CursorConfig> = {
   dot: {
-    type: 'dot',
+    type: "dot",
     size: 12,
     borderWidth: 2,
-    borderColor: '#ffffff',
-    shadowColor: '#000000',
+    borderColor: "#ffffff",
+    shadowColor: "#000000",
     start: { x: 0, y: 0 },
     persistPosition: true,
   },
   arrow: {
-    type: 'svg',
+    type: "svg",
     start: { x: 0, y: 0 },
     persistPosition: true,
     svg: {
@@ -29,11 +29,11 @@ export const cursorPresets: Record<CursorPresetName, CursorConfig> = {
     },
   },
   none: {
-    type: 'dot',
+    type: "dot",
     size: 0,
     borderWidth: 0,
-    borderColor: 'transparent',
-    shadowColor: 'transparent',
+    borderColor: "transparent",
+    shadowColor: "transparent",
     start: { x: 0, y: 0 },
     persistPosition: false,
   },
@@ -49,7 +49,7 @@ export const motionPresets: Record<MotionPresetName, MotionConfig> = {
       offsetRatio: 0.1,
       offsetMin: 4,
       offsetMax: 80,
-      easing: 'easeInOutCubic',
+      easing: "easeInOutCubic",
     },
   },
   snappy: {
@@ -61,7 +61,7 @@ export const motionPresets: Record<MotionPresetName, MotionConfig> = {
       offsetRatio: 0.05,
       offsetMin: 2,
       offsetMax: 30,
-      easing: 'easeInOutCubic',
+      easing: "easeInOutCubic",
     },
   },
   instant: {
@@ -73,7 +73,7 @@ export const motionPresets: Record<MotionPresetName, MotionConfig> = {
       offsetRatio: 0,
       offsetMin: 0,
       offsetMax: 0,
-      easing: 'easeInOutCubic',
+      easing: "easeInOutCubic",
     },
   },
 };

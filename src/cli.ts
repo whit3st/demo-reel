@@ -1,9 +1,5 @@
 #!/usr/bin/env node
-import {
-  loadConfig,
-  loadScenario,
-  findScenarioFiles,
-} from "./config-loader.js";
+import { loadConfig, loadScenario, findScenarioFiles } from "./config-loader.js";
 import { runVideoScenario, setOnBrowserCreated } from "./video-handler.js";
 import { writeFile } from "fs/promises";
 import { join } from "path";
@@ -165,12 +161,7 @@ async function main(): Promise<void> {
       for (const file of files) {
         console.log(`\n▶ ${file}`);
         const loaded = await loadConfig(file, options.outputDir);
-        await runVideoScenario(
-          loaded.config,
-          loaded.outputPath,
-          loaded.configPath,
-          options,
-        );
+        await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
       }
     } else if (scenario) {
       // Run specific scenario
@@ -185,12 +176,7 @@ async function main(): Promise<void> {
       }
 
       const loaded = await loadConfig(configPath, options.outputDir);
-      await runVideoScenario(
-        loaded.config,
-        loaded.outputPath,
-        loaded.configPath,
-        options,
-      );
+      await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
     } else {
       // Run all scenarios
       const files = await findScenarioFiles();
@@ -206,12 +192,7 @@ async function main(): Promise<void> {
       for (const file of files) {
         console.log(`\n▶ ${file}`);
         const loaded = await loadConfig(file, options.outputDir);
-        await runVideoScenario(
-          loaded.config,
-          loaded.outputPath,
-          loaded.configPath,
-          options,
-        );
+        await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
       }
     }
 
@@ -220,9 +201,7 @@ async function main(): Promise<void> {
     if (options.verbose) {
       console.error(error);
     } else {
-      console.error(
-        `Error: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
     }
     process.exit(1);
   }

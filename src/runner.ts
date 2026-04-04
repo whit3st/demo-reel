@@ -67,11 +67,7 @@ const resolveLocator = (page: Page, selector: SelectorConfig): Locator => {
 
 const punctuationCharacters = new Set([".", ",", "!", "?", ":", ";", "-"]);
 
-const getTypingDelay = (
-  character: string,
-  typing: TypingConfig,
-  baseDelay: number,
-) => {
+const getTypingDelay = (character: string, typing: TypingConfig, baseDelay: number) => {
   if (character === "\n") {
     return baseDelay + typing.enterDelayMs;
   }
@@ -235,11 +231,7 @@ const cursorScript = (cursor: CursorConfig) => {
     const update = (x: number, y: number) => {
       const clamped = clampToViewport(x, y);
       cursorEl.style.transform =
-        "translate(" +
-        (clamped.x - offset.x) +
-        "px, " +
-        (clamped.y - offset.y) +
-        "px)";
+        "translate(" + (clamped.x - offset.x) + "px, " + (clamped.y - offset.y) + "px)";
       writeStoredPosition(clamped.x, clamped.y);
     };
 
@@ -270,10 +262,7 @@ const installCursorOverlay = async (page: Page, cursor: CursorConfig) => {
   return resolvedCursor;
 };
 
-const ensureCursorOverlay = async (
-  page: Page,
-  resolvedCursor: CursorConfig & { start: Point },
-) => {
+const ensureCursorOverlay = async (page: Page, resolvedCursor: CursorConfig & { start: Point }) => {
   try {
     const cursorExists = await page.evaluate(() => {
       return document.getElementById("__pw_cursor") !== null;
@@ -286,11 +275,7 @@ const ensureCursorOverlay = async (
   }
 };
 
-const ensureMouseStart = async (
-  page: Page,
-  state: MouseState,
-  start: Point,
-) => {
+const ensureMouseStart = async (page: Page, state: MouseState, start: Point) => {
   if (state.initialized) {
     return;
   }
@@ -320,13 +305,7 @@ const getLocatorCenter = async (locator: Locator) => {
   };
 };
 
-const cubicBezierPoint = (
-  t: number,
-  p0: Point,
-  p1: Point,
-  p2: Point,
-  p3: Point,
-): Point => {
+const cubicBezierPoint = (t: number, p0: Point, p1: Point, p2: Point, p3: Point): Point => {
   const u = 1 - t;
   const tt = t * t;
   const uu = u * u;
@@ -351,11 +330,7 @@ const easingLookup = {
   easeInOutCubic,
 } as const;
 
-const getBezierControlPoints = (
-  start: Point,
-  end: Point,
-  motion: MotionConfig,
-) => {
+const getBezierControlPoints = (start: Point, end: Point, motion: MotionConfig) => {
   const dx = end.x - start.x;
   const dy = end.y - start.y;
   const distance = Math.hypot(dx, dy);
@@ -368,11 +343,8 @@ const getBezierControlPoints = (
   const curveDirection = dominantAxis >= 0 ? 1 : -1;
   const perpendicular = { x: -dy / distance, y: dx / distance };
   const offset =
-    clamp(
-      distance * motion.curve.offsetRatio,
-      motion.curve.offsetMin,
-      motion.curve.offsetMax,
-    ) * curveDirection;
+    clamp(distance * motion.curve.offsetRatio, motion.curve.offsetMin, motion.curve.offsetMax) *
+    curveDirection;
 
   return {
     control1: {
@@ -441,10 +413,7 @@ const humanType = async (
   typing: TypingConfig,
   baseDelayOverride?: number,
 ) => {
-  const baseDelay =
-    typeof baseDelayOverride === "number"
-      ? baseDelayOverride
-      : typing.baseDelayMs;
+  const baseDelay = typeof baseDelayOverride === "number" ? baseDelayOverride : typing.baseDelayMs;
 
   for (const character of Array.from(text)) {
     if (character === "\n") {
@@ -500,10 +469,7 @@ const buildTimeoutOption = (timeoutMs?: number) => {
 
 export const runStepSimple = async (page: Page, step: Step): Promise<void> => {
   if (step.action === "goto") {
-    await page.goto(
-      step.url,
-      step.waitUntil ? { waitUntil: step.waitUntil } : undefined,
-    );
+    await page.goto(step.url, step.waitUntil ? { waitUntil: step.waitUntil } : undefined);
     return;
   }
 
@@ -531,10 +497,7 @@ export const runStepSimple = async (page: Page, step: Step): Promise<void> => {
     }
 
     if (step.kind === "loadState") {
-      await page.waitForLoadState(
-        step.state,
-        buildTimeoutOption(step.timeoutMs),
-      );
+      await page.waitForLoadState(step.state, buildTimeoutOption(step.timeoutMs));
       return;
     }
 
@@ -632,10 +595,7 @@ const runStep = async (
   startDelayApplied: boolean,
 ): Promise<boolean> => {
   if (step.action === "goto") {
-    await page.goto(
-      step.url,
-      step.waitUntil ? { waitUntil: step.waitUntil } : undefined,
-    );
+    await page.goto(step.url, step.waitUntil ? { waitUntil: step.waitUntil } : undefined);
     await ensureCursorOverlay(page, resolvedCursor);
     return applyStartDelayIfNeeded(page, config.timing, startDelayApplied);
   }
@@ -664,10 +624,7 @@ const runStep = async (
     }
 
     if (step.kind === "loadState") {
-      await page.waitForLoadState(
-        step.state,
-        buildTimeoutOption(step.timeoutMs),
-      );
+      await page.waitForLoadState(step.state, buildTimeoutOption(step.timeoutMs));
       await ensureCursorOverlay(page, resolvedCursor);
       return startDelayApplied;
     }
@@ -692,11 +649,7 @@ const runStep = async (
   }
 
   if (step.action === "click") {
-    const delayApplied = await applyStartDelayIfNeeded(
-      page,
-      config.timing,
-      startDelayApplied,
-    );
+    const delayApplied = await applyStartDelayIfNeeded(page, config.timing, startDelayApplied);
 
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
@@ -706,11 +659,7 @@ const runStep = async (
   }
 
   if (step.action === "hover") {
-    const delayApplied = await applyStartDelayIfNeeded(
-      page,
-      config.timing,
-      startDelayApplied,
-    );
+    const delayApplied = await applyStartDelayIfNeeded(page, config.timing, startDelayApplied);
 
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
@@ -720,11 +669,7 @@ const runStep = async (
   }
 
   if (step.action === "type") {
-    const delayApplied = await applyStartDelayIfNeeded(
-      page,
-      config.timing,
-      startDelayApplied,
-    );
+    const delayApplied = await applyStartDelayIfNeeded(page, config.timing, startDelayApplied);
 
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
@@ -738,11 +683,7 @@ const runStep = async (
   }
 
   if (step.action === "press") {
-    const delayApplied = await applyStartDelayIfNeeded(
-      page,
-      config.timing,
-      startDelayApplied,
-    );
+    const delayApplied = await applyStartDelayIfNeeded(page, config.timing, startDelayApplied);
 
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
@@ -754,11 +695,7 @@ const runStep = async (
   }
 
   if (step.action === "scroll") {
-    const delayApplied = await applyStartDelayIfNeeded(
-      page,
-      config.timing,
-      startDelayApplied,
-    );
+    const delayApplied = await applyStartDelayIfNeeded(page, config.timing, startDelayApplied);
 
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
@@ -769,11 +706,7 @@ const runStep = async (
   }
 
   if (step.action === "select") {
-    const delayApplied = await applyStartDelayIfNeeded(
-      page,
-      config.timing,
-      startDelayApplied,
-    );
+    const delayApplied = await applyStartDelayIfNeeded(page, config.timing, startDelayApplied);
 
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
@@ -784,11 +717,7 @@ const runStep = async (
   }
 
   if (step.action === "check") {
-    const delayApplied = await applyStartDelayIfNeeded(
-      page,
-      config.timing,
-      startDelayApplied,
-    );
+    const delayApplied = await applyStartDelayIfNeeded(page, config.timing, startDelayApplied);
 
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
@@ -799,11 +728,7 @@ const runStep = async (
   }
 
   if (step.action === "upload") {
-    const delayApplied = await applyStartDelayIfNeeded(
-      page,
-      config.timing,
-      startDelayApplied,
-    );
+    const delayApplied = await applyStartDelayIfNeeded(page, config.timing, startDelayApplied);
 
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
@@ -814,11 +739,7 @@ const runStep = async (
   }
 
   if (step.action === "drag") {
-    const delayApplied = await applyStartDelayIfNeeded(
-      page,
-      config.timing,
-      startDelayApplied,
-    );
+    const delayApplied = await applyStartDelayIfNeeded(page, config.timing, startDelayApplied);
 
     await applyStepDelay(page, step.delayBeforeMs);
     const source = resolveLocator(page, step.source);
@@ -828,13 +749,7 @@ const runStep = async (
     await page.mouse.down();
 
     const targetPoint = await getLocatorCenter(target);
-    await moveMouseBezier(
-      page,
-      state,
-      targetPoint.x,
-      targetPoint.y,
-      config.motion,
-    );
+    await moveMouseBezier(page, state, targetPoint.x, targetPoint.y, config.motion);
     await page.waitForTimeout(config.motion.clickDelayMs);
     await page.mouse.up();
     await applyStepDelay(page, step.delayAfterMs);
