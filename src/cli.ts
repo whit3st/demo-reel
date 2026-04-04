@@ -1,8 +1,12 @@
 #!/usr/bin/env node
-import { loadConfig, loadScenario, findScenarioFiles } from './config-loader.js';
-import { runVideoScenario, setOnBrowserCreated } from './video-handler.js';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
+import {
+  loadConfig,
+  loadScenario,
+  findScenarioFiles,
+} from "./config-loader.js";
+import { runVideoScenario, setOnBrowserCreated } from "./video-handler.js";
+import { writeFile } from "fs/promises";
+import { join } from "path";
 
 interface CliOptions {
   verbose: boolean;
@@ -29,7 +33,7 @@ async function cleanupBrowser(): Promise<void> {
         await currentBrowser.browser.close();
       }
     } catch (e) {
-      // Ignore cleanup errors
+      console.log("Cleanup errors:", e);
     }
     currentBrowser = null;
   }
@@ -37,10 +41,12 @@ async function cleanupBrowser(): Promise<void> {
 
 function setupSignalHandlers(): void {
   const cleanup = () => {
-    cleanupBrowser().then(() => process.exit(0)).catch(() => process.exit(0));
+    cleanupBrowser()
+      .then(() => process.exit(0))
+      .catch(() => process.exit(0));
   };
-  process.on('SIGINT', cleanup);
-  process.on('SIGTERM', cleanup);
+  process.on("SIGINT", cleanup);
+  process.on("SIGTERM", cleanup);
 }
 
 const EXAMPLE_SCENARIO = `import { defineConfig } from 'demo-reel';
@@ -77,23 +83,23 @@ function parseArgs(): { scenario?: string; options: CliOptions } {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    
-    if (arg === '--verbose' || arg === '-v') {
+
+    if (arg === "--verbose" || arg === "-v") {
       options.verbose = true;
-    } else if (arg === '--dry-run') {
+    } else if (arg === "--dry-run") {
       options.dryRun = true;
-    } else if (arg === '--all') {
+    } else if (arg === "--all") {
       options.all = true;
-    } else if (arg === '--output-dir' || arg === '-o') {
+    } else if (arg === "--output-dir" || arg === "-o") {
       options.outputDir = args[++i];
-    } else if (arg === '--headed') {
+    } else if (arg === "--headed") {
       options.headed = true;
-    } else if (arg === '--help' || arg === '-h') {
+    } else if (arg === "--help" || arg === "-h") {
       showHelp();
       process.exit(0);
-    } else if (arg === 'init') {
+    } else if (arg === "init") {
       options.init = true;
-    } else if (!arg.startsWith('-')) {
+    } else if (!arg.startsWith("-")) {
       scenario = arg;
     }
   }
@@ -139,8 +145,8 @@ async function main(): Promise<void> {
 
   try {
     if (options.init) {
-      const demoPath = join(process.cwd(), 'example.demo.ts');
-      await writeFile(demoPath, EXAMPLE_SCENARIO, 'utf-8');
+      const demoPath = join(process.cwd(), "example.demo.ts");
+      await writeFile(demoPath, EXAMPLE_SCENARIO, "utf-8");
       console.log(`Created ${demoPath}`);
       process.exit(0);
     }
@@ -148,58 +154,75 @@ async function main(): Promise<void> {
     if (options.all) {
       // Run all demo scenarios
       const files = await findScenarioFiles();
-      
+
       if (files.length === 0) {
-        console.error('No *.demo.ts files found');
+        console.error("No *.demo.ts files found");
         process.exit(1);
       }
-      
+
       console.log(`Found ${files.length} scenario(s)`);
-      
+
       for (const file of files) {
         console.log(`\n▶ ${file}`);
         const loaded = await loadConfig(file, options.outputDir);
-        await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
+        await runVideoScenario(
+          loaded.config,
+          loaded.outputPath,
+          loaded.configPath,
+          options,
+        );
       }
     } else if (scenario) {
       // Run specific scenario
       const configPath = await loadScenario(scenario);
-      
+
       if (!configPath) {
         console.error(`Scenario not found: ${scenario}`);
-        console.error('Looked for:');
+        console.error("Looked for:");
         console.error(`  - ${scenario}.demo.ts`);
         console.error(`  - ${scenario}.config.ts`);
         process.exit(1);
       }
-      
+
       const loaded = await loadConfig(configPath, options.outputDir);
-      await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
+      await runVideoScenario(
+        loaded.config,
+        loaded.outputPath,
+        loaded.configPath,
+        options,
+      );
     } else {
       // Run all scenarios
       const files = await findScenarioFiles();
-      
+
       if (files.length === 0) {
-        console.error('No *.demo.ts files found');
+        console.error("No *.demo.ts files found");
         console.error('Run "demo-reel init" to create an example scenario');
         process.exit(1);
       }
-      
+
       console.log(`Found ${files.length} scenario(s)`);
-      
+
       for (const file of files) {
         console.log(`\n▶ ${file}`);
         const loaded = await loadConfig(file, options.outputDir);
-        await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
+        await runVideoScenario(
+          loaded.config,
+          loaded.outputPath,
+          loaded.configPath,
+          options,
+        );
       }
     }
-    
+
     process.exit(0);
   } catch (error) {
     if (options.verbose) {
       console.error(error);
     } else {
-      console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      console.error(
+        `Error: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
     process.exit(1);
   }

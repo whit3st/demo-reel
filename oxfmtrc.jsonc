@@ -1,0 +1,31 @@
+{
+  // Oxfmt configuration file
+  // https://oxc.rs/docs/guide/usage/formatter#configuration
+
+  // Whether to format code
+  "enabled": true,
+
+  // Line width for formatting
+  "lineWidth": 100,
+
+  // Indentation style: "tab" or number of spaces
+  "indentStyle": 2,
+
+  // Whether to use tabs for indentation
+  "indentWidth": 2,
+
+  // Whether to add trailing commas
+  "trailingComma": "none",
+
+  // Whether to use semicolons
+  "semicolons": true,
+
+  // Whether to use single quotes
+  "quotes": "single",
+
+  // Whether to escape quotes in template literals
+  "escapeQuotes": "always",
+
+  // Whether to ignore formatter directives in comments
+  "ignoreDirectives": false
+}

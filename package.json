@@ -22,6 +22,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
+    "lint": "oxlint .",
+    "format": "oxfmt . --write",
     "prepublishOnly": "pnpm run build && pnpm test"
   },
   "files": [
@@ -44,6 +46,8 @@
     "@types/node": "^20.0.0",
     "@typescript/native-preview": "7.0.0-dev.20260321.1",
     "@vitest/ui": "^4.1.0",
+    "oxfmt": "^0.43.0",
+    "oxlint": "^1.58.0",
     "typescript": "^5.0.0",
     "vitest": "^4.1.0"
   },

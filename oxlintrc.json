@@ -1,0 +1,11 @@
+{
+  "$schema": "https://oxc.rs/schemas/oxlintrc.json",
+  "rules": {
+    "complexity": "warn",
+    "no-console": "off",
+    "use-named-capture-group": "off",
+    "no-var": "warn",
+    "prefer-const": "warn",
+    "sort-keys": "off"
+  }
+}
