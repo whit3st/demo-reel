@@ -122,6 +122,27 @@ export async function handleAuth(
   return true;
 }
 
+export async function startBrowser(config: DemoReelConfig, headed: boolean = false): Promise<VideoResult> {
+  const browser = await chromium.launch({ headless: !headed });
+  
+  const context = await browser.newContext({
+    viewport: config.viewport,
+  });
+  
+  const page = await context.newPage();
+  
+  if (onBrowserCreated) {
+    onBrowserCreated(browser, context);
+  }
+  
+  return {
+    page,
+    context,
+    browser,
+    tempVideoPath: '',
+  };
+}
+
 export async function startRecording(config: DemoReelConfig, headed: boolean = false): Promise<VideoResult> {
   const browser = await chromium.launch({ headless: !headed });
   
@@ -145,7 +166,7 @@ export async function startRecording(config: DemoReelConfig, headed: boolean = f
     page,
     context,
     browser,
-    tempVideoPath: '', // Will be set after recording
+    tempVideoPath: '',
   };
 }
 
@@ -236,17 +257,37 @@ export async function runVideoScenario(
   
   const startTime = Date.now();
   
-  if (verbose) {
-    console.log('Starting browser and recording...');
+  if (config.auth) {
+    if (verbose) {
+      console.log('Starting browser for authentication (no recording)...');
+    }
+    
+    const authBrowser = await startBrowser(config, headed);
+    
+    try {
+      await handleAuth(authBrowser.context, authBrowser.page, config.auth, configPath, verbose);
+    } finally {
+      await authBrowser.context.close();
+      await authBrowser.browser.close();
+    }
+    
+    if (verbose) {
+      console.log('Starting browser and recording...');
+    }
+  } else {
+    if (verbose) {
+      console.log('Starting browser and recording...');
+    }
   }
   
-  const recording = await startRecording(config, headed);
+  const recording = config.auth 
+    ? await startRecording(config, headed)
+    : await startBrowser(config, headed);
   
   try {
-    // Handle authentication if configured
     if (config.auth) {
       if (verbose) {
-        console.log('Handling authentication...');
+        console.log('Restoring session for recording...');
       }
       await handleAuth(recording.context, recording.page, config.auth, configPath, verbose);
     }
