@@ -167,6 +167,12 @@ export const selectorSchema = z
       .string()
       .min(1)
       .describe("Selector value (without # or . for id/class)"),
+    index: z
+      .number()
+      .int()
+      .min(0)
+      .optional()
+      .describe("Index of element to select when multiple elements match (0-based)"),
   })
   .superRefine((value, ctx) => {
     if (value.strategy === "id" || value.strategy === "class") {
@@ -225,6 +231,10 @@ export const typeStepSchema = stepDelaySchema.extend({
     .min(0)
     .optional()
     .describe("Delay between keystrokes in ms"),
+  clear: z
+    .boolean()
+    .optional()
+    .describe("Clear existing value before typing"),
 });
 
 export const pressStepSchema = stepDelaySchema.extend({

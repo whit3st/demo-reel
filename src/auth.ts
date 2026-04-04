@@ -214,6 +214,16 @@ export async function validateSession(
         locator = page.locator(`[href="${selector.value}"]`);
         selectorString = `[href="${selector.value}"]`;
         break;
+      case "data-node-id":
+        locator = page.locator(`[data-node-id="${selector.value}"]`);
+        selectorString = `[data-node-id="${selector.value}"]`;
+        break;
+    }
+
+    if (locator) {
+      locator = selector.index !== undefined
+        ? locator.nth(selector.index)
+        : locator.first();
     }
 
     if (verbose) {
@@ -230,7 +240,7 @@ export async function validateSession(
     // Use .first() to avoid strict mode violation when multiple elements match
     let isVisible = false;
     try {
-      await locator?.first().waitFor({ state: "visible", timeout: 5000 });
+      await locator?.waitFor({ state: "visible", timeout: 5000 });
       isVisible = true;
       if (verbose) {
         console.log("  → Element is visible!");

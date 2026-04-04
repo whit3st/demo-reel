@@ -1,174 +1,222 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 import {
   demoReelConfigSchema,
   stepSchema,
   selectorSchema,
   authConfigSchema,
   sizeSchema,
-} from '../src/schemas.js';
-import { z } from 'zod';
+} from "../src/schemas.js";
 
-describe('Schema Validation', () => {
-  describe('Selector Schema', () => {
-    it('should validate valid selector with id strategy', () => {
+describe("Schema Validation", () => {
+  describe("Selector Schema", () => {
+    it("should validate valid selector with id strategy", () => {
       const result = selectorSchema.safeParse({
-        strategy: 'id',
-        value: 'username',
+        strategy: "id",
+        value: "username",
       });
       expect(result.success).toBe(true);
     });
 
-    it('should validate valid selector with class strategy', () => {
+    it("should validate valid selector with class strategy", () => {
       const result = selectorSchema.safeParse({
-        strategy: 'class',
-        value: 'btn-primary',
+        strategy: "class",
+        value: "btn-primary",
       });
       expect(result.success).toBe(true);
     });
 
-    it('should validate valid selector with href strategy', () => {
+    it("should validate valid selector with href strategy", () => {
       const result = selectorSchema.safeParse({
-        strategy: 'href',
-        value: '/dashboard',
+        strategy: "href",
+        value: "/dashboard",
       });
       expect(result.success).toBe(true);
     });
 
-    it('should validate valid selector with testId strategy', () => {
+    it("should validate valid selector with testId strategy", () => {
       const result = selectorSchema.safeParse({
-        strategy: 'testId',
-        value: 'submit-button',
+        strategy: "testId",
+        value: "submit-button",
       });
       expect(result.success).toBe(true);
     });
 
-    it('should reject selector with # prefix for id strategy', () => {
+    it("should reject selector with # prefix for id strategy", () => {
       const result = selectorSchema.safeParse({
-        strategy: 'id',
-        value: '#username',
+        strategy: "id",
+        value: "#username",
       });
       expect(result.success).toBe(false);
     });
 
-    it('should reject selector with . prefix for class strategy', () => {
+    it("should reject selector with . prefix for class strategy", () => {
       const result = selectorSchema.safeParse({
-        strategy: 'class',
-        value: '.btn-primary',
+        strategy: "class",
+        value: ".btn-primary",
       });
       expect(result.success).toBe(false);
     });
 
-    it('should reject empty selector value', () => {
+    it("should reject empty selector value", () => {
       const result = selectorSchema.safeParse({
-        strategy: 'id',
-        value: '',
+        strategy: "id",
+        value: "",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("should validate selector with index", () => {
+      const result = selectorSchema.safeParse({
+        strategy: "class",
+        value: "btn",
+        index: 2,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should validate selector with index 0", () => {
+      const result = selectorSchema.safeParse({
+        strategy: "href",
+        value: "/page",
+        index: 0,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should reject negative index", () => {
+      const result = selectorSchema.safeParse({
+        strategy: "id",
+        value: "element",
+        index: -1,
       });
       expect(result.success).toBe(false);
     });
   });
 
-  describe('Step Schema', () => {
-    it('should validate goto step', () => {
+  describe("Step Schema", () => {
+    it("should validate goto step", () => {
       const result = stepSchema.safeParse({
-        action: 'goto',
-        url: 'https://example.com',
+        action: "goto",
+        url: "https://example.com",
       });
       expect(result.success).toBe(true);
     });
 
-    it('should validate click step', () => {
+    it("should validate click step", () => {
       const result = stepSchema.safeParse({
-        action: 'click',
-        selector: { strategy: 'id', value: 'button' },
+        action: "click",
+        selector: { strategy: "id", value: "button" },
       });
       expect(result.success).toBe(true);
     });
 
-    it('should validate type step', () => {
+    it("should validate type step", () => {
       const result = stepSchema.safeParse({
-        action: 'type',
-        selector: { strategy: 'id', value: 'input' },
-        text: 'Hello World',
+        action: "type",
+        selector: { strategy: "id", value: "input" },
+        text: "Hello World",
       });
       expect(result.success).toBe(true);
     });
 
-    it('should validate wait step', () => {
+    it("should validate type step with clear option", () => {
       const result = stepSchema.safeParse({
-        action: 'wait',
+        action: "type",
+        selector: { strategy: "id", value: "input" },
+        text: "Hello World",
+        clear: true,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should validate type step with clear false", () => {
+      const result = stepSchema.safeParse({
+        action: "type",
+        selector: { strategy: "id", value: "input" },
+        text: "Hello World",
+        clear: false,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should validate wait step", () => {
+      const result = stepSchema.safeParse({
+        action: "wait",
         ms: 1000,
       });
       expect(result.success).toBe(true);
     });
 
-    it('should validate waitFor selector step', () => {
+    it("should validate waitFor selector step", () => {
       const result = stepSchema.safeParse({
-        action: 'waitFor',
-        kind: 'selector',
-        selector: { strategy: 'id', value: 'element' },
-        state: 'visible',
+        action: "waitFor",
+        kind: "selector",
+        selector: { strategy: "id", value: "element" },
+        state: "visible",
       });
       expect(result.success).toBe(true);
     });
 
-    it('should validate waitFor url step', () => {
+    it("should validate waitFor url step", () => {
       const result = stepSchema.safeParse({
-        action: 'waitFor',
-        kind: 'url',
-        url: 'https://example.com/success',
+        action: "waitFor",
+        kind: "url",
+        url: "https://example.com/success",
       });
       expect(result.success).toBe(true);
     });
 
-    it('should reject goto step with invalid URL', () => {
+    it("should reject goto step with invalid URL", () => {
       const result = stepSchema.safeParse({
-        action: 'goto',
-        url: 'not-a-url',
+        action: "goto",
+        url: "not-a-url",
       });
       expect(result.success).toBe(false);
     });
 
-    it('should reject wait step with negative ms', () => {
+    it("should reject wait step with negative ms", () => {
       const result = stepSchema.safeParse({
-        action: 'wait',
+        action: "wait",
         ms: -100,
       });
       expect(result.success).toBe(false);
     });
   });
 
-  describe('Auth Config Schema', () => {
-    it('should validate auth config with all required fields', () => {
+  describe("Auth Config Schema", () => {
+    it("should validate auth config with all required fields", () => {
       const result = authConfigSchema.safeParse({
         loginSteps: [
-          { action: 'goto', url: 'https://example.com/login' },
-          { action: 'type', selector: { strategy: 'id', value: 'username' }, text: 'user' },
-          { action: 'click', selector: { strategy: 'id', value: 'submit' } },
+          { action: "goto", url: "https://example.com/login" },
+          {
+            action: "type",
+            selector: { strategy: "id", value: "username" },
+            text: "user",
+          },
+          { action: "click", selector: { strategy: "id", value: "submit" } },
         ],
         validate: {
-          protectedUrl: 'https://example.com/dashboard',
-          successIndicator: { strategy: 'id', value: 'dashboard' },
+          protectedUrl: "https://example.com/dashboard",
+          successIndicator: { strategy: "id", value: "dashboard" },
         },
         storage: {
-          name: 'test-session',
-          types: ['cookies'],
+          name: "test-session",
+          types: ["cookies"],
         },
       });
       expect(result.success).toBe(true);
     });
 
-    it('should validate auth config with optional behavior', () => {
+    it("should validate auth config with optional behavior", () => {
       const result = authConfigSchema.safeParse({
-        loginSteps: [
-          { action: 'goto', url: 'https://example.com/login' },
-        ],
+        loginSteps: [{ action: "goto", url: "https://example.com/login" }],
         validate: {
-          protectedUrl: 'https://example.com/dashboard',
-          successIndicator: { strategy: 'id', value: 'dashboard' },
+          protectedUrl: "https://example.com/dashboard",
+          successIndicator: { strategy: "id", value: "dashboard" },
         },
         storage: {
-          name: 'test-session',
-          types: ['cookies', 'localStorage'],
+          name: "test-session",
+          types: ["cookies", "localStorage"],
         },
         behavior: {
           autoReauth: true,
@@ -179,55 +227,53 @@ describe('Schema Validation', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject auth config without loginSteps', () => {
+    it("should reject auth config without loginSteps", () => {
       const result = authConfigSchema.safeParse({
         validate: {
-          protectedUrl: 'https://example.com/dashboard',
-          successIndicator: { strategy: 'id', value: 'dashboard' },
+          protectedUrl: "https://example.com/dashboard",
+          successIndicator: { strategy: "id", value: "dashboard" },
         },
         storage: {
-          name: 'test-session',
-          types: ['cookies'],
+          name: "test-session",
+          types: ["cookies"],
         },
       });
       expect(result.success).toBe(false);
     });
 
-    it('should reject auth config with empty loginSteps', () => {
+    it("should reject auth config with empty loginSteps", () => {
       const result = authConfigSchema.safeParse({
         loginSteps: [],
         validate: {
-          protectedUrl: 'https://example.com/dashboard',
-          successIndicator: { strategy: 'id', value: 'dashboard' },
+          protectedUrl: "https://example.com/dashboard",
+          successIndicator: { strategy: "id", value: "dashboard" },
         },
         storage: {
-          name: 'test-session',
-          types: ['cookies'],
+          name: "test-session",
+          types: ["cookies"],
         },
       });
       expect(result.success).toBe(false);
     });
 
-    it('should reject auth config with invalid storage type', () => {
+    it("should reject auth config with invalid storage type", () => {
       const result = authConfigSchema.safeParse({
-        loginSteps: [
-          { action: 'goto', url: 'https://example.com/login' },
-        ],
+        loginSteps: [{ action: "goto", url: "https://example.com/login" }],
         validate: {
-          protectedUrl: 'https://example.com/dashboard',
-          successIndicator: { strategy: 'id', value: 'dashboard' },
+          protectedUrl: "https://example.com/dashboard",
+          successIndicator: { strategy: "id", value: "dashboard" },
         },
         storage: {
-          name: 'test-session',
-          types: ['invalidType'],
+          name: "test-session",
+          types: ["invalidType"],
         },
       });
       expect(result.success).toBe(false);
     });
   });
 
-  describe('Size Schema', () => {
-    it('should validate valid size', () => {
+  describe("Size Schema", () => {
+    it("should validate valid size", () => {
       const result = sizeSchema.safeParse({
         width: 1920,
         height: 1080,
@@ -235,7 +281,7 @@ describe('Schema Validation', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject size with zero width', () => {
+    it("should reject size with zero width", () => {
       const result = sizeSchema.safeParse({
         width: 0,
         height: 1080,
@@ -243,7 +289,7 @@ describe('Schema Validation', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject size with negative height', () => {
+    it("should reject size with negative height", () => {
       const result = sizeSchema.safeParse({
         width: 1920,
         height: -100,
@@ -252,19 +298,19 @@ describe('Schema Validation', () => {
     });
   });
 
-  describe('Full Config Schema', () => {
-    it('should validate minimal valid config', () => {
+  describe("Full Config Schema", () => {
+    it("should validate minimal valid config", () => {
       const result = demoReelConfigSchema.safeParse({
         viewport: { width: 1920, height: 1080 },
         video: { enabled: true, size: { width: 1920, height: 1080 } },
         cursor: {
           start: { x: 100, y: 100 },
           persistPosition: false,
-          type: 'dot',
+          type: "dot",
           size: 10,
           borderWidth: 2,
-          borderColor: '#000',
-          shadowColor: '#fff',
+          borderColor: "#000",
+          shadowColor: "#fff",
         },
         motion: {
           moveDurationMs: 500,
@@ -275,7 +321,7 @@ describe('Schema Validation', () => {
             offsetRatio: 0.1,
             offsetMin: 5,
             offsetMax: 50,
-            easing: 'easeInOutCubic',
+            easing: "easeInOutCubic",
           },
         },
         typing: {
@@ -288,34 +334,30 @@ describe('Schema Validation', () => {
           afterGotoDelayMs: 1000,
           endDelayMs: 2000,
         },
-        steps: [
-          { action: 'goto', url: 'https://example.com' },
-        ],
+        steps: [{ action: "goto", url: "https://example.com" }],
       });
       expect(result.success).toBe(true);
     });
 
-    it('should reject config without required fields', () => {
+    it("should reject config without required fields", () => {
       const result = demoReelConfigSchema.safeParse({
-        steps: [
-          { action: 'goto', url: 'https://example.com' },
-        ],
+        steps: [{ action: "goto", url: "https://example.com" }],
       });
       expect(result.success).toBe(false);
     });
 
-    it('should reject config with empty steps array', () => {
+    it("should reject config with empty steps array", () => {
       const result = demoReelConfigSchema.safeParse({
         viewport: { width: 1920, height: 1080 },
         video: { enabled: true, size: { width: 1920, height: 1080 } },
         cursor: {
           start: { x: 100, y: 100 },
           persistPosition: false,
-          type: 'dot',
+          type: "dot",
           size: 10,
           borderWidth: 2,
-          borderColor: '#000',
-          shadowColor: '#fff',
+          borderColor: "#000",
+          shadowColor: "#fff",
         },
         motion: {
           moveDurationMs: 500,
@@ -326,7 +368,7 @@ describe('Schema Validation', () => {
             offsetRatio: 0.1,
             offsetMin: 5,
             offsetMax: 50,
-            easing: 'easeInOutCubic',
+            easing: "easeInOutCubic",
           },
         },
         typing: {

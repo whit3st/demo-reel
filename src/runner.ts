@@ -43,28 +43,24 @@ const assertRawSelector = (selector: SelectorConfig) => {
 const resolveLocator = (page: Page, selector: SelectorConfig): Locator => {
   assertRawSelector(selector);
 
+  let locator: Locator;
+
   if (selector.strategy === "testId") {
-    return page.getByTestId(selector.value);
+    locator = page.getByTestId(selector.value);
+  } else if (selector.strategy === "id") {
+    locator = page.locator(`#${selector.value}`);
+  } else if (selector.strategy === "class") {
+    locator = page.locator(`.${selector.value}`);
+  } else if (selector.strategy === "href") {
+    locator = page.locator(`a[href="${selector.value}"]`);
+  } else if (selector.strategy === "data-node-id") {
+    locator = page.locator(`[data-node-id=${selector.value}]`);
+  } else {
+    const exhaustiveCheck: never = selector.strategy;
+    throw new Error(`Unsupported selector strategy: ${exhaustiveCheck}`);
   }
 
-  if (selector.strategy === "id") {
-    return page.locator(`#${selector.value}`);
-  }
-
-  if (selector.strategy === "class") {
-    return page.locator(`.${selector.value}`);
-  }
-
-  if (selector.strategy === "href") {
-    return page.locator(`a[href="${selector.value}"]`).first();
-  }
-
-  if (selector.strategy === "data-node-id") {
-    return page.locator(`[data-node-id=${selector.value}]`).first();
-  }
-
-  const exhaustiveCheck: never = selector.strategy;
-  throw new Error(`Unsupported selector strategy: ${exhaustiveCheck}`);
+  return selector.index !== undefined ? locator.nth(selector.index) : locator.first();
 };
 
 const punctuationCharacters = new Set([".", ",", "!", "?", ":", ";", "-"]);
@@ -573,7 +569,11 @@ export const runStepSimple = async (page: Page, step: Step): Promise<void> => {
 
   if (step.action === "type") {
     const target = resolveLocator(page, step.selector);
-    await target.fill(step.text);
+    if (step.clear) {
+      await target.fill(step.text);
+    } else {
+      await target.type(step.text);
+    }
     return;
   }
 
@@ -727,6 +727,9 @@ const runStep = async (
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
     await humanClick(page, target, state, config.motion, cursorStart);
+    if (step.clear) {
+      await target.fill("");
+    }
     await humanType(page, step.text, config.typing, step.delayMs);
     await applyStepDelay(page, step.delayAfterMs);
     return delayApplied;
