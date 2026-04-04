@@ -157,7 +157,7 @@ export const typingSchema = z.object({
 });
 
 export const selectorStrategySchema = z
-  .enum(["testId", "id", "class", "href", "data-node-id"])
+  .enum(["testId", "id", "class", "href", "data-node-id", "custom"])
   .describe("Element selection strategy");
 
 export const selectorSchema = z

@@ -55,6 +55,8 @@ const resolveLocator = (page: Page, selector: SelectorConfig): Locator => {
     locator = page.locator(`a[href="${selector.value}"]`);
   } else if (selector.strategy === "data-node-id") {
     locator = page.locator(`[data-node-id=${selector.value}]`);
+  } else if (selector.strategy === "custom") {
+    locator = page.locator(selector.value);
   } else {
     const exhaustiveCheck: never = selector.strategy;
     throw new Error(`Unsupported selector strategy: ${exhaustiveCheck}`);

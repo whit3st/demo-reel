@@ -218,6 +218,10 @@ export async function validateSession(
         locator = page.locator(`[data-node-id="${selector.value}"]`);
         selectorString = `[data-node-id="${selector.value}"]`;
         break;
+      case "custom":
+        locator = page.locator(selector.value);
+        selectorString = selector.value;
+        break;
     }
 
     if (locator) {

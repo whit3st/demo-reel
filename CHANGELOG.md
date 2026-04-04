@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation**: Added descriptive `.describe()` calls on all Zod schema fields for IDE tooltips
 - **Selector Indexing**: Select a specific match with `selector.index` (0-based)
 - **New Selector Strategy**: `data-node-id` for `[data-node-id="..."]`
+- **Custom Selector Strategy**: `custom` uses a raw selector string
 - **Type Clear Option**: `type` steps support `clear: true` to clear inputs before typing
 
 ### Changed

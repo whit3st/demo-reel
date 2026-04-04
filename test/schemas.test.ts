@@ -41,6 +41,14 @@ describe("Schema Validation", () => {
       expect(result.success).toBe(true);
     });
 
+    it("should validate valid selector with custom strategy", () => {
+      const result = selectorSchema.safeParse({
+        strategy: "custom",
+        value: ".card[data-state='open']",
+      });
+      expect(result.success).toBe(true);
+    });
+
     it("should reject selector with # prefix for id strategy", () => {
       const result = selectorSchema.safeParse({
         strategy: "id",

@@ -162,6 +162,9 @@ export default defineConfig({
 // By data-node-id
 { strategy: 'data-node-id', value: 'node-123' }
 
+// By custom selector
+{ strategy: 'custom', value: '.card[data-state="open"]' }
+
 // Select a specific match (0-based index)
 { strategy: 'class', value: 'nav-link', index: 1 }
 ```

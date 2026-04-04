@@ -195,6 +195,18 @@ describe('Auth Persistence', () => {
       expect(isValid).toBe(true);
     });
 
+    it('should validate session with visible element by custom selector', async () => {
+      await page.setContent(TEST_HTML);
+
+      const validateConfig: AuthValidateConfig = {
+        protectedUrl: 'data:text/html,' + encodeURIComponent(TEST_HTML),
+        successIndicator: { strategy: 'custom', value: '.nav-link' },
+      };
+
+      const isValid = await validateSession(page, validateConfig, false);
+      expect(isValid).toBe(true);
+    });
+
     it('should fail validation when element not found', async () => {
       await page.setContent(TEST_HTML);
       
