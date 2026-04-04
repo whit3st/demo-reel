@@ -1,4 +1,4 @@
-import type { Locator, Page } from 'playwright';
+import type { Locator, Page } from "playwright";
 import type {
   CursorConfig,
   DemoReelConfig,
@@ -7,7 +7,7 @@ import type {
   SelectorConfig,
   TimingConfig,
   TypingConfig,
-} from './schemas.js';
+} from "./schemas.js";
 
 type Point = {
   x: number;
@@ -24,18 +24,18 @@ const clamp = (value: number, min: number, max: number) => {
 };
 
 const applyStepDelay = async (page: Page, delayMs?: number) => {
-  if (typeof delayMs === 'number' && delayMs > 0) {
+  if (typeof delayMs === "number" && delayMs > 0) {
     await page.waitForTimeout(delayMs);
   }
 };
 
 const assertRawSelector = (selector: SelectorConfig) => {
   if (
-    (selector.strategy === 'id' || selector.strategy === 'class') &&
-    (selector.value.startsWith('#') || selector.value.startsWith('.'))
+    (selector.strategy === "id" || selector.strategy === "class") &&
+    (selector.value.startsWith("#") || selector.value.startsWith("."))
   ) {
     throw new Error(
-      'Selector values must be raw names without "#" or "." when using id or class strategy.'
+      'Selector values must be raw names without "#" or "." when using id or class strategy.',
     );
   }
 };
@@ -43,34 +43,42 @@ const assertRawSelector = (selector: SelectorConfig) => {
 const resolveLocator = (page: Page, selector: SelectorConfig): Locator => {
   assertRawSelector(selector);
 
-  if (selector.strategy === 'testId') {
+  if (selector.strategy === "testId") {
     return page.getByTestId(selector.value);
   }
 
-  if (selector.strategy === 'id') {
+  if (selector.strategy === "id") {
     return page.locator(`#${selector.value}`);
   }
 
-  if (selector.strategy === 'class') {
+  if (selector.strategy === "class") {
     return page.locator(`.${selector.value}`);
   }
 
-  if (selector.strategy === 'href') {
+  if (selector.strategy === "href") {
     return page.locator(`a[href="${selector.value}"]`).first();
+  }
+
+  if (selector.strategy === "data-node-id") {
+    return page.locator(`[data-node-id=${selector.value}]`).first();
   }
 
   const exhaustiveCheck: never = selector.strategy;
   throw new Error(`Unsupported selector strategy: ${exhaustiveCheck}`);
 };
 
-const punctuationCharacters = new Set(['.', ',', '!', '?', ':', ';', '-']);
+const punctuationCharacters = new Set([".", ",", "!", "?", ":", ";", "-"]);
 
-const getTypingDelay = (character: string, typing: TypingConfig, baseDelay: number) => {
-  if (character === '\n') {
+const getTypingDelay = (
+  character: string,
+  typing: TypingConfig,
+  baseDelay: number,
+) => {
+  if (character === "\n") {
     return baseDelay + typing.enterDelayMs;
   }
 
-  if (character === ' ') {
+  if (character === " ") {
     return baseDelay + typing.spaceDelayMs;
   }
 
@@ -98,10 +106,10 @@ const resolveCursorStart = (page: Page, start: Point): Point => {
 
 // Cursor script that runs in browser context - uses Playwright's addInitScript
 const cursorScript = (cursor: CursorConfig) => {
-  const cursorId = '__pw_cursor';
-  const styleId = '__pw_cursor_style';
+  const cursorId = "__pw_cursor";
+  const styleId = "__pw_cursor_style";
   const storageKey = cursor.persistPosition
-    ? cursor.storageKey || 'demo-reel.cursor-position'
+    ? cursor.storageKey || "demo-reel.cursor-position"
     : null;
 
   const readStoredPosition = () => {
@@ -116,7 +124,7 @@ const cursorScript = (cursor: CursorConfig) => {
       }
 
       const parsed = JSON.parse(stored) as { x?: number; y?: number };
-      if (typeof parsed.x !== 'number' || typeof parsed.y !== 'number') {
+      if (typeof parsed.x !== "number" || typeof parsed.y !== "number") {
         return null;
       }
 
@@ -143,7 +151,7 @@ const cursorScript = (cursor: CursorConfig) => {
       return;
     }
 
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.id = styleId;
 
     const baseStyle = `
@@ -157,11 +165,17 @@ const cursorScript = (cursor: CursorConfig) => {
 }
 `;
 
-    if (cursor.type === 'svg') {
-      style.textContent = baseStyle + `
+    if (cursor.type === "svg") {
+      style.textContent =
+        baseStyle +
+        `
 #__pw_cursor {
-  width: ` + cursor.svg.width + `px;
-  height: ` + cursor.svg.height + `px;
+  width: ` +
+        cursor.svg.width +
+        `px;
+  height: ` +
+        cursor.svg.height +
+        `px;
 }
 #__pw_cursor svg {
   width: 100%;
@@ -170,28 +184,40 @@ const cursorScript = (cursor: CursorConfig) => {
 }
 `;
     } else {
-      style.textContent = baseStyle + `
+      style.textContent =
+        baseStyle +
+        `
 #__pw_cursor {
-  width: ` + cursor.size + `px;
-  height: ` + cursor.size + `px;
-  border: ` + cursor.borderWidth + `px solid ` + cursor.borderColor + `;
+  width: ` +
+        cursor.size +
+        `px;
+  height: ` +
+        cursor.size +
+        `px;
+  border: ` +
+        cursor.borderWidth +
+        `px solid ` +
+        cursor.borderColor +
+        `;
   border-radius: 999px;
-  box-shadow: 0 0 0 1px ` + cursor.shadowColor + `;
+  box-shadow: 0 0 0 1px ` +
+        cursor.shadowColor +
+        `;
 }
 `;
     }
 
     (document.head || document.documentElement).appendChild(style);
 
-    const cursorEl = document.createElement('div');
+    const cursorEl = document.createElement("div");
     cursorEl.id = cursorId;
-    if (cursor.type === 'svg') {
+    if (cursor.type === "svg") {
       cursorEl.innerHTML = cursor.svg.markup;
     }
     (document.body || document.documentElement).appendChild(cursorEl);
 
     const offset =
-      cursor.type === 'svg'
+      cursor.type === "svg"
         ? { x: cursor.svg.hotspot.x, y: cursor.svg.hotspot.y }
         : { x: cursor.size / 2, y: cursor.size / 2 };
 
@@ -210,7 +236,12 @@ const cursorScript = (cursor: CursorConfig) => {
 
     const update = (x: number, y: number) => {
       const clamped = clampToViewport(x, y);
-      cursorEl.style.transform = 'translate(' + (clamped.x - offset.x) + 'px, ' + (clamped.y - offset.y) + 'px)';
+      cursorEl.style.transform =
+        "translate(" +
+        (clamped.x - offset.x) +
+        "px, " +
+        (clamped.y - offset.y) +
+        "px)";
       writeStoredPosition(clamped.x, clamped.y);
     };
 
@@ -221,13 +252,13 @@ const cursorScript = (cursor: CursorConfig) => {
       update(cursor.start.x, cursor.start.y);
     }
 
-    document.addEventListener('mousemove', (event: MouseEvent) => {
+    document.addEventListener("mousemove", (event: MouseEvent) => {
       update(event.clientX, event.clientY);
     });
   };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', addCursor, { once: true });
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", addCursor, { once: true });
   } else {
     addCursor();
   }
@@ -241,10 +272,13 @@ const installCursorOverlay = async (page: Page, cursor: CursorConfig) => {
   return resolvedCursor;
 };
 
-const ensureCursorOverlay = async (page: Page, resolvedCursor: CursorConfig & { start: Point }) => {
+const ensureCursorOverlay = async (
+  page: Page,
+  resolvedCursor: CursorConfig & { start: Point },
+) => {
   try {
     const cursorExists = await page.evaluate(() => {
-      return document.getElementById('__pw_cursor') !== null;
+      return document.getElementById("__pw_cursor") !== null;
     });
     if (!cursorExists) {
       await page.evaluate(cursorScript, resolvedCursor);
@@ -257,7 +291,7 @@ const ensureCursorOverlay = async (page: Page, resolvedCursor: CursorConfig & { 
 const ensureMouseStart = async (
   page: Page,
   state: MouseState,
-  start: Point
+  start: Point,
 ) => {
   if (state.initialized) {
     return;
@@ -270,7 +304,7 @@ const ensureMouseStart = async (
 };
 
 const prepareLocator = async (locator: Locator) => {
-  await locator.waitFor({ state: 'visible' });
+  await locator.waitFor({ state: "visible" });
   await locator.scrollIntoViewIfNeeded();
 };
 
@@ -279,7 +313,7 @@ const getLocatorCenter = async (locator: Locator) => {
 
   const box = await locator.boundingBox();
   if (!box) {
-    throw new Error('Unable to determine bounding box for target element.');
+    throw new Error("Unable to determine bounding box for target element.");
   }
 
   return {
@@ -293,7 +327,7 @@ const cubicBezierPoint = (
   p0: Point,
   p1: Point,
   p2: Point,
-  p3: Point
+  p3: Point,
 ): Point => {
   const u = 1 - t;
   const tt = t * t;
@@ -322,7 +356,7 @@ const easingLookup = {
 const getBezierControlPoints = (
   start: Point,
   end: Point,
-  motion: MotionConfig
+  motion: MotionConfig,
 ) => {
   const dx = end.x - start.x;
   const dy = end.y - start.y;
@@ -336,8 +370,11 @@ const getBezierControlPoints = (
   const curveDirection = dominantAxis >= 0 ? 1 : -1;
   const perpendicular = { x: -dy / distance, y: dx / distance };
   const offset =
-    clamp(distance * motion.curve.offsetRatio, motion.curve.offsetMin, motion.curve.offsetMax) *
-    curveDirection;
+    clamp(
+      distance * motion.curve.offsetRatio,
+      motion.curve.offsetMin,
+      motion.curve.offsetMax,
+    ) * curveDirection;
 
   return {
     control1: {
@@ -356,7 +393,7 @@ const moveMouseBezier = async (
   state: MouseState,
   targetX: number,
   targetY: number,
-  motion: MotionConfig
+  motion: MotionConfig,
 ) => {
   const start = state.position;
   const end = { x: targetX, y: targetY };
@@ -388,7 +425,7 @@ const humanClick = async (
   locator: Locator,
   state: MouseState,
   motion: MotionConfig,
-  start: Point
+  start: Point,
 ) => {
   const target = await getLocatorCenter(locator);
 
@@ -404,13 +441,16 @@ const humanType = async (
   page: Page,
   text: string,
   typing: TypingConfig,
-  baseDelayOverride?: number
+  baseDelayOverride?: number,
 ) => {
-  const baseDelay = typeof baseDelayOverride === 'number' ? baseDelayOverride : typing.baseDelayMs;
+  const baseDelay =
+    typeof baseDelayOverride === "number"
+      ? baseDelayOverride
+      : typing.baseDelayMs;
 
   for (const character of Array.from(text)) {
-    if (character === '\n') {
-      await page.keyboard.press('Enter');
+    if (character === "\n") {
+      await page.keyboard.press("Enter");
     } else {
       await page.keyboard.type(character);
     }
@@ -427,7 +467,7 @@ const humanMoveToLocator = async (
   locator: Locator,
   state: MouseState,
   motion: MotionConfig,
-  start: Point
+  start: Point,
 ) => {
   const target = await getLocatorCenter(locator);
 
@@ -439,7 +479,7 @@ const humanMoveToLocator = async (
 const applyStartDelayIfNeeded = async (
   page: Page,
   timing: TimingConfig,
-  startDelayApplied: boolean
+  startDelayApplied: boolean,
 ) => {
   if (startDelayApplied) {
     return true;
@@ -453,29 +493,29 @@ const applyStartDelayIfNeeded = async (
 };
 
 const buildTimeoutOption = (timeoutMs?: number) => {
-  if (typeof timeoutMs === 'number') {
+  if (typeof timeoutMs === "number") {
     return { timeout: timeoutMs };
   }
 
   return {};
 };
 
-export const runStepSimple = async (
-  page: Page,
-  step: Step
-): Promise<void> => {
-  if (step.action === 'goto') {
-    await page.goto(step.url, step.waitUntil ? { waitUntil: step.waitUntil } : undefined);
+export const runStepSimple = async (page: Page, step: Step): Promise<void> => {
+  if (step.action === "goto") {
+    await page.goto(
+      step.url,
+      step.waitUntil ? { waitUntil: step.waitUntil } : undefined,
+    );
     return;
   }
 
-  if (step.action === 'wait') {
+  if (step.action === "wait") {
     await page.waitForTimeout(step.ms);
     return;
   }
 
-  if (step.action === 'waitFor') {
-    if (step.kind === 'selector') {
+  if (step.action === "waitFor") {
+    if (step.kind === "selector") {
       const target = resolveLocator(page, step.selector);
       await target.waitFor({
         state: step.state,
@@ -484,7 +524,7 @@ export const runStepSimple = async (
       return;
     }
 
-    if (step.kind === 'url') {
+    if (step.kind === "url") {
       await page.waitForURL(step.url, {
         waitUntil: step.waitUntil,
         ...buildTimeoutOption(step.timeoutMs),
@@ -492,22 +532,25 @@ export const runStepSimple = async (
       return;
     }
 
-    if (step.kind === 'loadState') {
-      await page.waitForLoadState(step.state, buildTimeoutOption(step.timeoutMs));
+    if (step.kind === "loadState") {
+      await page.waitForLoadState(
+        step.state,
+        buildTimeoutOption(step.timeoutMs),
+      );
       return;
     }
 
-    if (step.kind === 'request') {
+    if (step.kind === "request") {
       await page.waitForRequest(step.url, buildTimeoutOption(step.timeoutMs));
       return;
     }
 
-    if (step.kind === 'response') {
+    if (step.kind === "response") {
       await page.waitForResponse(step.url, buildTimeoutOption(step.timeoutMs));
       return;
     }
 
-    if (step.kind === 'function') {
+    if (step.kind === "function") {
       await page.waitForFunction(step.expression, step.arg, {
         polling: step.polling,
         ...buildTimeoutOption(step.timeoutMs),
@@ -516,57 +559,60 @@ export const runStepSimple = async (
     }
   }
 
-  if (step.action === 'click') {
+  if (step.action === "click") {
     const target = resolveLocator(page, step.selector);
     await target.click();
     return;
   }
 
-  if (step.action === 'hover') {
+  if (step.action === "hover") {
     const target = resolveLocator(page, step.selector);
     await target.hover();
     return;
   }
 
-  if (step.action === 'type') {
+  if (step.action === "type") {
     const target = resolveLocator(page, step.selector);
     await target.fill(step.text);
     return;
   }
 
-  if (step.action === 'press') {
+  if (step.action === "press") {
     const target = resolveLocator(page, step.selector);
     await target.press(step.key);
     return;
   }
 
-  if (step.action === 'scroll') {
+  if (step.action === "scroll") {
     const target = resolveLocator(page, step.selector);
-    await target.evaluate((el: HTMLElement | SVGElement, args: { x: number; y: number }) => {
-      el.scrollBy(args.x, args.y);
-    }, { x: step.x, y: step.y });
+    await target.evaluate(
+      (el: HTMLElement | SVGElement, args: { x: number; y: number }) => {
+        el.scrollBy(args.x, args.y);
+      },
+      { x: step.x, y: step.y },
+    );
     return;
   }
 
-  if (step.action === 'select') {
+  if (step.action === "select") {
     const target = resolveLocator(page, step.selector);
     await target.selectOption(step.value);
     return;
   }
 
-  if (step.action === 'check') {
+  if (step.action === "check") {
     const target = resolveLocator(page, step.selector);
     await target.setChecked(step.checked);
     return;
   }
 
-  if (step.action === 'upload') {
+  if (step.action === "upload") {
     const target = resolveLocator(page, step.selector);
     await target.setInputFiles(step.filePath);
     return;
   }
 
-  if (step.action === 'drag') {
+  if (step.action === "drag") {
     const source = resolveLocator(page, step.source);
     const target = resolveLocator(page, step.target);
     await source.dragTo(target);
@@ -581,21 +627,24 @@ const runStep = async (
   state: MouseState,
   cursorStart: Point,
   resolvedCursor: CursorConfig & { start: Point },
-  startDelayApplied: boolean
+  startDelayApplied: boolean,
 ): Promise<boolean> => {
-  if (step.action === 'goto') {
-    await page.goto(step.url, step.waitUntil ? { waitUntil: step.waitUntil } : undefined);
+  if (step.action === "goto") {
+    await page.goto(
+      step.url,
+      step.waitUntil ? { waitUntil: step.waitUntil } : undefined,
+    );
     await ensureCursorOverlay(page, resolvedCursor);
     return applyStartDelayIfNeeded(page, config.timing, startDelayApplied);
   }
 
-  if (step.action === 'wait') {
+  if (step.action === "wait") {
     await page.waitForTimeout(step.ms);
     return startDelayApplied;
   }
 
-  if (step.action === 'waitFor') {
-    if (step.kind === 'selector') {
+  if (step.action === "waitFor") {
+    if (step.kind === "selector") {
       const target = resolveLocator(page, step.selector);
       await target.waitFor({
         state: step.state,
@@ -604,7 +653,7 @@ const runStep = async (
       return startDelayApplied;
     }
 
-    if (step.kind === 'url') {
+    if (step.kind === "url") {
       await page.waitForURL(step.url, {
         waitUntil: step.waitUntil,
         ...buildTimeoutOption(step.timeoutMs),
@@ -612,23 +661,26 @@ const runStep = async (
       return startDelayApplied;
     }
 
-    if (step.kind === 'loadState') {
-      await page.waitForLoadState(step.state, buildTimeoutOption(step.timeoutMs));
+    if (step.kind === "loadState") {
+      await page.waitForLoadState(
+        step.state,
+        buildTimeoutOption(step.timeoutMs),
+      );
       await ensureCursorOverlay(page, resolvedCursor);
       return startDelayApplied;
     }
 
-    if (step.kind === 'request') {
+    if (step.kind === "request") {
       await page.waitForRequest(step.url, buildTimeoutOption(step.timeoutMs));
       return startDelayApplied;
     }
 
-    if (step.kind === 'response') {
+    if (step.kind === "response") {
       await page.waitForResponse(step.url, buildTimeoutOption(step.timeoutMs));
       return startDelayApplied;
     }
 
-    if (step.kind === 'function') {
+    if (step.kind === "function") {
       await page.waitForFunction(step.expression, step.arg, {
         polling: step.polling,
         ...buildTimeoutOption(step.timeoutMs),
@@ -637,11 +689,11 @@ const runStep = async (
     }
   }
 
-  if (step.action === 'click') {
+  if (step.action === "click") {
     const delayApplied = await applyStartDelayIfNeeded(
       page,
       config.timing,
-      startDelayApplied
+      startDelayApplied,
     );
 
     await applyStepDelay(page, step.delayBeforeMs);
@@ -651,11 +703,11 @@ const runStep = async (
     return delayApplied;
   }
 
-  if (step.action === 'hover') {
+  if (step.action === "hover") {
     const delayApplied = await applyStartDelayIfNeeded(
       page,
       config.timing,
-      startDelayApplied
+      startDelayApplied,
     );
 
     await applyStepDelay(page, step.delayBeforeMs);
@@ -665,11 +717,11 @@ const runStep = async (
     return delayApplied;
   }
 
-  if (step.action === 'type') {
+  if (step.action === "type") {
     const delayApplied = await applyStartDelayIfNeeded(
       page,
       config.timing,
-      startDelayApplied
+      startDelayApplied,
     );
 
     await applyStepDelay(page, step.delayBeforeMs);
@@ -680,11 +732,11 @@ const runStep = async (
     return delayApplied;
   }
 
-  if (step.action === 'press') {
+  if (step.action === "press") {
     const delayApplied = await applyStartDelayIfNeeded(
       page,
       config.timing,
-      startDelayApplied
+      startDelayApplied,
     );
 
     await applyStepDelay(page, step.delayBeforeMs);
@@ -696,11 +748,11 @@ const runStep = async (
     return delayApplied;
   }
 
-  if (step.action === 'scroll') {
+  if (step.action === "scroll") {
     const delayApplied = await applyStartDelayIfNeeded(
       page,
       config.timing,
-      startDelayApplied
+      startDelayApplied,
     );
 
     await applyStepDelay(page, step.delayBeforeMs);
@@ -711,11 +763,11 @@ const runStep = async (
     return delayApplied;
   }
 
-  if (step.action === 'select') {
+  if (step.action === "select") {
     const delayApplied = await applyStartDelayIfNeeded(
       page,
       config.timing,
-      startDelayApplied
+      startDelayApplied,
     );
 
     await applyStepDelay(page, step.delayBeforeMs);
@@ -726,11 +778,11 @@ const runStep = async (
     return delayApplied;
   }
 
-  if (step.action === 'check') {
+  if (step.action === "check") {
     const delayApplied = await applyStartDelayIfNeeded(
       page,
       config.timing,
-      startDelayApplied
+      startDelayApplied,
     );
 
     await applyStepDelay(page, step.delayBeforeMs);
@@ -741,11 +793,11 @@ const runStep = async (
     return delayApplied;
   }
 
-  if (step.action === 'upload') {
+  if (step.action === "upload") {
     const delayApplied = await applyStartDelayIfNeeded(
       page,
       config.timing,
-      startDelayApplied
+      startDelayApplied,
     );
 
     await applyStepDelay(page, step.delayBeforeMs);
@@ -756,11 +808,11 @@ const runStep = async (
     return delayApplied;
   }
 
-  if (step.action === 'drag') {
+  if (step.action === "drag") {
     const delayApplied = await applyStartDelayIfNeeded(
       page,
       config.timing,
-      startDelayApplied
+      startDelayApplied,
     );
 
     await applyStepDelay(page, step.delayBeforeMs);
@@ -771,7 +823,13 @@ const runStep = async (
     await page.mouse.down();
 
     const targetPoint = await getLocatorCenter(target);
-    await moveMouseBezier(page, state, targetPoint.x, targetPoint.y, config.motion);
+    await moveMouseBezier(
+      page,
+      state,
+      targetPoint.x,
+      targetPoint.y,
+      config.motion,
+    );
     await page.waitForTimeout(config.motion.clickDelayMs);
     await page.mouse.up();
     await applyStepDelay(page, step.delayAfterMs);
@@ -803,7 +861,7 @@ export const runDemo = async (page: Page, config: DemoReelConfig) => {
       mouseState,
       resolvedCursor.start,
       resolvedCursor,
-      startDelayApplied
+      startDelayApplied,
     );
   }
 

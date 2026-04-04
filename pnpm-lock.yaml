@@ -4,10 +4,16 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  demo-reel: link:../../.local/share/pnpm/global/5/node_modules/demo-reel
+
 importers:
 
   .:
     dependencies:
+      demo-reel:
+        specifier: link:../../.local/share/pnpm/global/5/node_modules/demo-reel
+        version: link:../../.local/share/pnpm/global/5/node_modules/demo-reel
       ffmpeg-static:
         specifier: ^5.2.0
         version: 5.3.0
