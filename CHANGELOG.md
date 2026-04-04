@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Use string shortcuts (e.g., `cursor: 'dot'`) or full objects (e.g., `cursor: { type: 'dot', size: 16 }`)
 - **`init` Command**: New `demo-reel init` command creates `example.demo.ts` template
 - **Documentation**: Added descriptive `.describe()` calls on all Zod schema fields for IDE tooltips
+- **Selector Indexing**: Select a specific match with `selector.index` (0-based)
+- **New Selector Strategy**: `data-node-id` for `[data-node-id="..."]`
+- **Type Clear Option**: `type` steps support `clear: true` to clear inputs before typing
 
 ### Changed
 - **`demo-reel` (no args)**: Now runs all `*.demo.ts` files instead of requiring `--all` flag

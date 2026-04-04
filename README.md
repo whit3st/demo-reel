@@ -137,6 +137,10 @@ export default defineConfig({
 - `type` - Type text into input
 - `press` - Press a key
 - `scroll` - Scroll element
+- `select` - Select option(s) in dropdown
+- `check` - Check or uncheck checkbox
+- `upload` - Upload files
+- `drag` - Drag and drop element
 - `wait` - Wait for duration
 - `waitFor` - Wait for condition (selector, URL, function, etc.)
 
@@ -154,6 +158,20 @@ export default defineConfig({
 
 // By href
 { strategy: 'href', value: '/dashboard' }
+
+// By data-node-id
+{ strategy: 'data-node-id', value: 'node-123' }
+
+// Select a specific match (0-based index)
+{ strategy: 'class', value: 'nav-link', index: 1 }
+```
+
+### Type Clear Option
+
+Clear an input before typing:
+
+```typescript
+{ action: 'type', selector: { strategy: 'id', value: 'email' }, text: 'user@example.com', clear: true }
 ```
 
 ## Features
