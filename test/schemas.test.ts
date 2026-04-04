@@ -393,5 +393,129 @@ describe("Schema Validation", () => {
       });
       expect(result.success).toBe(false);
     });
+
+    it("should validate config with outputFormat mp4", () => {
+      const result = demoReelConfigSchema.safeParse({
+        viewport: { width: 1920, height: 1080 },
+        video: { enabled: true, size: { width: 1920, height: 1080 } },
+        cursor: {
+          start: { x: 100, y: 100 },
+          persistPosition: false,
+          type: "dot",
+          size: 10,
+          borderWidth: 2,
+          borderColor: "#000",
+          shadowColor: "#fff",
+        },
+        motion: {
+          moveDurationMs: 500,
+          moveStepsMin: 20,
+          stepsPerPx: 10,
+          clickDelayMs: 100,
+          curve: {
+            offsetRatio: 0.1,
+            offsetMin: 5,
+            offsetMax: 50,
+            easing: "easeInOutCubic",
+          },
+        },
+        typing: {
+          baseDelayMs: 50,
+          spaceDelayMs: 100,
+          punctuationDelayMs: 150,
+          enterDelayMs: 200,
+        },
+        timing: {
+          afterGotoDelayMs: 1000,
+          endDelayMs: 2000,
+        },
+        steps: [{ action: "goto", url: "https://example.com" }],
+        outputFormat: "mp4",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should validate config with outputFormat webm", () => {
+      const result = demoReelConfigSchema.safeParse({
+        viewport: { width: 1920, height: 1080 },
+        video: { enabled: true, size: { width: 1920, height: 1080 } },
+        cursor: {
+          start: { x: 100, y: 100 },
+          persistPosition: false,
+          type: "dot",
+          size: 10,
+          borderWidth: 2,
+          borderColor: "#000",
+          shadowColor: "#fff",
+        },
+        motion: {
+          moveDurationMs: 500,
+          moveStepsMin: 20,
+          stepsPerPx: 10,
+          clickDelayMs: 100,
+          curve: {
+            offsetRatio: 0.1,
+            offsetMin: 5,
+            offsetMax: 50,
+            easing: "easeInOutCubic",
+          },
+        },
+        typing: {
+          baseDelayMs: 50,
+          spaceDelayMs: 100,
+          punctuationDelayMs: 150,
+          enterDelayMs: 200,
+        },
+        timing: {
+          afterGotoDelayMs: 1000,
+          endDelayMs: 2000,
+        },
+        steps: [{ action: "goto", url: "https://example.com" }],
+        outputFormat: "webm",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should reject config with audio and outputFormat webm", () => {
+      const result = demoReelConfigSchema.safeParse({
+        viewport: { width: 1920, height: 1080 },
+        video: { enabled: true, size: { width: 1920, height: 1080 } },
+        cursor: {
+          start: { x: 100, y: 100 },
+          persistPosition: false,
+          type: "dot",
+          size: 10,
+          borderWidth: 2,
+          borderColor: "#000",
+          shadowColor: "#fff",
+        },
+        motion: {
+          moveDurationMs: 500,
+          moveStepsMin: 20,
+          stepsPerPx: 10,
+          clickDelayMs: 100,
+          curve: {
+            offsetRatio: 0.1,
+            offsetMin: 5,
+            offsetMax: 50,
+            easing: "easeInOutCubic",
+          },
+        },
+        typing: {
+          baseDelayMs: 50,
+          spaceDelayMs: 100,
+          punctuationDelayMs: 150,
+          enterDelayMs: 200,
+        },
+        timing: {
+          afterGotoDelayMs: 1000,
+          endDelayMs: 2000,
+        },
+        steps: [{ action: "goto", url: "https://example.com" }],
+        audio: { narration: "./voice.mp3" },
+        outputFormat: "webm",
+      });
+      expect(result.success).toBe(false);
+    });
   });
 });

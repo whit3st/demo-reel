@@ -417,6 +417,10 @@ export const videoConfigSchema = z.object({
   size: sizeSchema.describe("Video dimensions"),
 });
 
+export const outputFormatSchema = z
+  .enum(["webm", "mp4"])
+  .describe("Output file format");
+
 export const audioConfigSchema = z.object({
   narration: z
     .string()
@@ -529,7 +533,8 @@ function resolveTiming(
     : val;
 }
 
-export const demoReelConfigInputSchema = z.object({
+export const demoReelConfigInputSchema = z
+  .object({
   viewport: sizeSchema.describe("Browser viewport dimensions"),
   video: videoConfigSchema.describe("Video recording settings"),
   cursor: cursorPresetOrConfigSchema.describe(
@@ -564,6 +569,9 @@ export const demoReelConfigInputSchema = z.object({
     .min(1)
     .optional()
     .describe("Full output file path (overrides name/outputDir)"),
+  outputFormat: outputFormatSchema
+    .optional()
+    .describe("Output file format (default: webm, or mp4 when audio is used)"),
   concurrency: z
     .number()
     .int()
@@ -578,7 +586,19 @@ export const demoReelConfigInputSchema = z.object({
   auth: authConfigSchema
     .optional()
     .describe("Authentication/session persistence settings"),
-});
+  })
+  .superRefine((value, ctx) => {
+    if (
+      value.outputFormat === "webm" &&
+      (value.audio?.narration || value.audio?.background)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Audio output requires outputFormat to be mp4",
+        path: ["outputFormat"],
+      });
+    }
+  });
 
 export const demoReelConfigSchema = demoReelConfigInputSchema.transform(
   (val) => ({

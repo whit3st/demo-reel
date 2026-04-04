@@ -66,6 +66,7 @@ export default defineConfig({
     size: { width: 1920, height: 1080 },
   },
   name: 'my-demo',
+  outputFormat: 'webm', // 'webm' | 'mp4'
   steps: [
     { action: 'goto', url: 'https://example.com' },
     { action: 'wait', ms: 2000 },
@@ -199,6 +200,8 @@ audio: {
   backgroundVolume: 0.3,
 }
 ```
+
+Audio output requires `outputFormat: 'mp4'`.
 
 ## CI/CD Integration
 

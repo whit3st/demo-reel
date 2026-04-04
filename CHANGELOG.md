@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **New Selector Strategy**: `data-node-id` for `[data-node-id="..."]`
 - **Custom Selector Strategy**: `custom` uses a raw selector string
 - **Type Clear Option**: `type` steps support `clear: true` to clear inputs before typing
+- **Output Format**: `outputFormat` lets you choose `webm` or `mp4` (audio requires `mp4`)
 
 ### Changed
 - **`demo-reel` (no args)**: Now runs all `*.demo.ts` files instead of requiring `--all` flag
