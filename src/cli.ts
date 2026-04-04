@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { loadConfig, loadScenario, findScenarioFiles } from './config-loader.js';
-import { runVideoScenario } from './video-handler.js';
+import { runVideoScenario, setOnBrowserCreated } from './video-handler.js';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
 
@@ -11,6 +11,36 @@ interface CliOptions {
   init?: boolean;
   outputDir?: string;
   headed?: boolean;
+}
+
+let currentBrowser: { browser: any; context: any } | null = null;
+
+function registerCleanup(browser: any, context: any): void {
+  currentBrowser = { browser, context };
+}
+
+async function cleanupBrowser(): Promise<void> {
+  if (currentBrowser) {
+    try {
+      if (currentBrowser.context) {
+        await currentBrowser.context.close();
+      }
+      if (currentBrowser.browser) {
+        await currentBrowser.browser.close();
+      }
+    } catch (e) {
+      // Ignore cleanup errors
+    }
+    currentBrowser = null;
+  }
+}
+
+function setupSignalHandlers(): void {
+  const cleanup = () => {
+    cleanupBrowser().then(() => process.exit(0)).catch(() => process.exit(0));
+  };
+  process.on('SIGINT', cleanup);
+  process.on('SIGTERM', cleanup);
 }
 
 const EXAMPLE_SCENARIO = `import { defineConfig } from 'demo-reel';
@@ -101,6 +131,11 @@ Examples:
 
 async function main(): Promise<void> {
   const { scenario, options } = parseArgs();
+
+  setupSignalHandlers();
+  setOnBrowserCreated((browser, context) => {
+    registerCleanup(browser, context);
+  });
 
   try {
     if (options.init) {

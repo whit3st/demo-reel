@@ -20,6 +20,12 @@ export interface VideoResult {
   tempVideoPath: string;
 }
 
+let onBrowserCreated: ((browser: Browser, context: BrowserContext) => void) | null = null;
+
+export function setOnBrowserCreated(cb: (browser: Browser, context: BrowserContext) => void): void {
+  onBrowserCreated = cb;
+}
+
 // Default behavior settings
 const DEFAULT_BEHAVIOR: Required<AuthBehaviorConfig> = {
   autoReauth: true,
@@ -116,8 +122,8 @@ export async function handleAuth(
   return true;
 }
 
-export async function startRecording(config: DemoReelConfig, _configPath: string): Promise<VideoResult> {
-  const browser = await chromium.launch({ headless: true });
+export async function startRecording(config: DemoReelConfig, headed: boolean = false): Promise<VideoResult> {
+  const browser = await chromium.launch({ headless: !headed });
   
   const context = await browser.newContext({
     viewport: config.viewport,
@@ -130,6 +136,10 @@ export async function startRecording(config: DemoReelConfig, _configPath: string
   });
   
   const page = await context.newPage();
+  
+  if (onBrowserCreated) {
+    onBrowserCreated(browser, context);
+  }
   
   return {
     page,
@@ -214,9 +224,10 @@ export async function runVideoScenario(
   options: {
     verbose?: boolean;
     dryRun?: boolean;
+    headed?: boolean;
   } = {}
 ): Promise<string> {
-  const { verbose, dryRun } = options;
+  const { verbose, dryRun, headed } = options;
   
   if (dryRun) {
     console.log('✓ Config validated successfully (dry run)');
@@ -229,7 +240,7 @@ export async function runVideoScenario(
     console.log('Starting browser and recording...');
   }
   
-  const recording = await startRecording(config, configPath);
+  const recording = await startRecording(config, headed);
   
   try {
     // Handle authentication if configured
