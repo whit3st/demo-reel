@@ -11,6 +11,7 @@ interface CliOptions {
   init?: boolean;
   outputDir?: string;
   headed?: boolean;
+  tags?: string[];
 }
 
 let currentBrowser: { browser: any; context: any } | null = null;
@@ -66,6 +67,23 @@ export default defineConfig({
 });
 `;
 
+const addTags = (existing: string[] | undefined, value: string | undefined) => {
+  if (!value) {
+    return existing;
+  }
+
+  const tags = value
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0);
+
+  if (tags.length === 0) {
+    return existing;
+  }
+
+  return [...(existing ?? []), ...tags];
+};
+
 function parseArgs(): { scenario?: string; options: CliOptions } {
   const args = process.argv.slice(2);
   const options: CliOptions = {
@@ -88,6 +106,10 @@ function parseArgs(): { scenario?: string; options: CliOptions } {
       options.outputDir = args[++i];
     } else if (arg === "--headed") {
       options.headed = true;
+    } else if (arg === "--tag") {
+      options.tags = addTags(options.tags, args[++i]);
+    } else if (arg.startsWith("--tag=")) {
+      options.tags = addTags(options.tags, arg.slice("--tag=".length));
     } else if (arg === "--help" || arg === "-h") {
       showHelp();
       process.exit(0);
@@ -117,6 +139,7 @@ Options:
   --output-dir, -o <dir>       Override output directory for videos
   --dry-run                    Validate config without recording
   --headed                     Show browser window (non-headless)
+  --tag <tag>[,<tag>]          Run only scenarios with matching tags
   --verbose, -v                Show detailed output
   --help, -h                   Show this help message
 
@@ -131,6 +154,16 @@ Examples:
 
 async function main(): Promise<void> {
   const { scenario, options } = parseArgs();
+  const tagFilter = options.tags && options.tags.length > 0 ? new Set(options.tags) : null;
+  const matchesTags = (tags: string[] | undefined) => {
+    if (!tagFilter) {
+      return true;
+    }
+    if (!tags || tags.length === 0) {
+      return false;
+    }
+    return tags.some((tag) => tagFilter.has(tag));
+  };
 
   setupSignalHandlers();
   setOnBrowserCreated((browser, context) => {
@@ -155,11 +188,28 @@ async function main(): Promise<void> {
       }
 
       console.log(`Found ${files.length} scenario(s)`);
+      if (tagFilter) {
+        console.log(`Filtering by tags: ${options.tags?.join(", ")}`);
+      }
+
+      let matchedCount = 0;
 
       for (const file of files) {
         console.log(`\n▶ ${file}`);
         const loaded = await loadConfig(file, options.outputDir);
+        if (!matchesTags(loaded.config.tags)) {
+          if (options.verbose) {
+            console.log("  ↳ Skipped (tags)");
+          }
+          continue;
+        }
+        matchedCount += 1;
         await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
+      }
+
+      if (tagFilter && matchedCount === 0) {
+        console.error(`No scenarios match tags: ${options.tags?.join(", ")}`);
+        process.exit(1);
       }
     } else if (scenario) {
       // Run specific scenario
@@ -174,6 +224,10 @@ async function main(): Promise<void> {
       }
 
       const loaded = await loadConfig(configPath, options.outputDir);
+      if (!matchesTags(loaded.config.tags)) {
+        console.error(`Scenario does not match tags: ${options.tags?.join(", ")}`);
+        process.exit(1);
+      }
       await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
     } else {
       // Run all scenarios
@@ -186,11 +240,28 @@ async function main(): Promise<void> {
       }
 
       console.log(`Found ${files.length} scenario(s)`);
+      if (tagFilter) {
+        console.log(`Filtering by tags: ${options.tags?.join(", ")}`);
+      }
+
+      let matchedCount = 0;
 
       for (const file of files) {
         console.log(`\n▶ ${file}`);
         const loaded = await loadConfig(file, options.outputDir);
+        if (!matchesTags(loaded.config.tags)) {
+          if (options.verbose) {
+            console.log("  ↳ Skipped (tags)");
+          }
+          continue;
+        }
+        matchedCount += 1;
         await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
+      }
+
+      if (tagFilter && matchedCount === 0) {
+        console.error(`No scenarios match tags: ${options.tags?.join(", ")}`);
+        process.exit(1);
       }
     }
 

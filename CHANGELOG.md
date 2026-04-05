@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Custom Selector Strategy**: `custom` uses a raw selector string
 - **Type Clear Option**: `type` steps support `clear: true` to clear inputs before typing
 - **Output Format**: `outputFormat` lets you choose `webm` or `mp4` (audio requires `mp4`)
+- **Randomization Seed**: `randomization.seed` enables deterministic cursor/typing variation
+- **Scenario Tags**: `tags` plus `--tag` CLI filtering
 
 ### Changed
 

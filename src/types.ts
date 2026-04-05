@@ -21,4 +21,5 @@ export type {
   TimingPresetOrConfig,
   ResolutionPreset,
   ResolutionConfig,
+  RandomizationConfig,
 } from "./schemas.js";

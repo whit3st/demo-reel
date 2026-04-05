@@ -309,6 +309,15 @@ export const videoConfigSchema = z.object({
 
 export const outputFormatSchema = z.enum(["webm", "mp4"]).describe("Output file format");
 
+export const randomizationSchema = z
+  .object({
+    seed: z
+      .union([z.string().min(1), z.number().int()])
+      .optional()
+      .describe("Seed for deterministic randomization"),
+  })
+  .describe("Randomization settings");
+
 export const audioConfigSchema = z.object({
   narration: z.string().min(1).optional().describe("Path to narration MP3 file"),
   narrationDelay: z.number().min(0).optional().describe("Delay before narration starts in ms"),
@@ -408,6 +417,7 @@ export const demoReelConfigInputSchema = z
       .min(1)
       .optional()
       .describe("Full output file path (overrides name/outputDir)"),
+    tags: z.array(z.string().min(1)).optional().describe("Tags for filtering scenarios"),
     outputFormat: outputFormatSchema
       .optional()
       .describe("Output file format (default: webm, or mp4 when audio is used)"),
@@ -418,6 +428,7 @@ export const demoReelConfigInputSchema = z
       .optional()
       .describe("Number of videos to generate concurrently"),
     audio: audioConfigSchema.optional().describe("Audio/narration settings"),
+    randomization: randomizationSchema.optional().describe("Randomization settings"),
     timestamp: z.boolean().optional().describe("Add timestamp to output filename"),
     auth: authConfigSchema.optional().describe("Authentication/session persistence settings"),
   })
@@ -449,6 +460,7 @@ export type TypingPresetOrConfig = z.infer<typeof typingPresetOrConfigSchema>;
 export type TimingPresetOrConfig = z.infer<typeof timingPresetOrConfigSchema>;
 export type ResolutionPreset = z.infer<typeof resolutionPresetSchema>;
 export type ResolutionConfig = z.infer<typeof resolutionSchema>;
+export type RandomizationConfig = z.infer<typeof randomizationSchema>;
 export type DemoReelConfigInput = z.infer<typeof demoReelConfigInputSchema>;
 
 // Export types

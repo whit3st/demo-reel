@@ -8,6 +8,7 @@ import type {
   TimingConfig,
   TypingConfig,
 } from "./schemas.js";
+import { createRandom, type RandomSource } from "./random.js";
 
 type Point = {
   x: number;
@@ -21,6 +22,18 @@ type MouseState = {
 
 const clamp = (value: number, min: number, max: number) => {
   return Math.min(max, Math.max(min, value));
+};
+
+const MOTION_OFFSET_JITTER = 0.15;
+const TYPING_DELAY_JITTER = 0.15;
+
+const applyJitter = (value: number, jitter: number, rng?: RandomSource) => {
+  if (!rng || value === 0 || jitter <= 0) {
+    return value;
+  }
+
+  const factor = 1 + (rng() * 2 - 1) * jitter;
+  return Math.max(0, value * factor);
 };
 
 const applyStepDelay = async (page: Page, delayMs?: number) => {
@@ -330,7 +343,12 @@ const easingLookup = {
   easeInOutCubic,
 } as const;
 
-const getBezierControlPoints = (start: Point, end: Point, motion: MotionConfig) => {
+const getBezierControlPoints = (
+  start: Point,
+  end: Point,
+  motion: MotionConfig,
+  rng?: RandomSource,
+) => {
   const dx = end.x - start.x;
   const dy = end.y - start.y;
   const distance = Math.hypot(dx, dy);
@@ -342,9 +360,12 @@ const getBezierControlPoints = (start: Point, end: Point, motion: MotionConfig) 
   const dominantAxis = Math.abs(dx) >= Math.abs(dy) ? dx : dy;
   const curveDirection = dominantAxis >= 0 ? 1 : -1;
   const perpendicular = { x: -dy / distance, y: dx / distance };
-  const offset =
-    clamp(distance * motion.curve.offsetRatio, motion.curve.offsetMin, motion.curve.offsetMax) *
-    curveDirection;
+  const baseOffset = clamp(
+    distance * motion.curve.offsetRatio,
+    motion.curve.offsetMin,
+    motion.curve.offsetMax,
+  );
+  const offset = applyJitter(baseOffset, MOTION_OFFSET_JITTER, rng) * curveDirection;
 
   return {
     control1: {
@@ -364,6 +385,7 @@ const moveMouseBezier = async (
   targetX: number,
   targetY: number,
   motion: MotionConfig,
+  rng?: RandomSource,
 ) => {
   const start = state.position;
   const end = { x: targetX, y: targetY };
@@ -376,7 +398,7 @@ const moveMouseBezier = async (
   const stepsByDistance = Math.max(3, Math.round(distance / motion.stepsPerPx));
   const steps = Math.max(motion.moveStepsMin, stepsByDistance);
   const stepDelay = Math.max(1, Math.floor(motion.moveDurationMs / steps));
-  const { control1, control2 } = getBezierControlPoints(start, end, motion);
+  const { control1, control2 } = getBezierControlPoints(start, end, motion, rng);
   const easing = easingLookup[motion.curve.easing];
 
   for (let i = 1; i <= steps; i += 1) {
@@ -396,11 +418,12 @@ const humanClick = async (
   state: MouseState,
   motion: MotionConfig,
   start: Point,
+  rng?: RandomSource,
 ) => {
   const target = await getLocatorCenter(locator);
 
   await ensureMouseStart(page, state, start);
-  await moveMouseBezier(page, state, target.x, target.y, motion);
+  await moveMouseBezier(page, state, target.x, target.y, motion, rng);
   await page.waitForTimeout(motion.clickDelayMs);
   await page.mouse.down();
   await page.waitForTimeout(motion.clickDelayMs);
@@ -412,6 +435,7 @@ const humanType = async (
   text: string,
   typing: TypingConfig,
   baseDelayOverride?: number,
+  rng?: RandomSource,
 ) => {
   const baseDelay = typeof baseDelayOverride === "number" ? baseDelayOverride : typing.baseDelayMs;
 
@@ -423,8 +447,9 @@ const humanType = async (
     }
 
     const delay = getTypingDelay(character, typing, baseDelay);
-    if (delay > 0) {
-      await page.waitForTimeout(delay);
+    const randomizedDelay = applyJitter(delay, TYPING_DELAY_JITTER, rng);
+    if (randomizedDelay > 0) {
+      await page.waitForTimeout(randomizedDelay);
     }
   }
 };
@@ -435,11 +460,12 @@ const humanMoveToLocator = async (
   state: MouseState,
   motion: MotionConfig,
   start: Point,
+  rng?: RandomSource,
 ) => {
   const target = await getLocatorCenter(locator);
 
   await ensureMouseStart(page, state, start);
-  await moveMouseBezier(page, state, target.x, target.y, motion);
+  await moveMouseBezier(page, state, target.x, target.y, motion, rng);
   return target;
 };
 
@@ -593,6 +619,7 @@ const runStep = async (
   cursorStart: Point,
   resolvedCursor: CursorConfig & { start: Point },
   startDelayApplied: boolean,
+  rng?: RandomSource,
 ): Promise<boolean> => {
   if (step.action === "goto") {
     await page.goto(step.url, step.waitUntil ? { waitUntil: step.waitUntil } : undefined);
@@ -653,7 +680,7 @@ const runStep = async (
 
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
-    await humanClick(page, target, state, config.motion, cursorStart);
+    await humanClick(page, target, state, config.motion, cursorStart, rng);
     await applyStepDelay(page, step.delayAfterMs);
     return delayApplied;
   }
@@ -663,7 +690,7 @@ const runStep = async (
 
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
-    await humanMoveToLocator(page, target, state, config.motion, cursorStart);
+    await humanMoveToLocator(page, target, state, config.motion, cursorStart, rng);
     await applyStepDelay(page, step.delayAfterMs);
     return delayApplied;
   }
@@ -673,11 +700,11 @@ const runStep = async (
 
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
-    await humanClick(page, target, state, config.motion, cursorStart);
+    await humanClick(page, target, state, config.motion, cursorStart, rng);
     if (step.clear) {
       await target.fill("");
     }
-    await humanType(page, step.text, config.typing, step.delayMs);
+    await humanType(page, step.text, config.typing, step.delayMs, rng);
     await applyStepDelay(page, step.delayAfterMs);
     return delayApplied;
   }
@@ -699,7 +726,7 @@ const runStep = async (
 
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
-    await humanMoveToLocator(page, target, state, config.motion, cursorStart);
+    await humanMoveToLocator(page, target, state, config.motion, cursorStart, rng);
     await page.mouse.wheel(step.x, step.y);
     await applyStepDelay(page, step.delayAfterMs);
     return delayApplied;
@@ -744,12 +771,12 @@ const runStep = async (
     await applyStepDelay(page, step.delayBeforeMs);
     const source = resolveLocator(page, step.source);
     const target = resolveLocator(page, step.target);
-    await humanMoveToLocator(page, source, state, config.motion, cursorStart);
+    await humanMoveToLocator(page, source, state, config.motion, cursorStart, rng);
     await page.waitForTimeout(config.motion.clickDelayMs);
     await page.mouse.down();
 
     const targetPoint = await getLocatorCenter(target);
-    await moveMouseBezier(page, state, targetPoint.x, targetPoint.y, config.motion);
+    await moveMouseBezier(page, state, targetPoint.x, targetPoint.y, config.motion, rng);
     await page.waitForTimeout(config.motion.clickDelayMs);
     await page.mouse.up();
     await applyStepDelay(page, step.delayAfterMs);
@@ -772,6 +799,7 @@ export const runDemo = async (page: Page, config: DemoReelConfig) => {
     position: { x: 0, y: 0 },
   };
   let startDelayApplied = false;
+  const rng = config.randomization ? createRandom(config.randomization.seed) : undefined;
 
   for (const step of config.steps) {
     startDelayApplied = await runStep(
@@ -782,6 +810,7 @@ export const runDemo = async (page: Page, config: DemoReelConfig) => {
       resolvedCursor.start,
       resolvedCursor,
       startDelayApplied,
+      rng,
     );
   }
 

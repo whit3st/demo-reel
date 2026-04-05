@@ -146,6 +146,28 @@ video: { resolution: { width: 2560, height: 1440 } }
 | `2K`   | 2560x1440  |
 | `4K`   | 3840x2160  |
 
+### Randomization
+
+Enable deterministic randomization for cursor paths and typing delays:
+
+```typescript
+randomization: { seed: "demo-seed" }
+```
+
+### Scenario Tags
+
+Tag scenarios and filter runs by tag:
+
+```typescript
+tags: ["marketing", "onboarding"]
+```
+
+```bash
+demo-reel --tag marketing
+demo-reel --tag marketing --tag onboarding
+demo-reel --tag marketing,onboarding
+```
+
 ### Available Steps
 
 - `goto` - Navigate to URL
