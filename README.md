@@ -154,6 +154,34 @@ Enable deterministic randomization for cursor paths and typing delays:
 randomization: { seed: "demo-seed" }
 ```
 
+### Authentication
+
+Use the top-level `auth` property when a scenario needs to log in before recording and reuse a saved session on later runs.
+
+```typescript
+auth: {
+  loginSteps: [
+    { action: "goto", url: "https://demo.epistola.app/login" },
+    { action: "type", selector: { strategy: "id", value: "username" }, text: "admin@local" },
+    { action: "type", selector: { strategy: "id", value: "password" }, text: "admin" },
+    { action: "click", selector: { strategy: "class", value: "btn-primary" } },
+  ],
+  validate: {
+    protectedUrl: "https://demo.epistola.app/tenants/demo",
+    successIndicator: { strategy: "href", value: "/tenants/demo" },
+  },
+  storage: {
+    name: "demo-session",
+    types: ["cookies", "localStorage"],
+  },
+}
+```
+
+- `loginSteps`: runs the login flow and captures a session after it succeeds
+- `validate`: opens a protected page and checks for an element that proves the session is still valid
+- `storage`: controls the session name and which browser storage types to persist
+- `behavior`: optional flags for `autoReauth`, `forceReauth`, and `clearInvalid`
+
 ### Scenario Tags
 
 Tag scenarios and filter runs by tag:
