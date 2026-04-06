@@ -162,6 +162,7 @@ const cursorScript = (cursor: CursorConfig) => {
     style.id = styleId;
 
     const baseStyle = `
+* { cursor: none !important; }
 #__pw_cursor {
   position: fixed;
   top: 0;
@@ -469,6 +470,35 @@ const humanMoveToLocator = async (
   return target;
 };
 
+const SCROLL_STEP_PX = 80;
+const SCROLL_STEP_DELAY_MS = 16;
+
+const humanScroll = async (
+  page: Page,
+  deltaX: number,
+  deltaY: number,
+  _motion: MotionConfig,
+) => {
+  const totalDistance = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+  if (totalDistance === 0) {
+    return;
+  }
+
+  const steps = Math.max(3, Math.ceil(totalDistance / SCROLL_STEP_PX));
+  let scrolledX = 0;
+  let scrolledY = 0;
+
+  for (let i = 1; i <= steps; i += 1) {
+    const eased = easeInOutCubic(i / steps);
+    const targetX = Math.round(deltaX * eased);
+    const targetY = Math.round(deltaY * eased);
+    await page.mouse.wheel(targetX - scrolledX, targetY - scrolledY);
+    scrolledX = targetX;
+    scrolledY = targetY;
+    await page.waitForTimeout(SCROLL_STEP_DELAY_MS);
+  }
+};
+
 const applyStartDelayIfNeeded = async (
   page: Page,
   timing: TimingConfig,
@@ -578,7 +608,7 @@ export const runStepSimple = async (page: Page, step: Step): Promise<void> => {
     const target = resolveLocator(page, step.selector);
     await target.evaluate(
       (el: HTMLElement | SVGElement, args: { x: number; y: number }) => {
-        el.scrollBy(args.x, args.y);
+        el.scrollBy({ left: args.x, top: args.y, behavior: "smooth" });
       },
       { x: step.x, y: step.y },
     );
@@ -727,7 +757,7 @@ const runStep = async (
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
     await humanMoveToLocator(page, target, state, config.motion, cursorStart, rng);
-    await page.mouse.wheel(step.x, step.y);
+    await humanScroll(page, step.x, step.y, config.motion);
     await applyStepDelay(page, step.delayAfterMs);
     return delayApplied;
   }

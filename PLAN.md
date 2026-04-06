@@ -1,302 +1,123 @@
-# Demo Reel Implementation Plan
+# Demo Reel — Development Plan
 
-## Overview
+Current version: 0.1.4
 
-Transform from a Playwright test-based prototype to a professional CLI tool for generating demo videos.
-
-## Philosophy
-
-- **Convention over configuration**: `npx demo-reel` just works
-- **TypeScript-first**: `defineConfig()` gives autocomplete, no JSON schema needed
-- **Multiple scenarios**: Run single config or all `*.demo.ts` files
-- **CI/CD ready**: Works great in GitHub Actions, GitLab CI, etc.
+This plan covers the remaining work needed to produce polished, production-quality demo videos.
 
 ---
 
-## Phase 1: Project Restructure
+## Phase 1: Config Loading Reliability
 
-### 1.1 Directory Layout
+### TypeScript config loader
 
-```
-src/
-├── index.ts              # Public API exports
-├── cli.ts                # CLI entry point
-├── config-loader.ts      # Load and validate configs
-├── runner.ts             # Playwright video runner
-├── video-handler.ts      # Manage video output/naming
-├── schemas.ts            # Zod schemas (extracted)
-└── types.ts              # TypeScript type definitions
-templates/
-├── demo-reel.config.ts   # Starter template
-└── scenario.demo.ts      # Example scenario template
-```
+`config-loader.ts` uses `import(pathToFileURL(...))` for `.ts` files, which only works if the user has `tsx` or a similar Node loader registered. This should either:
 
-### 1.2 Package.json Updates
-
-- Add `bin` entry: `"demo-reel": "./dist/cli.js"`
-- Add build script for TypeScript compilation
-- Update exports for programmatic API
-- Add peer dependency for Playwright
+- Bundle `tsx` as a dependency and spawn with `--import tsx/esm`, or
+- Document the requirement explicitly in README and error messages
 
 ---
 
-## Phase 2: Core Module Extraction
+## Phase 2: Visual Polish
 
-### 2.1 Extract Types and Schemas
+### Click ripple effect
 
-Move Zod schemas from `tests/e2e.config.ts` to `src/schemas.ts`:
+Inject a brief visual ripple animation at the click point. This makes it obvious where clicks happen in the video. Implement as a CSS animation injected alongside the cursor overlay.
 
-- All step schemas (goto, click, type, wait, etc.)
-- Cursor schemas (dot, svg)
-- Motion, typing, timing schemas
-- Main config schema with output fields
+### Text overlay / callout step
 
-### 2.2 Refactor Adapter Code
+Add a new `annotate` step type that renders a floating text label or highlight box on screen for a configurable duration. Useful for "Step 1: Click here" style narration in the video itself.
 
-Move logic from `tests/e2e.adapter.ts` to `src/runner.ts`:
+### Zoom-to-element
 
-- Mouse state management
-- Bezier curve movement
-- Human-like typing delays
-- Cursor overlay injection
-- Step execution engine
-
-Remove Playwright test dependencies - run programmatically.
+Add a `zoom` step that smoothly scales the viewport to focus on a specific element, then zooms back out. Helps viewers see small UI details.
 
 ---
 
-## Phase 3: Config System
+## Phase 3: Step Enhancements
 
-### 3.1 Define Config Function
+### `evaluate` step
+
+Add an `evaluate` step type that runs arbitrary JavaScript in the page context. Useful for:
+
+- Injecting mock data or API responses
+- Triggering toast notifications
+- Changing themes or toggling feature flags
+- Any setup that isn't a standard browser interaction
+
+### Error recovery
+
+Add `continueOnError` (boolean) to the step schema. When true, a failed step logs a warning but doesn't abort the scenario. Optionally add `retries` (number) for flaky steps.
+
+---
+
+## Phase 4: Device Emulation
+
+### Mobile / tablet viewports
+
+Pass Playwright device descriptors through config:
 
 ```typescript
-// src/index.ts
-export function defineConfig(config: DemoReelConfig): DemoReelConfig {
-  return config;
-}
+device: "iPhone 14"
+// or
+viewport: { width: 390, height: 844, deviceScaleFactor: 3, isMobile: true, hasTouch: true }
 ```
 
-### 3.2 Extended Config Schema
-
-```typescript
-interface DemoReelConfig {
-  video: VideoConfig;
-  cursor: CursorConfig;
-  motion: MotionConfig;
-  typing: TypingConfig;
-  timing: TimingConfig;
-  steps: Step[];
-
-  // New fields
-  name?: string;
-  outputDir?: string;
-  outputPath?: string;
-  concurrency?: number;
-}
-```
-
-### 3.3 Config Loader
-
-Support multiple formats:
-
-- `demo-reel.config.ts` - Main config (TypeScript)
-- `*.demo.ts` - Scenario files
-- Dynamic import with tsx for TypeScript support
-- Resolve relative paths from config file location
+This enables demoing responsive designs and mobile-specific flows without separate tooling.
 
 ---
 
-## Phase 4: CLI Implementation
+## Phase 5: Scene Composition
 
-### 4.1 Entry Point
+### Multi-scene scenarios
 
-```typescript
-// src/cli.ts
-#!/usr/bin/env node
-// Use process.argv for minimal argument parsing
-```
+Allow a scenario to define multiple `scenes`, each with their own steps. Scenes are recorded separately and stitched together with configurable transitions (cut, fade, crossfade).
 
-### 4.2 CLI Behavior
+### Intro / outro frames
 
-```bash
-# Default: find and run demo-reel.config.ts
-npx demo-reel
-
-# Run specific scenario
-npx demo-reel onboarding
-# Looks for: onboarding.demo.ts, onboarding.config.ts
-
-# Run all scenarios in directory
-npx demo-reel --all
-# Finds all *.demo.ts files
-
-# Override output directory
-npx demo-reel --output-dir ./public/videos
-
-# Dry run (validate config without recording)
-npx demo-reel --dry-run
-
-# Verbose logging
-npx demo-reel --verbose
-```
-
-### 4.3 Resolution Order
-
-1. If argument provided: look for arg.demo.ts or arg.config.ts
-2. If no argument: look for demo-reel.config.ts
-3. If --all: find all \*.demo.ts in project
+Add `intro` and `outro` config sections that render a static title card (text, background color, duration) at the start/end of the video. Useful for branding.
 
 ---
 
-## Phase 5: Video Output Handling
+## Phase 6: CI/CD & Distribution
 
-### 5.1 Output Naming Priority
+### GitHub Action
 
-1. outputPath in config (absolute/relative path with filename)
-2. name + outputDir in config
-3. Config filename (e.g., onboarding.demo.ts to onboarding.webm)
-4. Default: demo-reel.webm in current directory
+Create `action.yml` for GitHub Marketplace:
 
-### 5.2 Video Lifecycle
+- Inputs: `config-path`, `output-dir`, `upload-artifacts`, `comment-pr`
+- Automatically install Playwright browsers
+- Post video links as PR comments
 
-1. Playwright records to temp directory
-2. After successful run, copy/rename to final destination
-3. Clean up temp files
-4. Log output path on completion
+### GIF export
 
-### 5.3 CI/CD Integration
-
-- Exit code 0 on success, 1 on failure
-- Stderr for errors, stdout for progress
-- Videos can be uploaded as artifacts
+Add `outputFormat: "gif"` with configurable fps, width, and color palette. GIFs are useful for READMEs, issue descriptions, and social media.
 
 ---
 
-## Phase 6: Multiple Config Discovery
+## Phase 7: Advanced Features
 
-### 6.1 Scenario Discovery
+### Parallel execution
 
-```typescript
-const scenarios = await glob("**/*.demo.ts", {
-  ignore: ["node_modules/**", "dist/**"],
-});
-```
+Run multiple `.demo.ts` scenarios concurrently with configurable concurrency limits. Important for CI pipelines with many scenarios.
 
-### 6.2 Execution Modes
+### Interactive recording mode
 
-- **Sequential** (default): Run one at a time
-- **Parallel** (future): Run independent scenarios concurrently
+Browse the app manually while recording, then auto-generate a `.demo.ts` config from the recorded actions. Lowers the barrier to creating the first scenario.
 
-### 6.3 Progress Reporting
+### Subtitle generation
 
-```
-✓ onboarding-flow (3.2s) → ./videos/onboarding-flow.webm
-✓ checkout-demo (5.1s) → ./videos/checkout-demo.webm
-```
+Auto-generate SRT/VTT files from narration audio timestamps or from step annotations. Important for accessibility.
 
 ---
 
-## Phase 7: Packaging and Distribution
+## Priority Summary
 
-### 7.1 Build Process
-
-- TypeScript compilation to dist/
-- Preserve type definitions
-- Include templates in package
-
-### 7.2 Installation Patterns
-
-As dev dependency:
-
-```bash
-npm install -D demo-reel
-npx demo-reel
-```
-
-One-off usage:
-
-```bash
-pnpx demo-reel --config ./my-demo.ts
-```
-
-CI/CD:
-
-```yaml
-- run: npx demo-reel --all
-- uses: actions/upload-artifact@v4
-  with:
-    name: demo-videos
-    path: ./public/videos/*.webm
-```
-
----
-
-## Phase 8: Developer Experience
-
-### 8.1 Init Command (Future)
-
-```bash
-npx demo-reel init
-# Creates demo-reel.config.ts from template
-```
-
-### 8.2 Debugging
-
-```bash
-# Show browser window (non-headless)
-npx demo-reel --headed
-
-# Slow motion
-npx demo-reel --slow-mo 100
-
-# Step through
-npx demo-reel --debug
-```
-
----
-
-## Implementation Order
-
-1. **Phase 1**: Restructure directories, update package.json
-2. **Phase 2**: Extract and refactor core modules
-3. **Phase 3**: Build config system with defineConfig
-4. **Phase 4**: Create CLI with basic argument parsing
-5. **Phase 5**: Implement video output handling
-6. **Phase 6**: Add multiple config discovery
-7. **Phase 7**: Set up build and packaging
-8. **Phase 8**: Polish DX, add templates
-
----
-
-## Migration Path
-
-For existing prototype:
-
-1. Move tests/e2e.adapter.ts to src/runner.ts
-2. Move tests/e2e.config.ts schemas to src/schemas.ts
-3. Create src/index.ts with defineConfig export
-4. Create src/cli.ts entry point
-5. Convert hardcoded config to template
-6. Remove Playwright test dependencies
-7. Test with new CLI
-
----
-
-## Success Criteria
-
-- [ ] npx demo-reel runs a config file
-- [ ] Config files get autocomplete via TypeScript
-- [ ] Video outputs with proper naming
-- [ ] Can run multiple scenarios with --all
-- [ ] Works in CI/CD pipelines
-- [ ] Programmatic API available
-
----
-
-## Future Enhancements
-
-- Audio recording/narration support
-- Post-processing hooks (compress, watermark)
-- GitHub Action for marketplace
-- VS Code extension
-- Cloud recording (Browserless, etc.)
+| Phase | Focus | Impact |
+|-------|-------|--------|
+| 1 | Config loading | Unblocks basic usage |
+| 2 | Visual polish | Makes videos look professional |
+| 3 | Step enhancements | Covers more demo scenarios |
+| 4 | Device emulation | Mobile product demos |
+| 5 | Scene composition | Multi-part narratives |
+| 6 | CI/CD & distribution | Automation and sharing |
+| 7 | Advanced features | Power users and scale |
