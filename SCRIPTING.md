@@ -6,6 +6,45 @@ Instead of manually writing step-by-step `.demo.ts` config files, describe what 
 
 ---
 
+## Modular Video Series
+
+Demo videos are designed as **modular, standalone segments** that also work as a guided learning path. Each video is fully independent — it sets up its own state via `auth` and `preSteps` — but opens with brief narration context so viewers following the series aren't disoriented.
+
+### Design principles
+
+- **Each video is self-contained.** PreSteps recreate the required state from scratch (login, create tenant, create template, etc.), even if a previous video already demonstrated that.
+- **Brief context intro.** Each video opens with ~3-5 seconds of narration explaining where we are: "We hebben een template aangemaakt — laten we varianten toevoegen."
+- **One focused topic per video.** 30-90 seconds, one clear goal, one clear outcome.
+- **Ends on the result.** The final frame shows the accomplished outcome — the created template, the rendered preview, the applied theme.
+
+### Series example
+
+```
+01-create-template.demo.ts
+  preSteps: login → create fresh tenant
+  recorded: navigate to templates → create template → open editor
+
+02-add-variants.demo.ts
+  preSteps: login → create tenant → create template (off-screen)
+  recorded: open template → add variants → show variant list
+
+03-editor-walkthrough.demo.ts
+  preSteps: login → create tenant → create template (off-screen)
+  recorded: open editor → drag blocks → edit text → preview
+
+04-theming.demo.ts
+  preSteps: login → create tenant → create template (off-screen)
+  recorded: create theme → apply to template → preview
+```
+
+Later videos have heavier preSteps because they need to recreate earlier videos' outcomes off-screen. This is intentional — it keeps every video independently runnable and re-recordable.
+
+### Interactive presentation
+
+The videos are designed to be presented in an interactive system (website, LMS, product docs) where users can choose what to watch. They don't need to be stitched into one long video, but the narration supports sequential viewing.
+
+---
+
 ## The Core Problem
 
 Two things need to be generated and synchronized:

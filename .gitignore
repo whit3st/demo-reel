@@ -6,6 +6,7 @@ test-videos
 .demo-reel-sessions
 *.demo.ts
 !templates/*.demo.ts
+!create-template.demo.ts
 
 # Example app for testing
 example-app/
