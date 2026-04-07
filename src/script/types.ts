@@ -33,6 +33,23 @@ export const crawledPageSchema = z.object({
 
 export type CrawledPage = z.infer<typeof crawledPageSchema>;
 
+// --- Voice config ---
+
+export const voiceConfigSchema = z.object({
+	provider: z
+		.enum(["piper", "openai", "elevenlabs"])
+		.default("piper")
+		.describe("TTS provider (piper = local/free, openai = cloud)"),
+	voice: z.string().default("nl_NL-mls-medium").describe("Voice name/ID or model path"),
+	speed: z.number().min(0.5).max(2.0).default(1.0).describe("Speech speed multiplier"),
+	pronunciation: z
+		.record(z.string())
+		.optional()
+		.describe("Word replacements for pronunciation (e.g. { 'template': 'templayt', 'editor': 'èditor' })"),
+});
+
+export type VoiceConfig = z.infer<typeof voiceConfigSchema>;
+
 // --- Script types ---
 
 export const scriptSceneSchema = z.object({
@@ -48,6 +65,7 @@ export const demoScriptSchema = z.object({
 	description: z.string().describe("Original user description"),
 	url: z.string().url().describe("Starting URL"),
 	scenes: z.array(scriptSceneSchema).min(1).describe("Ordered scenes of the demo"),
+	voice: voiceConfigSchema.optional().describe("TTS voice configuration for this demo"),
 });
 
 export type DemoScript = z.infer<typeof demoScriptSchema>;
@@ -69,23 +87,6 @@ export const timedScriptSchema = demoScriptSchema.extend({
 });
 
 export type TimedScript = z.infer<typeof timedScriptSchema>;
-
-// --- Voice config ---
-
-export const voiceConfigSchema = z.object({
-	provider: z
-		.enum(["piper", "openai", "elevenlabs"])
-		.default("piper")
-		.describe("TTS provider (piper = local/free, openai = cloud)"),
-	voice: z.string().default("nl_NL-mls-medium").describe("Voice name/ID or model path"),
-	speed: z.number().min(0.5).max(2.0).default(1.0).describe("Speech speed multiplier"),
-	pronunciation: z
-		.record(z.string())
-		.optional()
-		.describe("Word replacements for pronunciation (e.g. { 'template': 'templayt', 'editor': 'èditor' })"),
-});
-
-export type VoiceConfig = z.infer<typeof voiceConfigSchema>;
 
 // --- Script config (input for defineScript) ---
 
