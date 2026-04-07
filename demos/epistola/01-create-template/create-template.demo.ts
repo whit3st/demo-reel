@@ -14,7 +14,7 @@ export default defineConfig({
   outputDir: "./output",
 
   audio: {
-    narration: "./create-template-narration.mp3",
+    narration: "./output/create-template-narration.mp3",
     narrationDelay: 300,
   },
 

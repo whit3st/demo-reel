@@ -6,7 +6,8 @@
  * Reads a .script.json, generates voiceover audio, updates the script with timing,
  * and outputs the narration MP3 path.
  */
-import { readFile } from "fs/promises";
+import { readFile, mkdir } from "fs/promises";
+import { dirname, join, basename } from "path";
 import { demoScriptSchema, type VoiceConfig } from "./types.js";
 import { generateVoiceSegments, generateNarrationAudio } from "./tts.js";
 import { synchronizeTiming } from "./timing.js";
@@ -55,7 +56,12 @@ async function main() {
 
 		const segments = await generateVoiceSegments(script, voice, { verbose: true });
 
-		const audioPath = scriptPath.replace(/\.script\.json$/, "-narration.mp3");
+		// Output narration to output/ subfolder next to the script file
+		const scriptDir = dirname(scriptPath);
+		const scriptBase = basename(scriptPath, ".script.json");
+		const outputDir = join(scriptDir, "output");
+		await mkdir(outputDir, { recursive: true });
+		const audioPath = join(outputDir, `${scriptBase}-narration.mp3`);
 		const timedScenes = await generateNarrationAudio(segments, audioPath, { verbose: true });
 
 		const timedScript = synchronizeTiming(script, timedScenes, audioPath);
