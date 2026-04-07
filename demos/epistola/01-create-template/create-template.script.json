@@ -15,7 +15,7 @@
           }
         }
       ],
-      "audioDurationMs": 6766,
+      "audioDurationMs": 6635,
       "audioOffsetMs": 0,
       "gapAfterMs": 800
     },
@@ -58,24 +58,24 @@
           "text": "Ontvangstbevestiging Klacht"
         }
       ],
-      "audioDurationMs": 5146,
-      "audioOffsetMs": 7566,
+      "audioDurationMs": 5695,
+      "audioOffsetMs": 7435,
       "gapAfterMs": 800
     },
     {
       "narration": "Met een klik op 'Create Template' wordt het template direct aangemaakt inclusief een standaard variant.",
       "steps": [
         {
+          "delayAfterMs": 6705,
           "action": "click",
           "selector": {
             "strategy": "custom",
             "value": "button[type='submit']:has-text('Create Template')"
-          },
-          "delayAfterMs": 6705
+          }
         }
       ],
-      "audioDurationMs": 7105,
-      "audioOffsetMs": 13512,
+      "audioDurationMs": 6766,
+      "audioOffsetMs": 13930,
       "gapAfterMs": 800
     },
     {
@@ -90,11 +90,11 @@
           }
         }
       ],
-      "audioDurationMs": 3344,
-      "audioOffsetMs": 21417,
+      "audioDurationMs": 3291,
+      "audioOffsetMs": 21496,
       "gapAfterMs": 0
     }
   ],
-  "audioPath": "create-template-narration.mp3",
-  "totalDurationMs": 24761
+  "audioPath": "demos/epistola/01-create-template/output/create-template-narration.mp3",
+  "totalDurationMs": 24787
 }
