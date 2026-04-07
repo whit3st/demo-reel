@@ -7,7 +7,7 @@
       "narration": "Welkom in Epistola. We beginnen in het templateoverzicht, waar je al je documenttemplates vindt.",
       "steps": [
         {
-          "delayAfterMs": 6366,
+          "delayAfterMs": 6549,
           "action": "click",
           "selector": {
             "strategy": "href",
@@ -15,7 +15,7 @@
           }
         }
       ],
-      "audioDurationMs": 6687,
+      "audioDurationMs": 6949,
       "audioOffsetMs": 0,
       "gapAfterMs": 800
     },
@@ -58,8 +58,8 @@
           "text": "Ontvangstbevestiging Klacht"
         }
       ],
-      "audioDurationMs": 5512,
-      "audioOffsetMs": 7487,
+      "audioDurationMs": 4911,
+      "audioOffsetMs": 7749,
       "gapAfterMs": 800
     },
     {
@@ -74,8 +74,8 @@
           }
         }
       ],
-      "audioDurationMs": 7288,
-      "audioOffsetMs": 13799,
+      "audioDurationMs": 6217,
+      "audioOffsetMs": 13460,
       "gapAfterMs": 800
     },
     {
@@ -90,16 +90,16 @@
           }
         }
       ],
-      "audioDurationMs": 3370,
-      "audioOffsetMs": 21887,
+      "audioDurationMs": 3239,
+      "audioOffsetMs": 20477,
       "gapAfterMs": 0
     }
   ],
   "audioPath": "demos/epistola/01-create-template/output/create-template-narration.mp3",
-  "totalDurationMs": 25257,
+  "totalDurationMs": 23716,
   "voice": {
     "provider": "elevenlabs",
-    "voice": "Xb7hH8MSUJpSbSDYk0k2",
+    "voice": "5zhopMftSdRGaPYVcwKK",
     "speed": 1,
     "pronunciation": {
       "template": "template",

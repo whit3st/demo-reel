@@ -409,7 +409,11 @@ export const demoReelConfigInputSchema = z
     preSteps: z
       .array(stepSchema)
       .optional()
-      .describe("Steps to run before recording (e.g., login)"),
+      .describe("Steps to run before recording (e.g., setup data, navigate)"),
+    postSteps: z
+      .array(stepSchema)
+      .optional()
+      .describe("Steps to run after recording (e.g., cleanup, delete test data)"),
     name: z.string().min(1).optional().describe("Output file name without extension"),
     outputDir: z.string().min(1).optional().describe("Output directory for video files"),
     outputPath: z

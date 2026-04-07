@@ -462,7 +462,7 @@ export async function runVideoScenario(
       if (verbose) {
         console.log("Running pre-steps...");
       }
-      await runPreSteps(recording.page, config.preSteps);
+      await runPreSteps(recording.page, config.preSteps, { tolerant: true });
     }
 
     if (verbose) {
@@ -542,11 +542,52 @@ export async function runVideoScenario(
 
     console.log(`✓ Video created (${duration}s) → ${finalPath}`);
 
+    // Run post-steps (cleanup) in a fresh browser
+    if (config.postSteps && config.postSteps.length > 0) {
+      if (verbose) {
+        console.log("Running post-steps...");
+      }
+      const postBrowser = await startBrowser(config, headed);
+      try {
+        if (config.auth) {
+          await handleAuth(postBrowser.context, postBrowser.page, config.auth, configPath, verbose);
+        }
+        await runPreSteps(postBrowser.page, config.postSteps, { tolerant: true });
+        if (verbose) {
+          console.log("✓ Post-steps complete");
+        }
+      } finally {
+        await postBrowser.context.close().catch(() => {});
+        await postBrowser.browser.close().catch(() => {});
+      }
+    }
+
     return finalPath;
   } catch (error) {
-    // Clean up on error
+    // Clean up on error — still try to run postSteps for cleanup
     await recording.context.close().catch(() => {});
     await recording.browser.close().catch(() => {});
+
+    if (config.postSteps && config.postSteps.length > 0) {
+      try {
+        if (verbose) {
+          console.log("Running post-steps (error cleanup)...");
+        }
+        const postBrowser = await startBrowser(config, headed);
+        try {
+          if (config.auth) {
+            await handleAuth(postBrowser.context, postBrowser.page, config.auth, configPath, verbose);
+          }
+          await runPreSteps(postBrowser.page, config.postSteps, { tolerant: true });
+        } finally {
+          await postBrowser.context.close().catch(() => {});
+          await postBrowser.browser.close().catch(() => {});
+        }
+      } catch {
+        // Ignore post-step errors during error cleanup
+      }
+    }
+
     throw error;
   }
 }

@@ -825,9 +825,17 @@ const runStep = async (
   return startDelayApplied;
 };
 
-export const runPreSteps = async (page: Page, preSteps: Step[]) => {
+export const runPreSteps = async (page: Page, preSteps: Step[], options?: { tolerant?: boolean }) => {
   for (const step of preSteps) {
-    await runStepSimple(page, step);
+    if (options?.tolerant) {
+      try {
+        await runStepSimple(page, step);
+      } catch {
+        // Tolerant mode: skip failed steps (e.g. deleting a tenant that doesn't exist)
+      }
+    } else {
+      await runStepSimple(page, step);
+    }
   }
 };
 
