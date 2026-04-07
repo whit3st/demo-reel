@@ -677,6 +677,7 @@ const runStep = async (
         waitUntil: step.waitUntil,
         ...buildTimeoutOption(step.timeoutMs),
       });
+      await ensureCursorOverlay(page, resolvedCursor);
       return startDelayApplied;
     }
 
@@ -711,6 +712,8 @@ const runStep = async (
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
     await humanClick(page, target, state, config.motion, cursorStart, rng);
+    // Click may cause SPA navigation — re-inject cursor if needed
+    await ensureCursorOverlay(page, resolvedCursor);
     await applyStepDelay(page, step.delayAfterMs);
     return delayApplied;
   }

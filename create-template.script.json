@@ -6,29 +6,95 @@
     {
       "narration": "Welkom in Epistola. We beginnen in het templateoverzicht, waar je al je documenttemplates vindt.",
       "steps": [
-        { "action": "click", "selector": { "strategy": "href", "value": "/tenants/demo-klacht/templates" }, "delayAfterMs": 1500 }
-      ]
+        {
+          "delayAfterMs": 6366,
+          "action": "click",
+          "selector": {
+            "strategy": "href",
+            "value": "/tenants/demo-vid5/templates"
+          }
+        }
+      ],
+      "audioDurationMs": 6766,
+      "audioOffsetMs": 0,
+      "gapAfterMs": 800
     },
     {
       "narration": "Laten we een nieuw template aanmaken. We maken een ontvangstbevestiging voor klachten.",
       "steps": [
-        { "action": "click", "selector": { "strategy": "href", "value": "/tenants/demo-klacht/templates/new" }, "delayAfterMs": 500 },
-        { "action": "waitFor", "kind": "selector", "selector": { "strategy": "id", "value": "slug" }, "state": "visible" },
-        { "action": "type", "selector": { "strategy": "id", "value": "slug" }, "text": "ontvangstbevestiging-klacht", "delayAfterMs": 300 },
-        { "action": "type", "selector": { "strategy": "id", "value": "name" }, "text": "Ontvangstbevestiging Klacht", "delayAfterMs": 500 }
-      ]
+        {
+          "delayAfterMs": 500,
+          "action": "click",
+          "selector": {
+            "strategy": "href",
+            "value": "/tenants/demo-vid5/templates/new"
+          }
+        },
+        {
+          "action": "waitFor",
+          "kind": "selector",
+          "selector": {
+            "strategy": "id",
+            "value": "slug"
+          },
+          "state": "visible"
+        },
+        {
+          "delayAfterMs": 300,
+          "action": "type",
+          "selector": {
+            "strategy": "id",
+            "value": "slug"
+          },
+          "text": "ontvangstbevestiging-klacht"
+        },
+        {
+          "delayAfterMs": 500,
+          "action": "type",
+          "selector": {
+            "strategy": "id",
+            "value": "name"
+          },
+          "text": "Ontvangstbevestiging Klacht"
+        }
+      ],
+      "audioDurationMs": 5146,
+      "audioOffsetMs": 7566,
+      "gapAfterMs": 800
     },
     {
       "narration": "Met een klik op 'Create Template' wordt het template direct aangemaakt inclusief een standaard variant.",
       "steps": [
-        { "action": "click", "selector": { "strategy": "custom", "value": "button[type='submit']:has-text('Create Template')" }, "delayAfterMs": 2000 }
-      ]
+        {
+          "action": "click",
+          "selector": {
+            "strategy": "custom",
+            "value": "button[type='submit']:has-text('Create Template')"
+          },
+          "delayAfterMs": 6705
+        }
+      ],
+      "audioDurationMs": 7105,
+      "audioOffsetMs": 13512,
+      "gapAfterMs": 800
     },
     {
       "narration": "We openen de editor om het template te gaan bewerken.",
       "steps": [
-        { "action": "click", "selector": { "strategy": "custom", "value": "a[href*='editor']" }, "delayAfterMs": 2500 }
-      ]
+        {
+          "delayAfterMs": 2944,
+          "action": "click",
+          "selector": {
+            "strategy": "custom",
+            "value": "a[href*='editor']"
+          }
+        }
+      ],
+      "audioDurationMs": 3344,
+      "audioOffsetMs": 21417,
+      "gapAfterMs": 0
     }
-  ]
+  ],
+  "audioPath": "create-template-narration.mp3",
+  "totalDurationMs": 24761
 }
