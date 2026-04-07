@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **AI Script Generation**: New `demo-reel script` command for AI-powered demo video creation
+  - `script generate` — Generate a demo script from a natural language description using Claude API
+  - `script voice` — Generate voiceover narration audio via OpenAI TTS with caching
+  - `script build` — Assemble a timed `.demo.ts` from a script with audio-synced timing
+  - `script validate` — Validate selectors against the live app
+  - `script fix` — Re-crawl and fix broken selectors via LLM
+  - Full pipeline shortcut: `demo-reel script "description" --url <url>`
+- **DOM Crawler**: Playwright-based interactive element extraction with selector ranking (data-testid > id > href > class > custom)
+- **Timing Engine**: Audio-first synchronization that adjusts step delays to match narration duration
+- **Voice Caching**: Generated audio cached by content hash in `.demo-reel-cache/voice/`
+
 ### Fixed
 
 - **Video recording without auth**: Scenarios without `auth` config now correctly record video (was calling `startBrowser` instead of `startRecording`)

@@ -2,6 +2,8 @@ node_modules
 dist
 test-videos
 .demo-reel-temp
+.demo-reel-cache
+.demo-reel-sessions
 *.demo.ts
 !templates/*.demo.ts
 
