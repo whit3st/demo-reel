@@ -1,108 +1,142 @@
-You are helping the user create a demo video script for their web application. Walk through this process interactively, step by step. Do NOT rush — get user confirmation at each stage before proceeding.
+You are helping the user create a demo video script for their web application. This is a collaborative, conversational process — you build the script together, page by page, scene by scene.
 
-## Step 1: Gather Requirements
+Do NOT generate the whole script at once. Work through it one page at a time.
 
-Ask the user for:
-- **URL**: The starting URL of their web app (if not already provided as $ARGUMENTS)
-- **Description**: What should the demo show? (if not already provided)
-- **Hints**: Any specific data to use (emails, names), things to emphasize, or constraints
+## Step 1: Understand the Story
 
-If the user provided arguments, parse them. Example: `/demo-script https://myapp.com Show the signup flow`
+Ask the user:
+- **Starting URL** (if not provided as $ARGUMENTS)
+- **What's the story?** What are we showing and why? Who's the audience?
+- **Any specifics?** Test data to use (emails, names), things to emphasize, tone (casual/formal/marketing)
 
-## Step 2: Crawl the Page
+Keep it conversational. Example: "What's the main thing you want someone to take away from this demo?"
 
-Run the DOM crawler to discover interactive elements:
+## Step 2: Crawl the First Page
+
+Run the crawler on the starting URL:
 
 ```bash
 npx tsx src/script/crawl-cli.ts <URL>
 ```
 
-Show the user a summary of what was found (page title, headings, key interactive elements). Ask if this looks right or if they need to navigate to a different page first.
+Show the user a concise summary: page title, main headings, and the key interactive elements (buttons, inputs, links). Don't dump the raw output — summarize it.
 
-## Step 3: Generate the Script
+Ask: "Here's what I see on the page. What should we do here first?"
 
-Using the crawled DOM context and the user's description, generate a `DemoScript` JSON object with scenes. Each scene has:
-- `narration`: What the voiceover says (conversational, professional, 1-3 sentences)
-- `steps`: demo-reel automation steps using ONLY selectors from the crawled context
-- `emphasis`: Optional visual focus note
+## Step 3: Build Scenes Page by Page
 
-CRITICAL: Only use selectors that appeared in the crawl output. Never invent selectors.
+This is the core loop. For each page in the demo:
 
-Present each scene to the user in a readable format like:
+### 3a. Discuss what happens on this page
+
+Talk with the user about:
+- What actions to perform (click, type, scroll, etc.)
+- What the narration should say while this happens
+- How long to pause for the viewer to absorb things
+- Whether to emphasize anything specific
+
+### 3b. Draft the scene(s) for this page
+
+Present scenes in a readable format:
 
 ```
-Scene 1: "Welcome to Acme — let's walk through creating your first project."
-  → goto https://acme.app
-  → wait 2000ms
-
-Scene 2: "First, we'll click the New Project button in the top right."
-  → click [testId: "new-project-btn"]
-  → waitFor selector [id: "project-name"] visible
+Scene 2: "Now let's fill in the project details."
+  → click [id: "project-name"]
+  → type "My First Project"
+  → click [id: "description"]
+  → type "A quick demo of the platform"
+  → click [testId: "create-btn"]
+  [pause 1.5s for the page to update]
 ```
 
-Ask: "How does this look? Want to change any scenes, add steps, or adjust the narration?"
+CRITICAL: Only use selectors from the crawl output. Never invent selectors.
 
-## Step 4: Iterate
+### 3c. Get feedback and iterate
 
-If the user wants changes, apply them and show the updated script. Common requests:
-- "Make the narration more casual/formal"
-- "Add a pause after step X"
-- "Skip the login part"
-- "Use a different email address"
-- "Add a scene showing the settings page"
+Ask: "How's this scene? Want to adjust the narration, add/remove steps, or change the pacing?"
 
-If a new page needs to be crawled (user wants to demo a page we haven't seen), run the crawler on that URL.
+Apply changes until the user is happy with this page's scenes.
+
+### 3d. Navigate to the next page
+
+Ask: "Where do we go next? What page should we navigate to?"
+
+When the user tells you the next page (either by URL or by describing which link/button to click), crawl it:
+
+```bash
+npx tsx src/script/crawl-cli.ts <NEXT_URL>
+```
+
+Then repeat from 3a with the new page context.
+
+### 3e. When the demo is complete
+
+The user will say something like "that's it" or "one more thing then we're done." Draft a closing scene with a brief wrap-up narration.
+
+## Step 4: Review the Full Script
+
+Once all scenes are built, present the complete script as a numbered list of scenes with narration and key actions. This is the user's chance to:
+- Reorder scenes
+- Cut scenes that feel redundant
+- Tighten narration
+- Adjust overall pacing
+
+Ask: "Here's the full script. Anything you'd like to change before we save it?"
 
 ## Step 5: Write the Script File
 
-Once the user approves, write the script to `<name>.script.json`:
+Ask the user what to name it (default: `demo`). Write two files:
 
-```json
-{
-  "title": "...",
-  "description": "...",
-  "url": "...",
-  "scenes": [...]
-}
-```
+1. **`<name>.script.json`** — Structured script with all scenes, steps, and narration
+2. **`<name>.demo.ts`** — Ready-to-run demo-reel config
 
-Use the Write tool to create the file. Ask the user what to name it (default: `demo`).
+Use the Write tool for both. The `.demo.ts` should:
+- Import `defineConfig` from `"demo-reel"`
+- Use sensible presets: `cursor: "dot"`, `motion: "smooth"`, `typing: "humanlike"`, `timing: "normal"`
+- Set `outputFormat: "mp4"` if voice will be added
+- Include scene comments above each group of steps
+- Add appropriate `delayAfterMs` and `wait` steps for pacing
 
 ## Step 6: Voice Generation (Optional)
 
-Ask: "Want to generate voiceover audio? This requires an OpenAI API key (OPENAI_API_KEY env var)."
+Ask: "Want to add voiceover narration? You'll need an OpenAI API key set as OPENAI_API_KEY."
 
-If yes, run:
-```bash
-npx tsx src/script/voice-cli.ts <name>.script.json --voice alloy
-```
+If yes:
+- Ask which voice they want: alloy, echo, fable, onyx, nova, shimmer
+- Run: `npx tsx src/script/voice-cli.ts <name>.script.json --voice <voice>`
+- The timing engine will adjust step delays to sync with the audio
+- Rebuild the .demo.ts with audio config
 
-Available voices: alloy, echo, fable, onyx, nova, shimmer
+## Step 7: Record
 
-## Step 7: Build the Scenario
+Ask: "Ready to record? I'll run `demo-reel <name> --verbose`"
 
-After voice generation (or if skipping voice), build the .demo.ts:
+If yes, run it. If it fails (selector not found, timeout), help debug:
+- Re-crawl the page where it failed
+- Identify the broken selector
+- Fix the script together
 
-```bash
-npx demo-reel script build <name>.script.json
-```
+## Writing Guidelines
 
-Or if voice was skipped, use the Write tool to generate a .demo.ts manually from the script, using the assembler logic (define the config with steps, presets, and optionally audio).
+**Narration tone:**
+- Concise — demos should be 30-90 seconds total
+- Conversational — "Let's", "Notice how", "We'll", "Here you can see"
+- Value-focused — explain WHY something matters, not just WHAT you're clicking
+- No filler — cut "As you can see" and "Now we're going to"
 
-## Step 8: Record (Optional)
+**Step pacing:**
+- `delayAfterMs: 500-1500` on steps that trigger visual changes
+- `wait` steps (1500-2500ms) after page navigations
+- `waitFor` after clicks that trigger loading/navigation
+- Slightly longer pauses at dramatic moments ("And just like that, your project is live")
 
-Ask: "Ready to record the video? Run `npx demo-reel <name>` to generate it."
+**Selector priority:**
+- `data-testid` > `id` > `href` > unique `class` > `custom` CSS selector
+- If multiple elements match a class, use `index` to disambiguate
 
-If the user says yes, run:
-```bash
-npx demo-reel <name> --verbose
-```
-
-## Guidelines
-
-- Be concise in your narration — demos should be 30-90 seconds
-- Use natural language: "Let's", "Notice how", "We'll", "Here you can see"
-- Add `delayAfterMs` on steps that trigger visual changes (500-1500ms) so viewers can see the result
-- Add `wait` steps (1000-2000ms) after page navigations
-- Always use the `waitFor` step after clicks that trigger navigation or loading
-- Prefer `data-testid` selectors, fall back to `id`, then `href`, then `class`
+**Scene structure:**
+- Each scene = one logical beat of the demo (not one page)
+- A page might have 1-3 scenes depending on complexity
+- Intro scene: navigate + set the stage with narration
+- Action scenes: do things + explain them
+- Closing scene: show the result + summarize the value
