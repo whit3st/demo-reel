@@ -63,13 +63,16 @@ export default defineConfig({
   postSteps: deleteTenantSteps,
 
   scenes: [
-    { narration: "Welkom in Epistola. Vanuit het dashboard navigeren we naar het templateoverzicht.", stepIndex: 0, isIntro: true },
-    { narration: "Laten we een nieuw template aanmaken. We maken een ontvangstbevestiging voor klachten.", stepIndex: 3 },
-    { narration: "Met een klik op 'Create Template' wordt het template direct aangemaakt inclusief een standaard variant.", stepIndex: 8 },
-    { narration: "We openen de editor om het template te gaan bewerken.", stepIndex: 11 },
+    { narration: "Welkom in Epistola. Vanuit het dashboard navigeren we naar het templateoverzicht.", stepIndex: 1, isIntro: true },
+    { narration: "Laten we een nieuw template aanmaken. We maken een ontvangstbevestiging voor klachten.", stepIndex: 4 },
+    { narration: "Met een klik op 'Create Template' wordt het template direct aangemaakt inclusief een standaard variant.", stepIndex: 9 },
+    { narration: "We openen de editor om het template te gaan bewerken.", stepIndex: 12 },
   ],
 
   steps: [
+    // Navigate into the tenant (preSteps ran in a separate browser)
+    { action: "goto", url: `${BASE}/tenants/${TENANT_SLUG}` },
+
     // Scene 1: Dashboard → hover templates stat card → click → templates list
     { action: "hover", selector: { strategy: "custom", value: `a.stat-card[href="/tenants/${TENANT_SLUG}/templates"]` }, delayAfterMs: 800 },
     { action: "click", selector: { strategy: "custom", value: `a.stat-card[href="/tenants/${TENANT_SLUG}/templates"]` }, delayAfterMs: 1500 },

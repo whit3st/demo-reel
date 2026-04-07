@@ -425,27 +425,34 @@ export async function runVideoScenario(
 
   const startTime = Date.now();
 
-  if (config.auth) {
+  // Run auth + preSteps in a separate browser BEFORE recording starts
+  const hasPreWork = config.auth || (config.preSteps && config.preSteps.length > 0);
+  if (hasPreWork) {
     if (verbose) {
-      console.log("Starting browser for authentication (no recording)...");
+      console.log("Starting browser for setup (no recording)...");
     }
 
-    const authBrowser = await startBrowser(config, headed);
+    const setupBrowser = await startBrowser(config, headed);
 
     try {
-      await handleAuth(authBrowser.context, authBrowser.page, config.auth, configPath, verbose);
-    } finally {
-      await authBrowser.context.close();
-      await authBrowser.browser.close();
-    }
+      if (config.auth) {
+        await handleAuth(setupBrowser.context, setupBrowser.page, config.auth, configPath, verbose);
+      }
 
-    if (verbose) {
-      console.log("Starting browser and recording...");
+      if (config.preSteps && config.preSteps.length > 0) {
+        if (verbose) {
+          console.log("Running pre-steps...");
+        }
+        await runPreSteps(setupBrowser.page, config.preSteps, { tolerant: true });
+      }
+    } finally {
+      await setupBrowser.context.close();
+      await setupBrowser.browser.close();
     }
-  } else {
-    if (verbose) {
-      console.log("Starting browser and recording...");
-    }
+  }
+
+  if (verbose) {
+    console.log("Starting browser and recording...");
   }
 
   const recording = await startRecording(config, headed);
@@ -456,13 +463,6 @@ export async function runVideoScenario(
         console.log("Restoring session for recording...");
       }
       await handleAuth(recording.context, recording.page, config.auth, configPath, verbose);
-    }
-
-    if (config.preSteps && config.preSteps.length > 0) {
-      if (verbose) {
-        console.log("Running pre-steps...");
-      }
-      await runPreSteps(recording.page, config.preSteps, { tolerant: true });
     }
 
     if (verbose) {
