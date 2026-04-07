@@ -64,7 +64,10 @@ function resolveOutputPath(
   }
 
   // Priority 2: name + optional timestamp + outputDir (or CLI override)
-  const outputDir = cliOutputDir || config.outputDir || dirname(configPath);
+  const configDir = dirname(configPath);
+  const rawOutputDir = cliOutputDir || config.outputDir || configDir;
+  // Resolve outputDir relative to the config file, not cwd
+  const outputDir = rawOutputDir.startsWith("/") ? rawOutputDir : resolve(configDir, rawOutputDir);
   const baseName = config.name || getBaseNameFromConfig(configPath);
   const useTimestamp = config.timestamp ?? false; // Default to false for CI/CD compatibility
 
@@ -74,10 +77,10 @@ function resolveOutputPath(
 
   if (useTimestamp) {
     const timestamp = formatTimestamp(new Date());
-    return join(resolve(outputDir), `${baseName}-${timestamp}${extension}`);
+    return join(outputDir, `${baseName}-${timestamp}${extension}`);
   }
 
-  return join(resolve(outputDir), `${baseName}${extension}`);
+  return join(outputDir, `${baseName}${extension}`);
 }
 
 function getBaseNameFromConfig(configPath: string): string {
