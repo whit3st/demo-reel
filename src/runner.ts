@@ -283,9 +283,17 @@ const ensureCursorOverlay = async (page: Page, resolvedCursor: CursorConfig & { 
     });
     if (!cursorExists) {
       await page.evaluate(cursorScript, resolvedCursor);
+      // Small wait for DOM to settle after injection
+      await page.waitForTimeout(50);
     }
   } catch {
-    // Page navigated during evaluation, will be recreated on next step
+    // Page navigated during evaluation — try once more after a brief wait
+    try {
+      await page.waitForTimeout(200);
+      await page.evaluate(cursorScript, resolvedCursor);
+    } catch {
+      // Still failing — will retry on next step
+    }
   }
 };
 
@@ -712,8 +720,6 @@ const runStep = async (
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
     await humanClick(page, target, state, config.motion, cursorStart, rng);
-    // Click may cause SPA navigation — re-inject cursor if needed
-    await ensureCursorOverlay(page, resolvedCursor);
     await applyStepDelay(page, step.delayAfterMs);
     return delayApplied;
   }
@@ -856,6 +862,9 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
 
   for (let stepIdx = 0; stepIdx < config.steps.length; stepIdx++) {
     const step = config.steps[stepIdx];
+
+    // Ensure cursor overlay exists before each step (SPA navigation may have destroyed it)
+    await ensureCursorOverlay(page, resolvedCursor);
 
     // Check if this step starts a new scene
     const sceneIdx = sceneBoundaries.get(stepIdx);
