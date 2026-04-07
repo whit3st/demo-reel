@@ -122,6 +122,9 @@ export async function handleAuth(
   return true;
 }
 
+// Fail fast instead of waiting 30s on broken selectors
+const DEFAULT_TIMEOUT_MS = 5000;
+
 export async function startBrowser(
   config: DemoReelConfig,
   headed: boolean = false,
@@ -131,6 +134,7 @@ export async function startBrowser(
   const context = await browser.newContext({
     viewport: config.video.resolution,
   });
+  context.setDefaultTimeout(DEFAULT_TIMEOUT_MS);
 
   const page = await context.newPage();
 
@@ -159,6 +163,7 @@ export async function startRecording(
       size: config.video.resolution,
     },
   });
+  context.setDefaultTimeout(DEFAULT_TIMEOUT_MS);
 
   const page = await context.newPage();
 
