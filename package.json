@@ -12,7 +12,9 @@
   "license": "MIT",
   "author": "",
   "bin": {
-    "demo-reel": "dist/cli.js"
+    "demo-reel": "dist/cli.js",
+    "demo-reel-crawl": "dist/script/crawl-cli.js",
+    "demo-reel-voice": "dist/script/voice-cli.js"
   },
   "files": [
     "dist",
