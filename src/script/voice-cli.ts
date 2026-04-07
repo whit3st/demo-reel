@@ -15,11 +15,14 @@ import { writeScriptJson } from "./assembler.js";
 async function main() {
 	const args = process.argv.slice(2);
 	let scriptPath: string | undefined;
-	let voiceName = "alloy";
+	let providerName = "piper";
+	let voiceName = "nl_NL-mls-medium";
 	let speed = 1.0;
 
 	for (let i = 0; i < args.length; i++) {
-		if (args[i] === "--voice") {
+		if (args[i] === "--provider") {
+			providerName = args[++i];
+		} else if (args[i] === "--voice") {
 			voiceName = args[++i];
 		} else if (args[i] === "--speed") {
 			speed = parseFloat(args[++i]);
@@ -29,11 +32,11 @@ async function main() {
 	}
 
 	if (!scriptPath) {
-		console.error("Usage: node dist/script/voice-cli.js <script.json> [--voice alloy] [--speed 1.0]");
+		console.error("Usage: node dist/script/voice-cli.js <script.json> [--provider piper] [--voice nl_NL-mls-medium] [--speed 1.0]");
 		process.exit(1);
 	}
 
-	const voice: VoiceConfig = { provider: "openai", voice: voiceName, speed };
+	const voice: VoiceConfig = { provider: providerName as VoiceConfig["provider"], voice: voiceName, speed };
 
 	try {
 		const raw = await readFile(scriptPath, "utf-8");

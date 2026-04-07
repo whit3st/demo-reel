@@ -12,6 +12,11 @@ export default defineConfig({
   outputFormat: "mp4",
   name: "create-template",
 
+  audio: {
+    narration: "./create-template-narration.mp3",
+    narrationDelay: 300,
+  },
+
   // Login and create a fresh tenant (not recorded)
   auth: {
     loginSteps: [
@@ -33,11 +38,11 @@ export default defineConfig({
   // Create a fresh tenant and navigate into it (not recorded)
   preSteps: [
     { action: "goto", url: "https://demo.epistola.app/" },
-    { action: "type", selector: { strategy: "id", value: "slug" }, text: "demo-vid", clear: true },
+    { action: "type", selector: { strategy: "id", value: "slug" }, text: "demo-vid2", clear: true },
     { action: "type", selector: { strategy: "id", value: "name" }, text: "Demo Video", clear: true },
     { action: "click", selector: { strategy: "custom", value: "button[type='submit']:has-text('Create Tenant')" } },
     { action: "wait", ms: 1500 },
-    { action: "click", selector: { strategy: "href", value: "/tenants/demo-vid" } },
+    { action: "click", selector: { strategy: "href", value: "/tenants/demo-vid2" } },
     { action: "wait", ms: 1000 },
   ],
 
@@ -50,10 +55,10 @@ export default defineConfig({
 
   steps: [
     // Scene 1: Intro — navigate to templates
-    { action: "click", selector: { strategy: "href", value: "/tenants/demo-vid/templates" }, delayAfterMs: 1500 },
+    { action: "click", selector: { strategy: "href", value: "/tenants/demo-vid2/templates" }, delayAfterMs: 1500 },
 
     // Scene 2: Create template
-    { action: "click", selector: { strategy: "href", value: "/tenants/demo-vid/templates/new" }, delayAfterMs: 500 },
+    { action: "click", selector: { strategy: "href", value: "/tenants/demo-vid2/templates/new" }, delayAfterMs: 500 },
     { action: "waitFor", kind: "selector", selector: { strategy: "id", value: "slug" }, state: "visible" },
     { action: "type", selector: { strategy: "id", value: "slug" }, text: "ontvangstbevestiging-klacht", delayAfterMs: 300 },
     { action: "type", selector: { strategy: "id", value: "name" }, text: "Ontvangstbevestiging Klacht", delayAfterMs: 500 },

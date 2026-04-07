@@ -24,36 +24,51 @@ async function getFFmpegPath(): Promise<string> {
 	return ffmpegPath;
 }
 
-function getFFprobePath(ffmpegPath: string): string {
-	return ffmpegPath.replace(/ffmpeg([^/\\]*)$/, "ffprobe$1");
+async function getFFprobePath(ffmpegPath: string): Promise<string> {
+	// Try alongside ffmpeg-static first
+	const adjacent = ffmpegPath.replace(/ffmpeg([^/\\]*)$/, "ffprobe$1");
+	try {
+		await stat(adjacent);
+		return adjacent;
+	} catch {
+		// Fall back to system ffprobe
+		return "ffprobe";
+	}
 }
 
 export async function measureAudioDuration(audioBuffer: Buffer): Promise<number> {
 	const ffmpegPath = await getFFmpegPath();
-	const ffprobePath = getFFprobePath(ffmpegPath);
+	const ffprobePath = await getFFprobePath(ffmpegPath);
 
-	return new Promise((resolve, reject) => {
-		const proc = spawn(ffprobePath, [
-			"-v", "quiet",
-			"-show_entries", "format=duration",
-			"-of", "default=noprint_wrappers=1:nokey=1",
-			"-i", "pipe:0",
-		]);
+	// Write to temp file — ffprobe needs seeking which pipes don't support for MP3
+	const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
+	await mkdir(tempDir, { recursive: true });
+	const tempPath = join(tempDir, `probe-${Date.now()}.mp3`);
+	await writeFile(tempPath, audioBuffer);
 
-		let output = "";
-		proc.stdout.on("data", (data: Buffer) => { output += data.toString(); });
-		proc.stderr.on("data", () => {});
+	try {
+		return await new Promise((resolve, reject) => {
+			const proc = spawn(ffprobePath, [
+				"-v", "quiet",
+				"-show_entries", "format=duration",
+				"-of", "default=noprint_wrappers=1:nokey=1",
+				tempPath,
+			]);
 
-		proc.on("close", (code) => {
-			if (code !== 0) { reject(new Error(`ffprobe exited with code ${code}`)); return; }
-			const seconds = parseFloat(output.trim());
-			if (isNaN(seconds)) { reject(new Error("Could not parse audio duration")); return; }
-			resolve(Math.round(seconds * 1000));
+			let output = "";
+			proc.stdout.on("data", (data: Buffer) => { output += data.toString(); });
+			proc.stderr.on("data", () => {});
+
+			proc.on("close", (code) => {
+				if (code !== 0) { reject(new Error(`ffprobe exited with code ${code}`)); return; }
+				const seconds = parseFloat(output.trim());
+				if (isNaN(seconds)) { reject(new Error("Could not parse audio duration")); return; }
+				resolve(Math.round(seconds * 1000));
+			});
 		});
-
-		proc.stdin.write(audioBuffer);
-		proc.stdin.end();
-	});
+	} finally {
+		await unlink(tempPath).catch(() => {});
+	}
 }
 
 function runFFmpeg(ffmpegPath: string, args: string[]): Promise<void> {
