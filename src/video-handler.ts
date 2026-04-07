@@ -1,8 +1,8 @@
-import { mkdir } from "fs/promises";
+import { mkdir, unlink, rmdir } from "fs/promises";
 import { dirname, join, resolve } from "path";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import type { DemoReelConfig, AuthConfig, AuthBehaviorConfig } from "./schemas.js";
-import { runDemo, runStepSimple } from "./runner.js";
+import { runDemo, runPreSteps, runStepSimple } from "./runner.js";
 import { mergeAudioVideo, type AudioConfig } from "./audio-processor.js";
 import {
   loadSession,
@@ -287,9 +287,7 @@ export async function runVideoScenario(
     }
   }
 
-  const recording = config.auth
-    ? await startRecording(config, headed)
-    : await startBrowser(config, headed);
+  const recording = await startRecording(config, headed);
 
   try {
     if (config.auth) {
@@ -297,6 +295,13 @@ export async function runVideoScenario(
         console.log("Restoring session for recording...");
       }
       await handleAuth(recording.context, recording.page, config.auth, configPath, verbose);
+    }
+
+    if (config.preSteps && config.preSteps.length > 0) {
+      if (verbose) {
+        console.log("Running pre-steps...");
+      }
+      await runPreSteps(recording.page, config.preSteps);
     }
 
     if (verbose) {
@@ -337,6 +342,14 @@ export async function runVideoScenario(
       config.audio,
       configPath,
     );
+
+    // Clean up temp video file and directory
+    try {
+      await unlink(tempVideoPath);
+      await rmdir(join(process.cwd(), ".demo-reel-temp")).catch(() => {});
+    } catch {
+      // Ignore cleanup errors
+    }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
 

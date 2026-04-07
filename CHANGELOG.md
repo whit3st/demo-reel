@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Video recording without auth**: Scenarios without `auth` config now correctly record video (was calling `startBrowser` instead of `startRecording`)
+- **preSteps execution**: `preSteps` are now actually executed before recording begins (were silently ignored)
+- **Temp file cleanup**: Temporary video files in `.demo-reel-temp/` are now deleted after processing
+- **Smooth scroll animation**: `scroll` steps now animate smoothly with eased incremental scrolling instead of jumping instantly
+- **Native cursor hidden**: Browser's native cursor is now hidden via CSS when the cursor overlay is active, preventing double cursors
+
 ### Added
 
 - **Built-in Presets**: Simplified configuration with preset shortcuts for cursor, motion, typing, and timing
