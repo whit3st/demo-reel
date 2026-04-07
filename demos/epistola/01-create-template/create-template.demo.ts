@@ -39,11 +39,11 @@ export default defineConfig({
   // Create a fresh tenant and navigate into it (not recorded)
   preSteps: [
     { action: "goto", url: "https://demo.epistola.app/" },
-    { action: "type", selector: { strategy: "id", value: "slug" }, text: "demo-vid9", clear: true },
+    { action: "type", selector: { strategy: "id", value: "slug" }, text: "demo-vid10", clear: true },
     { action: "type", selector: { strategy: "id", value: "name" }, text: "Demo Video", clear: true },
     { action: "click", selector: { strategy: "custom", value: "button[type='submit']:has-text('Create Tenant')" } },
     { action: "wait", ms: 1500 },
-    { action: "click", selector: { strategy: "href", value: "/tenants/demo-vid9" } },
+    { action: "click", selector: { strategy: "href", value: "/tenants/demo-vid10" } },
     { action: "wait", ms: 1000 },
   ],
 
@@ -56,10 +56,10 @@ export default defineConfig({
 
   steps: [
     // Scene 1: Intro — navigate to templates
-    { action: "click", selector: { strategy: "href", value: "/tenants/demo-vid9/templates" }, delayAfterMs: 1500 },
+    { action: "click", selector: { strategy: "href", value: "/tenants/demo-vid10/templates" }, delayAfterMs: 1500 },
 
     // Scene 2: Create template
-    { action: "click", selector: { strategy: "href", value: "/tenants/demo-vid9/templates/new" }, delayAfterMs: 500 },
+    { action: "click", selector: { strategy: "href", value: "/tenants/demo-vid10/templates/new" }, delayAfterMs: 500 },
     { action: "waitFor", kind: "selector", selector: { strategy: "id", value: "slug" }, state: "visible" },
     { action: "type", selector: { strategy: "id", value: "slug" }, text: "ontvangstbevestiging-klacht", delayAfterMs: 300 },
     { action: "type", selector: { strategy: "id", value: "name" }, text: "Ontvangstbevestiging Klacht", delayAfterMs: 500 },
