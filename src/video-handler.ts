@@ -1,5 +1,5 @@
-import { mkdir, unlink, rmdir, writeFile as fsWriteFile } from "fs/promises";
-import { dirname, join, resolve } from "path";
+import { mkdir, unlink, rmdir, writeFile as fsWriteFile, readFile } from "fs/promises";
+import { basename, dirname, join, resolve } from "path";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import type { DemoReelConfig, AuthConfig, AuthBehaviorConfig } from "./schemas.js";
 import { runDemo, runPreSteps, runStepSimple, type SceneTimestamp } from "./runner.js";
@@ -247,6 +247,107 @@ export async function processVideoWithAudio(
 
 // --- Subtitle and metadata generation ---
 
+interface SubtitleCue {
+  narration: string;
+  startMs: number;
+  endMs: number;
+  isIntro: boolean;
+}
+
+/**
+ * Build subtitle cues. When audio is present, use the narrationDelay + audio durations
+ * so subtitles sync with the voiceover. Otherwise fall back to recording timestamps.
+ */
+function buildSubtitleCues(
+  sceneTimestamps: SceneTimestamp[],
+  config: DemoReelConfig,
+): SubtitleCue[] {
+  // If we have audio with a timed script, compute subtitle timing from audio offsets
+  if (config.audio?.narration && config.scenes) {
+    const narrationDelay = config.audio.narrationDelay ?? 0;
+    let audioOffset = narrationDelay;
+
+    return sceneTimestamps.map((scene) => {
+      // Estimate audio duration from the recording scene duration as fallback
+      // The actual audio segment duration would be ideal, but we use the scene gap
+      const sceneDurationMs = scene.endMs - scene.startMs;
+      const cue: SubtitleCue = {
+        narration: scene.narration,
+        startMs: audioOffset,
+        endMs: audioOffset + sceneDurationMs,
+        isIntro: scene.isIntro,
+      };
+      audioOffset = cue.endMs;
+      return cue;
+    });
+  }
+
+  // No audio — use recording timestamps directly
+  return sceneTimestamps.map((scene) => ({
+    narration: scene.narration,
+    startMs: scene.startMs,
+    endMs: scene.endMs,
+    isIntro: scene.isIntro,
+  }));
+}
+
+/**
+ * Try to load audio timing from a timed .script.json file.
+ * Returns audio offsets + durations per scene if available.
+ */
+async function loadAudioTiming(
+  configPath: string,
+): Promise<{ audioOffsetMs: number; audioDurationMs: number; gapAfterMs: number }[] | null> {
+  // Look for a .script.json next to the config
+  const scriptPath = configPath.replace(/\.demo\.ts$/, ".script.json");
+  try {
+    const raw = await readFile(scriptPath, "utf-8");
+    const script = JSON.parse(raw);
+    if (script.scenes && script.audioPath) {
+      return script.scenes.map((s: any) => ({
+        audioOffsetMs: s.audioOffsetMs ?? 0,
+        audioDurationMs: s.audioDurationMs ?? 0,
+        gapAfterMs: s.gapAfterMs ?? 0,
+      }));
+    }
+  } catch {
+    // No script file or invalid format
+  }
+  return null;
+}
+
+/**
+ * Build subtitle cues from audio timing data (preferred) or recording timestamps (fallback).
+ */
+async function buildSubtitleCuesWithAudioTiming(
+  sceneTimestamps: SceneTimestamp[],
+  config: DemoReelConfig,
+  configPath: string,
+): Promise<SubtitleCue[]> {
+  if (!config.audio?.narration) {
+    return buildSubtitleCues(sceneTimestamps, config);
+  }
+
+  const narrationDelay = config.audio.narrationDelay ?? 0;
+  const audioTiming = await loadAudioTiming(configPath);
+
+  if (audioTiming && audioTiming.length === sceneTimestamps.length) {
+    // Use audio timing — these are the actual positions in the narration audio
+    return sceneTimestamps.map((scene, i) => {
+      const timing = audioTiming[i];
+      return {
+        narration: scene.narration,
+        startMs: narrationDelay + timing.audioOffsetMs,
+        endMs: narrationDelay + timing.audioOffsetMs + timing.audioDurationMs,
+        isIntro: scene.isIntro,
+      };
+    });
+  }
+
+  // Fallback to estimate-based approach
+  return buildSubtitleCues(sceneTimestamps, config);
+}
+
 function formatTimecode(ms: number, separator: string): string {
   const totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
@@ -256,60 +357,52 @@ function formatTimecode(ms: number, separator: string): string {
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}${separator}${String(millis).padStart(3, "0")}`;
 }
 
-function generateSRT(timestamps: SceneTimestamp[]): string {
-  return timestamps
-    .map((scene, i) => {
-      const start = formatTimecode(scene.startMs, ",");
-      const end = formatTimecode(scene.endMs, ",");
-      return `${i + 1}\n${start} --> ${end}\n${scene.narration}\n`;
+function generateSRT(cues: SubtitleCue[]): string {
+  return cues
+    .map((cue, i) => {
+      const start = formatTimecode(cue.startMs, ",");
+      const end = formatTimecode(cue.endMs, ",");
+      return `${i + 1}\n${start} --> ${end}\n${cue.narration}\n`;
     })
     .join("\n");
 }
 
-function generateVTT(timestamps: SceneTimestamp[]): string {
-  const cues = timestamps
-    .map((scene) => {
-      const start = formatTimecode(scene.startMs, ".");
-      const end = formatTimecode(scene.endMs, ".");
-      return `${start} --> ${end}\n${scene.narration}\n`;
+function generateVTT(cues: SubtitleCue[]): string {
+  const lines = cues
+    .map((cue) => {
+      const start = formatTimecode(cue.startMs, ".");
+      const end = formatTimecode(cue.endMs, ".");
+      return `${start} --> ${end}\n${cue.narration}\n`;
     })
     .join("\n");
-  return `WEBVTT\n\n${cues}`;
+  return `WEBVTT\n\n${lines}`;
 }
 
 function generateMetadata(
-  timestamps: SceneTimestamp[],
+  sceneTimestamps: SceneTimestamp[],
+  subtitleCues: SubtitleCue[],
   videoPath: string,
-): {
-  video: string;
-  scenes: {
-    index: number;
-    narration: string;
-    isIntro: boolean;
-    startMs: number;
-    endMs: number;
-    durationMs: number;
-  }[];
-  introEndMs: number | null;
-  totalDurationMs: number;
-} {
-  const scenes = timestamps.map((t) => ({
+) {
+  const scenes = sceneTimestamps.map((t, i) => ({
     index: t.sceneIndex,
     narration: t.narration,
     isIntro: t.isIntro,
-    startMs: t.startMs,
-    endMs: t.endMs,
-    durationMs: t.endMs - t.startMs,
+    // Visual timing (when things happen on screen)
+    visualStartMs: t.startMs,
+    visualEndMs: t.endMs,
+    // Audio timing (when narration is heard) — from subtitles
+    audioStartMs: subtitleCues[i]?.startMs ?? t.startMs,
+    audioEndMs: subtitleCues[i]?.endMs ?? t.endMs,
   }));
 
   const introScene = scenes.find((s) => s.isIntro);
   const lastScene = scenes[scenes.length - 1];
 
   return {
-    video: videoPath,
+    video: basename(videoPath),
     scenes,
-    introEndMs: introScene ? introScene.endMs : null,
-    totalDurationMs: lastScene ? lastScene.endMs : 0,
+    introEndMs: introScene ? introScene.visualEndMs : null,
+    totalDurationMs: lastScene ? lastScene.visualEndMs : 0,
   };
 }
 
@@ -426,13 +519,17 @@ export async function runVideoScenario(
     if (sceneTimestamps.length > 0) {
       const basePath = finalPath.replace(/\.[^.]+$/, "");
 
-      const srt = generateSRT(sceneTimestamps);
+      const subtitleCues = await buildSubtitleCuesWithAudioTiming(
+        sceneTimestamps, config, configPath,
+      );
+
+      const srt = generateSRT(subtitleCues);
       await fsWriteFile(`${basePath}.srt`, srt, "utf-8");
 
-      const vtt = generateVTT(sceneTimestamps);
+      const vtt = generateVTT(subtitleCues);
       await fsWriteFile(`${basePath}.vtt`, vtt, "utf-8");
 
-      const meta = generateMetadata(sceneTimestamps, finalPath);
+      const meta = generateMetadata(sceneTimestamps, subtitleCues, finalPath);
       await fsWriteFile(`${basePath}.meta.json`, JSON.stringify(meta, null, 2), "utf-8");
 
       if (verbose) {

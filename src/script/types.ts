@@ -79,6 +79,10 @@ export const voiceConfigSchema = z.object({
 		.describe("TTS provider (piper = local/free, openai = cloud)"),
 	voice: z.string().default("nl_NL-mls-medium").describe("Voice name/ID or model path"),
 	speed: z.number().min(0.5).max(2.0).default(1.0).describe("Speech speed multiplier"),
+	pronunciation: z
+		.record(z.string())
+		.optional()
+		.describe("Word replacements for pronunciation (e.g. { 'template': 'templayt', 'editor': 'èditor' })"),
 });
 
 export type VoiceConfig = z.infer<typeof voiceConfigSchema>;

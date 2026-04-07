@@ -210,11 +210,55 @@ async function generateOpenAI(
 	return { audio, durationMs };
 }
 
+// --- ElevenLabs TTS Provider ---
+
+async function generateElevenLabs(
+	text: string,
+	options: VoiceConfig,
+): Promise<{ audio: Buffer; durationMs: number }> {
+	const apiKey = process.env.ELEVENLABS_KEY || process.env.ELEVENLABS_API_KEY;
+	if (!apiKey) {
+		throw new Error("ElevenLabs API key not found. Set ELEVENLABS_KEY or ELEVENLABS_API_KEY env var.");
+	}
+
+	// Default to a good multilingual voice
+	const voiceId = options.voice || "21m00Tcm4TlvDq8ikWAM"; // "Rachel" - good for multilingual
+
+	const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+		method: "POST",
+		headers: {
+			"xi-api-key": apiKey,
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({
+			text,
+			model_id: "eleven_multilingual_v2",
+			voice_settings: {
+				stability: 0.5,
+				similarity_boost: 0.75,
+				speed: options.speed,
+			},
+		}),
+	});
+
+	if (!response.ok) {
+		const body = await response.text();
+		throw new Error(`ElevenLabs API error ${response.status}: ${body}`);
+	}
+
+	const arrayBuffer = await response.arrayBuffer();
+	const audio = Buffer.from(arrayBuffer);
+	const durationMs = await measureAudioDuration(audio);
+
+	return { audio, durationMs };
+}
+
 // --- Provider registry ---
 
 const providers: Record<string, TTSProvider> = {
 	piper: { name: "piper", generate: generatePiper },
 	openai: { name: "openai", generate: generateOpenAI },
+	elevenlabs: { name: "elevenlabs", generate: generateElevenLabs },
 };
 
 export function getTTSProvider(name: string): TTSProvider {
@@ -315,6 +359,20 @@ interface VoiceSegment {
 	durationMs: number;
 }
 
+/**
+ * Apply pronunciation replacements to text before sending to TTS.
+ * Replacements are case-insensitive and match whole words.
+ */
+function applyPronunciation(text: string, pronunciation?: Record<string, string>): string {
+	if (!pronunciation) return text;
+	let result = text;
+	for (const [word, replacement] of Object.entries(pronunciation)) {
+		const regex = new RegExp(`\\b${word}\\b`, "gi");
+		result = result.replace(regex, replacement);
+	}
+	return result;
+}
+
 export async function generateVoiceSegments(
 	script: DemoScript,
 	voice: VoiceConfig,
@@ -338,10 +396,14 @@ export async function generateVoiceSegments(
 		}
 
 		if (options.verbose) console.log(`  Scene ${i + 1}: generating voice...`);
-		const { audio, durationMs } = await provider.generate(scene.narration, voice);
+
+		// Apply pronunciation map before TTS
+		const ttsText = applyPronunciation(scene.narration, voice.pronunciation);
+		const { audio, durationMs } = await provider.generate(ttsText, voice);
 		await setCache(key, audio);
 		if (options.verbose) console.log(`  Scene ${i + 1}: ${(durationMs / 1000).toFixed(1)}s`);
 
+		// Store the original narration (for subtitles), not the pronunciation-adjusted text
 		segments.push({ sceneIndex: i, narration: scene.narration, audio, durationMs });
 	}
 

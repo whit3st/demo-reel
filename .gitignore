@@ -4,9 +4,12 @@ test-videos
 .demo-reel-temp
 .demo-reel-cache
 .demo-reel-sessions
+output/
 *.demo.ts
 !templates/*.demo.ts
 !create-template.demo.ts
 
 # Example app for testing
 example-app/
+
+.env

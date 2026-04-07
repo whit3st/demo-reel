@@ -18,6 +18,7 @@ async function main() {
 	let providerName = "piper";
 	let voiceName = "nl_NL-mls-medium";
 	let speed = 1.0;
+	let pronunciation: Record<string, string> | undefined;
 
 	for (let i = 0; i < args.length; i++) {
 		if (args[i] === "--provider") {
@@ -26,17 +27,25 @@ async function main() {
 			voiceName = args[++i];
 		} else if (args[i] === "--speed") {
 			speed = parseFloat(args[++i]);
+		} else if (args[i] === "--pronunciation") {
+			// Accept inline JSON or a file path
+			const val = args[++i];
+			if (val.startsWith("{")) {
+				pronunciation = JSON.parse(val);
+			} else {
+				pronunciation = JSON.parse(await readFile(val, "utf-8"));
+			}
 		} else if (!args[i].startsWith("-")) {
 			scriptPath = args[i];
 		}
 	}
 
 	if (!scriptPath) {
-		console.error("Usage: node dist/script/voice-cli.js <script.json> [--provider piper] [--voice nl_NL-mls-medium] [--speed 1.0]");
+		console.error("Usage: node dist/script/voice-cli.js <script.json> [--provider piper] [--voice nl_NL-mls-medium] [--speed 1.0] [--pronunciation '{\"template\":\"templayt\"}']");
 		process.exit(1);
 	}
 
-	const voice: VoiceConfig = { provider: providerName as VoiceConfig["provider"], voice: voiceName, speed };
+	const voice: VoiceConfig = { provider: providerName as VoiceConfig["provider"], voice: voiceName, speed, pronunciation };
 
 	try {
 		const raw = await readFile(scriptPath, "utf-8");
