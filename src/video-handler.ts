@@ -1,8 +1,8 @@
-import { mkdir, unlink, rmdir } from "fs/promises";
+import { mkdir, unlink, rmdir, writeFile as fsWriteFile } from "fs/promises";
 import { dirname, join, resolve } from "path";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import type { DemoReelConfig, AuthConfig, AuthBehaviorConfig } from "./schemas.js";
-import { runDemo, runPreSteps, runStepSimple } from "./runner.js";
+import { runDemo, runPreSteps, runStepSimple, type SceneTimestamp } from "./runner.js";
 import { mergeAudioVideo, type AudioConfig } from "./audio-processor.js";
 import {
   loadSession,
@@ -245,6 +245,74 @@ export async function processVideoWithAudio(
   return outputPath;
 }
 
+// --- Subtitle and metadata generation ---
+
+function formatTimecode(ms: number, separator: string): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const millis = ms % 1000;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}${separator}${String(millis).padStart(3, "0")}`;
+}
+
+function generateSRT(timestamps: SceneTimestamp[]): string {
+  return timestamps
+    .map((scene, i) => {
+      const start = formatTimecode(scene.startMs, ",");
+      const end = formatTimecode(scene.endMs, ",");
+      return `${i + 1}\n${start} --> ${end}\n${scene.narration}\n`;
+    })
+    .join("\n");
+}
+
+function generateVTT(timestamps: SceneTimestamp[]): string {
+  const cues = timestamps
+    .map((scene) => {
+      const start = formatTimecode(scene.startMs, ".");
+      const end = formatTimecode(scene.endMs, ".");
+      return `${start} --> ${end}\n${scene.narration}\n`;
+    })
+    .join("\n");
+  return `WEBVTT\n\n${cues}`;
+}
+
+function generateMetadata(
+  timestamps: SceneTimestamp[],
+  videoPath: string,
+): {
+  video: string;
+  scenes: {
+    index: number;
+    narration: string;
+    isIntro: boolean;
+    startMs: number;
+    endMs: number;
+    durationMs: number;
+  }[];
+  introEndMs: number | null;
+  totalDurationMs: number;
+} {
+  const scenes = timestamps.map((t) => ({
+    index: t.sceneIndex,
+    narration: t.narration,
+    isIntro: t.isIntro,
+    startMs: t.startMs,
+    endMs: t.endMs,
+    durationMs: t.endMs - t.startMs,
+  }));
+
+  const introScene = scenes.find((s) => s.isIntro);
+  const lastScene = scenes[scenes.length - 1];
+
+  return {
+    video: videoPath,
+    scenes,
+    introEndMs: introScene ? introScene.endMs : null,
+    totalDurationMs: lastScene ? lastScene.endMs : 0,
+  };
+}
+
 export async function runVideoScenario(
   config: DemoReelConfig,
   outputPath: string,
@@ -308,10 +376,13 @@ export async function runVideoScenario(
       console.log("Running demo scenario...");
     }
 
-    await runDemo(recording.page, config);
+    const sceneTimestamps = await runDemo(recording.page, config);
 
     if (verbose) {
       console.log("Stopping recording...");
+      if (sceneTimestamps.length > 0) {
+        console.log(`Tracked ${sceneTimestamps.length} scene(s)`);
+      }
     }
 
     // Prepare session save function if auth is configured
@@ -349,6 +420,25 @@ export async function runVideoScenario(
       await rmdir(join(process.cwd(), ".demo-reel-temp")).catch(() => {});
     } catch {
       // Ignore cleanup errors
+    }
+
+    // Generate subtitles and metadata if scene timestamps are available
+    if (sceneTimestamps.length > 0) {
+      const basePath = finalPath.replace(/\.[^.]+$/, "");
+
+      const srt = generateSRT(sceneTimestamps);
+      await fsWriteFile(`${basePath}.srt`, srt, "utf-8");
+
+      const vtt = generateVTT(sceneTimestamps);
+      await fsWriteFile(`${basePath}.vtt`, vtt, "utf-8");
+
+      const meta = generateMetadata(sceneTimestamps, finalPath);
+      await fsWriteFile(`${basePath}.meta.json`, JSON.stringify(meta, null, 2), "utf-8");
+
+      if (verbose) {
+        console.log(`✓ Subtitles: ${basePath}.srt, ${basePath}.vtt`);
+        console.log(`✓ Metadata: ${basePath}.meta.json`);
+      }
     }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);

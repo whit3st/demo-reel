@@ -74,10 +74,10 @@ export type TimedScript = z.infer<typeof timedScriptSchema>;
 
 export const voiceConfigSchema = z.object({
 	provider: z
-		.enum(["openai", "elevenlabs"])
-		.default("openai")
-		.describe("TTS provider"),
-	voice: z.string().default("alloy").describe("Voice name/ID"),
+		.enum(["piper", "openai", "elevenlabs"])
+		.default("piper")
+		.describe("TTS provider (piper = local/free, openai = cloud)"),
+	voice: z.string().default("nl_NL-mls-medium").describe("Voice name/ID or model path"),
 	speed: z.number().min(0.5).max(2.0).default(1.0).describe("Speech speed multiplier"),
 });
 

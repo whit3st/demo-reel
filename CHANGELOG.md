@@ -22,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`/demo-script` Claude Code Skill**: Interactive, collaborative script building inside Claude Code — crawl pages, draft scenes together, iterate on narration, generate `.demo.ts` files
 - **Site Explorer**: `explore.ts` logs in and clicks through SPA pages to discover selectors and page structure
 - **Modular Video Series Pattern**: Design pattern for standalone videos that work independently and as a guided series — each video has its own preSteps for reproducible state setup
+- **Piper TTS Provider**: Local, free text-to-speech via Piper with Dutch voice support (`nl_NL-mls-medium`). No API key required for development iteration.
+- **TTS Provider Interface**: Pluggable provider system — `piper` (local/free, default) and `openai` built-in, with `registerTTSProvider()` for custom providers
+- **Scene Timeline Tracking**: `runDemo()` now records wall-clock timestamps for each scene boundary during recording
+- **Subtitle Generation**: Automatically generates `.srt` and `.vtt` subtitle files alongside the video, with per-scene narration text and actual timestamps
+- **Scene Metadata**: Generates `.meta.json` with scene timestamps, intro end point, and chapter markers for interactive presentation systems
+- **`scenes` Config Field**: New optional config field to declare scene boundaries with narration text, step indices, and intro markers
 
 ### Fixed
 

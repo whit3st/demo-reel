@@ -822,7 +822,15 @@ export const runPreSteps = async (page: Page, preSteps: Step[]) => {
   }
 };
 
-export const runDemo = async (page: Page, config: DemoReelConfig) => {
+export interface SceneTimestamp {
+  sceneIndex: number;
+  narration: string;
+  isIntro: boolean;
+  startMs: number;
+  endMs: number;
+}
+
+export const runDemo = async (page: Page, config: DemoReelConfig): Promise<SceneTimestamp[]> => {
   const resolvedCursor = await installCursorOverlay(page, config.cursor);
   const mouseState: MouseState = {
     initialized: false,
@@ -831,7 +839,41 @@ export const runDemo = async (page: Page, config: DemoReelConfig) => {
   let startDelayApplied = false;
   const rng = config.randomization ? createRandom(config.randomization.seed) : undefined;
 
-  for (const step of config.steps) {
+  // Build scene boundary lookup: stepIndex → sceneIndex
+  const sceneBoundaries = new Map<number, number>();
+  if (config.scenes) {
+    for (let i = 0; i < config.scenes.length; i++) {
+      sceneBoundaries.set(config.scenes[i].stepIndex, i);
+    }
+  }
+
+  const timestamps: SceneTimestamp[] = [];
+  const recordingStart = Date.now();
+  let currentScene: { index: number; startMs: number } | null = null;
+
+  for (let stepIdx = 0; stepIdx < config.steps.length; stepIdx++) {
+    const step = config.steps[stepIdx];
+
+    // Check if this step starts a new scene
+    const sceneIdx = sceneBoundaries.get(stepIdx);
+    if (sceneIdx !== undefined && config.scenes) {
+      const now = Date.now() - recordingStart;
+
+      // Close previous scene
+      if (currentScene !== null) {
+        const prevScene = config.scenes[currentScene.index];
+        timestamps.push({
+          sceneIndex: currentScene.index,
+          narration: prevScene.narration,
+          isIntro: prevScene.isIntro ?? false,
+          startMs: currentScene.startMs,
+          endMs: now,
+        });
+      }
+
+      currentScene = { index: sceneIdx, startMs: now };
+    }
+
     startDelayApplied = await runStep(
       page,
       step,
@@ -847,4 +889,18 @@ export const runDemo = async (page: Page, config: DemoReelConfig) => {
   if (config.timing.endDelayMs > 0) {
     await page.waitForTimeout(config.timing.endDelayMs);
   }
+
+  // Close final scene
+  if (currentScene !== null && config.scenes) {
+    const finalScene = config.scenes[currentScene.index];
+    timestamps.push({
+      sceneIndex: currentScene.index,
+      narration: finalScene.narration,
+      isIntro: finalScene.isIntro ?? false,
+      startMs: currentScene.startMs,
+      endMs: Date.now() - recordingStart,
+    });
+  }
+
+  return timestamps;
 };

@@ -431,6 +431,16 @@ export const demoReelConfigInputSchema = z
     randomization: randomizationSchema.optional().describe("Randomization settings"),
     timestamp: z.boolean().optional().describe("Add timestamp to output filename"),
     auth: authConfigSchema.optional().describe("Authentication/session persistence settings"),
+    scenes: z
+      .array(
+        z.object({
+          narration: z.string().describe("Voiceover narration text for this scene"),
+          stepIndex: z.number().int().min(0).describe("Index of the first step in this scene"),
+          isIntro: z.boolean().optional().describe("Whether this scene is the intro/context scene"),
+        }),
+      )
+      .optional()
+      .describe("Scene markers for timeline tracking and subtitle generation"),
   })
   .superRefine((value, ctx) => {
     if (value.outputFormat === "webm" && (value.audio?.narration || value.audio?.background)) {
