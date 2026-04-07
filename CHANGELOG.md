@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **DOM Crawler**: Playwright-based interactive element extraction with selector ranking (data-testid > id > href > class > custom)
 - **Timing Engine**: Audio-first synchronization that adjusts step delays to match narration duration
 - **Voice Caching**: Generated audio cached by content hash in `.demo-reel-cache/voice/`
+- **`/demo-script` Claude Code Skill**: Interactive, collaborative script building inside Claude Code — crawl pages, draft scenes together, iterate on narration, generate `.demo.ts` files
+- **Site Explorer**: `explore.ts` logs in and clicks through SPA pages to discover selectors and page structure
+- **Modular Video Series Pattern**: Design pattern for standalone videos that work independently and as a guided series — each video has its own preSteps for reproducible state setup
 
 ### Fixed
 
