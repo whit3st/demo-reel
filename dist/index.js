@@ -1,6 +1,6 @@
 import { execSync, spawn } from "child_process";
-import { writeFileSync, unlinkSync, mkdirSync } from "fs";
-import { resolve, join, relative } from "path";
+import { existsSync, writeFileSync, unlinkSync, mkdirSync } from "fs";
+import { resolve, dirname, join, relative } from "path";
 
 const DEFAULT_IMAGE = "ghcr.io/whit3st/demo-reel:latest";
 const LOCAL_IMAGE = "demo-reel:latest";
@@ -54,10 +54,64 @@ export async function generate(config, options = {}) {
 	const name = config.name || "demo";
 	const outputDir = config.outputDir || "./output";
 
+	// Auto-generate voice if scenes have narration + voice config
+	const hasNarration = config.scenes?.some(s => s.narration);
+	const hasVoice = config.voice;
+	const resolvedOutputDir = resolve(outputDir);
+	mkdirSync(resolvedOutputDir, { recursive: true });
+	const audioPath = join(resolvedOutputDir, `${name}-narration.mp3`);
+
+	if (hasNarration && hasVoice && !existsSync(audioPath)) {
+		if (verbose) console.log("Generating voiceover via Docker...");
+
+		// Write a script JSON for the voice CLI
+		const scriptJson = {
+			title: name,
+			description: "",
+			url: "",
+			scenes: config.scenes.filter(s => s.narration).map(s => ({ narration: s.narration, steps: [] })),
+			voice: config.voice,
+		};
+		const scriptPath = `.${name}.voice.tmp.json`;
+		writeFileSync(scriptPath, JSON.stringify(scriptJson, null, 2), "utf-8");
+
+		try {
+			const image = getImage();
+			const voiceArgs = [
+				"run", "--rm",
+				"-v", `${process.cwd()}:/work:z`,
+				"-w", "/work",
+			];
+			for (const envVar of ENV_PASSTHROUGH) {
+				if (process.env[envVar]) voiceArgs.push("-e", `${envVar}=${process.env[envVar]}`);
+			}
+			voiceArgs.push(
+				"--entrypoint", "node",
+				image,
+				"/app/dist/script/voice-cli.js",
+				scriptPath,
+			);
+			execSync(`docker ${voiceArgs.join(" ")}`, { stdio: "inherit" });
+		} finally {
+			try { unlinkSync(scriptPath); } catch { /* ignore */ }
+		}
+	}
+
+	// Inject audio config if narration was generated
+	const configWithAudio = { ...config };
+	if (hasNarration && existsSync(audioPath)) {
+		configWithAudio.audio = {
+			...config.audio,
+			narration: relative(process.cwd(), audioPath),
+			narrationDelay: config.audio?.narrationDelay ?? 300,
+		};
+		configWithAudio.outputFormat = "mp4";
+	}
+
 	const jsonPath = `.${name}.tmp.json`;
 
 	try {
-		writeFileSync(jsonPath, JSON.stringify(config, null, 2), "utf-8");
+		writeFileSync(jsonPath, JSON.stringify(configWithAudio, null, 2), "utf-8");
 	} catch (err) {
 		throw new Error(`Failed to write config: ${err.message}`);
 	}
