@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --import tsx/esm
+#!/usr/bin/env node
 import { loadConfig, loadScenario, findScenarioFiles } from "./config-loader.js";
 import { runVideoScenario, setOnBrowserCreated } from "./video-handler.js";
 import { writeFile } from "fs/promises";

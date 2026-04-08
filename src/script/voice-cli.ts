@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --import tsx/esm
+#!/usr/bin/env node
 /**
  * Generate voiceover audio for a demo script.
  *

@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --import tsx/esm
+#!/usr/bin/env node
 /**
  * Standalone crawler script for use with Claude Code.
  * Usage: node dist/script/crawl-cli.js <url>

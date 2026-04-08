@@ -12,12 +12,11 @@
   "license": "MIT",
   "author": "",
   "bin": {
-    "demo-reel": "src/docker-cli.ts",
-    "demo-reel-local": "src/cli.ts",
-    "demo-reel-crawl": "src/script/crawl-cli.ts",
-    "demo-reel-voice": "src/script/voice-cli.ts"
+    "demo-reel": "bin/demo-reel.mjs",
+    "demo-reel-local": "bin/demo-reel-local.mjs"
   },
   "files": [
+    "bin",
     "src",
     "templates",
     ".claude"
