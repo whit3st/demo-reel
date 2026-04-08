@@ -36,11 +36,6 @@ export default demo({
     },
   },
 
-  audio: {
-    narration: "./output/create-template-narration.mp3",
-    narrationDelay: 300,
-  },
-
   auth: {
     loginSteps: [
       { action: "goto", url: `${BASE}/login` },
@@ -82,7 +77,7 @@ export default demo({
   ],
 
   steps: [
-    // Navigate into the tenant (preSteps ran in a separate browser)
+    // Navigate into the tenant (setup ran in a separate browser)
     { action: "goto", url: `${BASE}/tenants/${TENANT_SLUG}` },
 
     // Scene 1: Dashboard → hover templates stat card → click → templates list

@@ -1,21 +1,15 @@
 {
   "baseUrl": "https://demo.epistola.app",
-  "auth": {
-    "loginUrl": "/login",
-    "username": "admin@local",
-    "password": "admin",
-    "successIndicator": "h1:has-text('Tenants')"
-  },
+  "language": "nl",
   "voice": {
     "provider": "elevenlabs",
     "voice": "5zhopMftSdRGaPYVcwKK",
     "pronunciation": {
       "template": "template",
       "templates": "templates",
-      "editor": "editor",
-      "Create Template": "Create Template"
+      "templateoverzicht": "template overzicht",
+      "documenttemplates": "document templates",
+      "editor": "editor"
     }
-  },
-  "resolution": "FHD",
-  "language": "nl"
+  }
 }
