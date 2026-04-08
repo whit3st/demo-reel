@@ -1,12 +1,17 @@
-// Re-export consumer-facing API from define.ts (zero-dep)
-export { defineConfig, demo } from "./define.js";
+// Consumer-facing API is in dist/index.js (committed, zero deps).
+// This file is for internal use only (full dependency tree).
 
-// Internal API (requires full dependency tree)
 import {
   demoReelConfigSchema,
   demoReelConfigInputSchema,
   type DemoReelConfig,
 } from "./schemas.js";
+
+export function defineConfig(config: DemoReelConfig): DemoReelConfig {
+  return demoReelConfigSchema.parse(config);
+}
+
+export const demo = defineConfig;
 
 export function validateConfig(config: unknown): DemoReelConfig {
   return demoReelConfigSchema.parse(config);

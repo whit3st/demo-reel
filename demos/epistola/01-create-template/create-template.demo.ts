@@ -1,4 +1,4 @@
-import { demo } from "demo-reel";
+import { generate } from "demo-reel";
 
 const TENANT_SLUG = "demo-reel";
 const BASE = "https://demo.epistola.app";
@@ -11,7 +11,7 @@ const deleteTenantSteps = [
   { action: "wait" as const, ms: 1000 },
 ];
 
-export default demo({
+await generate({
   video: {
     resolution: "FHD",
   },
@@ -102,4 +102,4 @@ export default demo({
     { action: "hover", selector: { strategy: "custom", value: "a[href*='editor']" }, delayAfterMs: 600 },
     { action: "click", selector: { strategy: "custom", value: "a[href*='editor']" }, delayAfterMs: 2500 },
   ],
-});
+}, { verbose: true });

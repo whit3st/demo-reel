@@ -12,24 +12,23 @@
   "license": "MIT",
   "author": "",
   "bin": {
-    "demo-reel": "bin/demo-reel.mjs",
-    "demo-reel-local": "bin/demo-reel-local.mjs"
+    "demo-reel": "bin/demo-reel.mjs"
   },
   "files": [
     "bin",
-    "dist/define.js",
-    "dist/define.d.ts",
+    "dist/index.js",
+    "dist/index.d.ts",
     "src",
     "templates",
     ".claude-plugin"
   ],
   "type": "module",
-  "main": "./dist/define.js",
-  "types": "./dist/define.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/define.js",
-      "types": "./dist/define.d.ts"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
     "./package.json": "./package.json"
   },
@@ -49,12 +48,12 @@
   "dependencies": {
     "ffmpeg-static": "^5.2.0",
     "glob": "^13.0.6",
-    "tsx": "^4.21.0",
     "zod": "^3.22.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@typescript/native-preview": "7.0.0-dev.20260321.1",
+    "tsx": "^4.21.0",
     "@vitest/ui": "^4.1.0",
     "oxfmt": "^0.43.0",
     "oxlint": "^1.58.0",
