@@ -43,6 +43,7 @@
     "format": "oxfmt . --write",
     "demo": "tsc --outDir dist && node dist/cli.js",
     "demo:voice": "node --import tsx/esm src/script/voice-cli.ts",
+    "prepare": "tsc --outDir dist || true",
     "prepublishOnly": "pnpm run build && pnpm test"
   },
   "dependencies": {
