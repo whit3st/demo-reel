@@ -54,8 +54,7 @@ export async function generate(config, options = {}) {
 	const name = config.name || "demo";
 	const outputDir = config.outputDir || "./output";
 
-	mkdirSync(outputDir, { recursive: true });
-	const jsonPath = join(outputDir, `.${name}.tmp.json`);
+	const jsonPath = `.${name}.tmp.json`;
 
 	try {
 		writeFileSync(jsonPath, JSON.stringify(config, null, 2), "utf-8");
