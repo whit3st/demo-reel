@@ -183,33 +183,27 @@ async function main(): Promise<void> {
 	const noDocker = args.includes("--no-docker");
 	const filteredArgs = args.filter((a) => a !== "--no-docker");
 
-	// Handle setup command — installs the Claude Code skill
+	// Handle setup command — shows how to install the Claude Code plugin
 	if (filteredArgs[0] === "setup") {
-		const dest = join(process.cwd(), SKILL_PATH);
-		if (existsSync(dest)) {
-			console.log(`✓ /demo-script skill already installed at ${SKILL_PATH}`);
-		} else {
-			try {
-				const response = await fetch(SKILL_URL);
-				if (!response.ok) throw new Error(`HTTP ${response.status}`);
-				const content = await response.text();
-				mkdirSync(dirname(dest), { recursive: true });
-				writeFileSync(dest, content, "utf-8");
-				console.log(`✓ Installed /demo-script skill → ${SKILL_PATH}`);
-				console.log(`  Use /demo-script in Claude Code to build demo scripts interactively.`);
-			} catch (err) {
-				console.error(`Failed to download skill: ${err instanceof Error ? err.message : err}`);
-				console.error(`Manual install:\n  mkdir -p .claude/commands`);
-				console.error(`  curl -sL ${SKILL_URL} -o ${SKILL_PATH}`);
-				process.exit(1);
-			}
-		}
+		console.log(`demo-reel setup
+
+Install the /demo-script Claude Code plugin to build demo scripts interactively.
+
+Option 1 — Claude Code plugin (recommended):
+  /plugin marketplace add whit3st/demo-reel
+  /plugin install demo-reel@whit3st-demo-reel
+
+Option 2 — Manual copy:
+  mkdir -p .claude/commands
+  curl -sL ${SKILL_URL} -o ${SKILL_PATH}
+
+Then use /demo-script in Claude Code to create demo videos collaboratively.`);
 		return;
 	}
 
-	// Hint about the skill if not installed (only on first run, non-verbose)
+	// Hint about the plugin if skill not installed
 	if (!existsSync(join(process.cwd(), SKILL_PATH)) && !filteredArgs.includes("--help") && !filteredArgs.includes("-h")) {
-		console.log(`tip: Run "demo-reel setup" to install the /demo-script Claude Code skill\n`);
+		console.log(`tip: Run "demo-reel setup" to learn how to install the /demo-script Claude Code plugin\n`);
 	}
 
 	// Handle explore subcommand (runs in Docker, no config needed)

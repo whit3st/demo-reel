@@ -1,0 +1,13 @@
+{
+  "plugins": [
+    {
+      "name": "demo-reel",
+      "description": "Create demo videos from web apps — interactive script building with Claude Code",
+      "source": {
+        "source": "github",
+        "repo": "whit3st/demo-reel"
+      },
+      "version": "0.1.4"
+    }
+  ]
+}

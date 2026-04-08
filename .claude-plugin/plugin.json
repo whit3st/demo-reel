@@ -1,0 +1,8 @@
+{
+  "name": "demo-reel",
+  "description": "Create demo videos from web apps — interactive script building with Claude Code",
+  "version": "0.1.4",
+  "author": {
+    "name": "whit3st"
+  }
+}
