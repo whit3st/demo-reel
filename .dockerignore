@@ -1,0 +1,10 @@
+node_modules
+dist
+.demo-reel-cache
+.demo-reel-temp
+.demo-reel-sessions
+.git
+.env
+test-videos
+example-app
+demos/**/output

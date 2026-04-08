@@ -406,14 +406,11 @@ export const demoReelConfigInputSchema = z
       "Timing preset name or custom timing configuration",
     ),
     steps: z.array(stepSchema).min(1).describe("Demo scenario steps to execute"),
-    preSteps: z
-      .array(stepSchema)
-      .optional()
-      .describe("Steps to run before recording (e.g., setup data, navigate)"),
-    postSteps: z
-      .array(stepSchema)
-      .optional()
-      .describe("Steps to run after recording (e.g., cleanup, delete test data)"),
+    setup: z.array(stepSchema).optional().describe("Steps to run before recording (e.g., create tenant, navigate)"),
+    cleanup: z.array(stepSchema).optional().describe("Steps to run after recording (e.g., delete tenant)"),
+    // Aliases for backward compatibility
+    preSteps: z.array(stepSchema).optional().describe("Alias for setup"),
+    postSteps: z.array(stepSchema).optional().describe("Alias for cleanup"),
     name: z.string().min(1).optional().describe("Output file name without extension"),
     outputDir: z.string().min(1).optional().describe("Output directory for video files"),
     outputPath: z
@@ -435,6 +432,15 @@ export const demoReelConfigInputSchema = z
     randomization: randomizationSchema.optional().describe("Randomization settings"),
     timestamp: z.boolean().optional().describe("Add timestamp to output filename"),
     auth: authConfigSchema.optional().describe("Authentication/session persistence settings"),
+    voice: z
+      .object({
+        provider: z.enum(["piper", "openai", "elevenlabs"]).default("piper").describe("TTS provider"),
+        voice: z.string().default("nl_NL-mls-medium").describe("Voice name/ID"),
+        speed: z.number().min(0.5).max(2.0).default(1.0).describe("Speech speed"),
+        pronunciation: z.record(z.string()).optional().describe("Word replacements for pronunciation"),
+      })
+      .optional()
+      .describe("Voice/TTS configuration for narration generation"),
     scenes: z
       .array(
         z.object({
@@ -466,6 +472,9 @@ export const demoReelConfigSchema = demoReelConfigInputSchema.transform((val) =>
   motion: resolveMotion(val.motion),
   typing: resolveTyping(val.typing),
   timing: resolveTiming(val.timing),
+  // Resolve setup/cleanup aliases
+  preSteps: val.setup || val.preSteps,
+  postSteps: val.cleanup || val.postSteps,
 }));
 
 export type CursorPresetOrConfig = z.infer<typeof cursorPresetOrConfigSchema>;

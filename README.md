@@ -1,277 +1,209 @@
 # Demo Reel
 
-Create beautiful demo videos from web apps using Playwright. Perfect for showcasing features, creating onboarding tutorials, or documenting workflows.
-
-## What is Demo Reel?
-
-Demo Reel is a developer-first tool for creating professional demo videos from web applications. Unlike manual screen recording, Demo Reel uses Playwright automation to create pixel-perfect, reproducible demos.
-
-**Key Benefits:**
-
-- **Code as Config**: Demo configurations are TypeScript files
-- **Version Controlled**: Track demo changes in git
-- **CI/CD Ready**: Generate videos in automated pipelines
-- **Human-Like**: Natural cursor movements and typing
-- **Audio Support**: Mix narration and background music
-
-## Installation
-
-```bash
-npm install -D demo-reel playwright
-```
+Create professional demo videos from web apps. Code your demos in TypeScript, record via Docker, with automatic voiceover and subtitles.
 
 ## Quick Start
 
-### 1. Initialize a Demo Scenario
-
 ```bash
-npx demo-reel init
+pnpm add -D demo-reel@github:whit3st/demo-reel tsx
 ```
 
-This creates `example.demo.ts` in your project.
+```typescript
+// demos/signup.demo.ts
+import { generate } from "demo-reel";
 
-### 2. Run the Demo
+await generate({
+  name: "signup",
+  outputDir: "./output",
+  video: { resolution: "FHD" },
+  cursor: "dot",
+  motion: "smooth",
+  typing: "humanlike",
+  timing: "normal",
+  outputFormat: "mp4",
 
-```bash
-npx demo-reel
+  voice: {
+    provider: "elevenlabs",  // or "piper" (local/free) or "openai"
+    voice: "your-voice-id",
+  },
+
+  auth: {
+    loginSteps: [
+      { action: "goto", url: "https://myapp.com/login" },
+      { action: "type", selector: { strategy: "id", value: "email" }, text: "demo@example.com" },
+      { action: "type", selector: { strategy: "id", value: "password" }, text: "password" },
+      { action: "click", selector: { strategy: "class", value: "btn-primary" } },
+    ],
+    validate: {
+      protectedUrl: "https://myapp.com/dashboard",
+      successIndicator: { strategy: "custom", value: "h1:has-text('Dashboard')" },
+    },
+    storage: { name: "demo-session", types: ["cookies"] },
+  },
+
+  setup: [
+    // Runs before recording (off-screen) — create test data, navigate
+    { action: "goto", url: "https://myapp.com/dashboard" },
+  ],
+
+  cleanup: [
+    // Runs after recording — delete test data
+  ],
+
+  scenes: [
+    { narration: "Welcome to our app. Let's create a new project.", stepIndex: 0, isIntro: true },
+    { narration: "Fill in the details and click Create.", stepIndex: 2 },
+  ],
+
+  steps: [
+    // Scene 1
+    { action: "hover", selector: { strategy: "testId", value: "new-project" }, delayAfterMs: 800 },
+    { action: "click", selector: { strategy: "testId", value: "new-project" }, delayAfterMs: 1500 },
+
+    // Scene 2
+    { action: "type", selector: { strategy: "id", value: "name" }, text: "My Project", delayAfterMs: 500 },
+    { action: "hover", selector: { strategy: "custom", value: "button[type='submit']" }, delayAfterMs: 600 },
+    { action: "click", selector: { strategy: "custom", value: "button[type='submit']" }, delayAfterMs: 2000 },
+  ],
+}, { verbose: true });
 ```
 
-Output: `videos/example.mp4`
+```bash
+npx tsx demos/signup.demo.ts
+```
 
-## CLI Usage
+Output: `output/signup.mp4` + `.srt` + `.vtt` + `.meta.json`
+
+## How It Works
+
+1. **You write a `.demo.ts`** — TypeScript config with steps, scenes, and narration
+2. **`generate()` handles everything** — compiles config, generates voiceover (via Docker), records the video (via Docker), outputs subtitles and metadata
+3. **Docker runs the heavy stuff** — Chromium, FFmpeg, Piper TTS are in the Docker image, not on your machine
+
+### Requirements
+
+- **Docker** — for recording and voice generation
+- **Node.js 18+** — for running your demo scripts
+- **API keys** (optional) — `ELEVENLABS_KEY` or `OPENAI_API_KEY` for cloud TTS
+
+## Claude Code Integration
+
+Build demo scripts interactively with Claude Code:
 
 ```bash
-demo-reel init                        # Create example.demo.ts
-demo-reel                             # Run all *.demo.ts files
-demo-reel onboarding                  # Run onboarding.demo.ts
-demo-reel --all                       # Run all *.demo.ts files
-demo-reel --dry-run                   # Validate config without recording
-demo-reel --headed                    # Show browser window
-demo-reel -o ./public/videos          # Override output directory
-demo-reel --verbose                   # Show detailed output
+pnpm demo-reel setup   # shows how to install the /demo-script plugin
 ```
+
+Then use `/demo-script` in Claude Code:
+```
+/demo-script https://myapp.com show the signup flow
+```
+
+Claude crawls your app, builds the script with you scene by scene, and generates the `.demo.ts`.
 
 ## Configuration
 
-### Scenario Files
-
-Demo scenarios are `.demo.ts` files containing your configuration:
+### Voice / TTS
 
 ```typescript
-import { defineConfig } from "demo-reel";
-
-export default defineConfig({
-  video: {
-    resolution: "FHD", // HD | FHD | 2K | 4K or custom size
+voice: {
+  provider: "elevenlabs",           // "piper" (local/free) | "openai" | "elevenlabs"
+  voice: "voice-id-or-model-name",  // e.g. "nl_NL-mls-medium" for Piper
+  speed: 1.0,
+  pronunciation: {                  // word replacements before TTS
+    "template": "template",         // prevent Dutch pronunciation of English words
   },
-  name: "my-demo",
-  outputFormat: "webm", // 'webm' | 'mp4'
-  steps: [
-    { action: "goto", url: "https://example.com" },
-    { action: "wait", ms: 2000 },
-  ],
-});
+},
 ```
 
-### Built-in Presets
+Voiceover is auto-generated when `scenes` have `narration` text and `voice` is configured. Cached by content hash — only regenerates when narration changes.
 
-Demo Reel includes presets for cursor, motion, typing, and timing. Use string shortcuts for quick setup:
+### Setup & Cleanup
 
 ```typescript
-export default defineConfig({
-  cursor: "dot", // 'dot' | 'arrow' | 'none'
-  motion: "smooth", // 'smooth' | 'snappy' | 'instant'
-  typing: "humanlike", // 'humanlike' | 'fast' | 'instant'
-  timing: "normal", // 'normal' | 'fast' | 'instant'
-  // ...
-});
+setup: [
+  // Runs in a separate browser BEFORE recording (not visible in video)
+  { action: "goto", url: "https://myapp.com/" },
+  { action: "click", selector: { strategy: "id", value: "create-workspace" } },
+],
+
+cleanup: [
+  // Runs AFTER recording (even on failure) — delete test data
+  { action: "goto", url: "https://myapp.com/admin" },
+  { action: "click", selector: { strategy: "custom", value: "button.delete" } },
+],
 ```
 
-Or customize individual settings:
+Setup and cleanup run in tolerant mode — failed steps are skipped.
+
+### Scenes & Subtitles
 
 ```typescript
-export default defineConfig({
-  cursor: { type: "dot", size: 16, borderWidth: 2 },
-  motion: { moveDurationMs: 400, clickDelayMs: 50 },
-  // ...
-});
+scenes: [
+  { narration: "Welcome to our app.", stepIndex: 0, isIntro: true },
+  { narration: "Let's create something.", stepIndex: 3 },
+],
 ```
 
-#### Cursor Presets
+- `narration` — voiceover text (also used for subtitles)
+- `stepIndex` — which step starts this scene
+- `isIntro` — marks the intro scene (used by presentation systems to skip context)
 
-| Preset  | Description                             |
-| ------- | --------------------------------------- |
-| `dot`   | Colored dot cursor (12px, white border) |
-| `arrow` | Classic SVG arrow cursor                |
-| `none`  | No cursor overlay                       |
+Generates `.srt`, `.vtt` (subtitles) and `.meta.json` (scene timestamps for interactive players).
 
-#### Motion Presets
+### Steps
 
-| Preset    | Description                                |
-| --------- | ------------------------------------------ |
-| `smooth`  | Natural curved movement (600ms, 25+ steps) |
-| `snappy`  | Faster direct movement (300ms, 15 steps)   |
-| `instant` | Teleporting (no animation)                 |
+| Action | Description |
+|--------|-------------|
+| `goto` | Navigate to URL |
+| `click` | Click an element |
+| `hover` | Hover over element |
+| `type` | Type text into input |
+| `press` | Press a key |
+| `scroll` | Scroll element |
+| `select` | Select dropdown option(s) |
+| `check` | Check/uncheck checkbox |
+| `upload` | Upload files |
+| `drag` | Drag and drop |
+| `wait` | Wait for duration |
+| `waitFor` | Wait for condition (selector, URL, load state, network, JS function) |
 
-#### Typing Presets
-
-| Preset      | Description                           |
-| ----------- | ------------------------------------- |
-| `humanlike` | Realistic variable delays (80ms base) |
-| `fast`      | Quick natural typing (40ms base)      |
-| `instant`   | No delay                              |
-
-#### Timing Presets
-
-| Preset    | Description                        |
-| --------- | ---------------------------------- |
-| `normal`  | Balanced delays (2000ms goto/ end) |
-| `fast`    | Reduced waits (1000ms)             |
-| `instant` | Minimal delays (0ms)               |
-
-### Video Resolution
-
-Choose a preset or provide a custom size:
+### Selectors
 
 ```typescript
-video: { resolution: "FHD" }
-// or
-video: { resolution: { width: 2560, height: 1440 } }
+{ strategy: "testId", value: "submit-button" }     // data-testid
+{ strategy: "id", value: "username" }               // id (no #)
+{ strategy: "class", value: "btn-primary" }         // class (no .)
+{ strategy: "href", value: "/dashboard" }           // link href
+{ strategy: "custom", value: "button:has-text('Save')" }  // any CSS selector
+{ strategy: "class", value: "card", index: 2 }      // nth match
 ```
 
-| Preset | Resolution |
-| ------ | ---------- |
-| `HD`   | 1280x720   |
-| `FHD`  | 1920x1080  |
-| `2K`   | 2560x1440  |
-| `4K`   | 3840x2160  |
-
-### Randomization
-
-Enable deterministic randomization for cursor paths and typing delays:
+### Presets
 
 ```typescript
-randomization: { seed: "demo-seed" }
+cursor: "dot" | "arrow" | "none"
+motion: "smooth" | "snappy" | "instant"
+typing: "humanlike" | "fast" | "instant"
+timing: "normal" | "fast" | "instant"
+video: { resolution: "HD" | "FHD" | "2K" | "4K" }
 ```
 
-### Authentication
+## Modular Video Series
 
-Use the top-level `auth` property when a scenario needs to log in before recording and reuse a saved session on later runs.
+Demo videos are designed as standalone segments that also work as a series:
 
-```typescript
-auth: {
-  loginSteps: [
-    { action: "goto", url: "https://demo.epistola.app/login" },
-    { action: "type", selector: { strategy: "id", value: "username" }, text: "admin@local" },
-    { action: "type", selector: { strategy: "id", value: "password" }, text: "admin" },
-    { action: "click", selector: { strategy: "class", value: "btn-primary" } },
-  ],
-  validate: {
-    protectedUrl: "https://demo.epistola.app/tenants/demo",
-    successIndicator: { strategy: "href", value: "/tenants/demo" },
-  },
-  storage: {
-    name: "demo-session",
-    types: ["cookies", "localStorage"],
-  },
-}
+```
+demos/
+└── my-app/
+    ├── 01-signup/signup.demo.ts          # setup: create workspace
+    ├── 02-create-project/project.demo.ts # setup: create workspace + template
+    └── 03-editor/editor.demo.ts          # setup: create workspace + template + project
 ```
 
-- `loginSteps`: runs the login flow and captures a session after it succeeds
-- `validate`: opens a protected page and checks for an element that proves the session is still valid
-- `storage`: controls the session name and which browser storage types to persist
-- `behavior`: optional flags for `autoReauth`, `forceReauth`, and `clearInvalid`
+Each video has its own `setup` that recreates the required state. Later videos have heavier setup. Every video is independently recordable.
 
-### Scenario Tags
-
-Tag scenarios and filter runs by tag:
-
-```typescript
-tags: ["marketing", "onboarding"]
-```
-
-```bash
-demo-reel --tag marketing
-demo-reel --tag marketing --tag onboarding
-demo-reel --tag marketing,onboarding
-```
-
-### Available Steps
-
-- `goto` - Navigate to URL
-- `click` - Click an element
-- `hover` - Hover over element
-- `type` - Type text into input
-- `press` - Press a key
-- `scroll` - Scroll element
-- `select` - Select option(s) in dropdown
-- `check` - Check or uncheck checkbox
-- `upload` - Upload files
-- `drag` - Drag and drop element
-- `wait` - Wait for duration
-- `waitFor` - Wait for condition (selector, URL, function, etc.)
-
-### Selector Strategies
-
-```typescript
-// By test ID (data-testid attribute)
-{ strategy: 'testId', value: 'submit-button' }
-
-// By ID (without #)
-{ strategy: 'id', value: 'username' }
-
-// By class (without .)
-{ strategy: 'class', value: 'btn-primary' }
-
-// By href
-{ strategy: 'href', value: '/dashboard' }
-
-// By data-node-id
-{ strategy: 'data-node-id', value: 'node-123' }
-
-// By custom selector
-{ strategy: 'custom', value: '.card[data-state="open"]' }
-
-// Select a specific match (0-based index)
-{ strategy: 'class', value: 'nav-link', index: 1 }
-```
-
-### Type Clear Option
-
-Clear an input before typing:
-
-```typescript
-{ action: 'type', selector: { strategy: 'id', value: 'email' }, text: 'user@example.com', clear: true }
-```
-
-## Features
-
-### Human-Like Cursor Movement
-
-Smooth Bezier curve paths with configurable speed and easing.
-
-### Natural Typing
-
-Variable delays based on character type (spaces, punctuation, etc.)
-
-### Audio Support
-
-Mix narration and background music:
-
-```typescript
-audio: {
-  narration: './voiceover.mp3',
-  narrationDelay: 2000,  // Delay before narration starts
-  background: './music.mp3',
-  backgroundVolume: 0.3,
-}
-```
-
-Audio output requires `outputFormat: 'mp4'`.
-
-## CI/CD Integration
-
-Example GitHub Actions workflow:
+## CI/CD
 
 ```yaml
 name: Generate Demo Videos
@@ -282,13 +214,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm ci
-      - run: npx playwright install chromium
-      - run: npx demo-reel --all
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install
+      - run: npx tsx demos/01-signup/signup.demo.ts
+        env:
+          ELEVENLABS_KEY: ${{ secrets.ELEVENLABS_KEY }}
       - uses: actions/upload-artifact@v4
         with:
           name: demo-videos
-          path: ./videos/*.mp4
+          path: ./output/*.mp4
 ```
 
 ## License

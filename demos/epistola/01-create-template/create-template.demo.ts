@@ -1,4 +1,4 @@
-import { defineConfig } from "demo-reel";
+import { generate } from "demo-reel";
 
 const TENANT_SLUG = "demo-reel";
 const BASE = "https://demo.epistola.app";
@@ -11,7 +11,7 @@ const deleteTenantSteps = [
   { action: "wait" as const, ms: 1000 },
 ];
 
-export default defineConfig({
+await generate({
   video: {
     resolution: "FHD",
   },
@@ -24,9 +24,16 @@ export default defineConfig({
   name: "create-template",
   outputDir: "./output",
 
-  audio: {
-    narration: "./output/create-template-narration.mp3",
-    narrationDelay: 300,
+  voice: {
+    provider: "elevenlabs",
+    voice: "5zhopMftSdRGaPYVcwKK",
+    pronunciation: {
+      "template": "template",
+      "templates": "templates",
+      "templateoverzicht": "template overzicht",
+      "documenttemplates": "document templates",
+      "editor": "editor",
+    },
   },
 
   auth: {
@@ -46,7 +53,7 @@ export default defineConfig({
     },
   },
 
-  preSteps: [
+  setup: [
     // Delete tenant if it exists (tolerant — won't fail if it doesn't)
     ...deleteTenantSteps,
     // Create fresh tenant
@@ -60,7 +67,7 @@ export default defineConfig({
     { action: "wait", ms: 1500 },
   ],
 
-  postSteps: deleteTenantSteps,
+  cleanup: deleteTenantSteps,
 
   scenes: [
     { narration: "Welkom in Epistola. Vanuit het dashboard navigeren we naar het templateoverzicht.", stepIndex: 1, isIntro: true },
@@ -70,7 +77,7 @@ export default defineConfig({
   ],
 
   steps: [
-    // Navigate into the tenant (preSteps ran in a separate browser)
+    // Navigate into the tenant (setup ran in a separate browser)
     { action: "goto", url: `${BASE}/tenants/${TENANT_SLUG}` },
 
     // Scene 1: Dashboard → hover templates stat card → click → templates list
@@ -95,4 +102,4 @@ export default defineConfig({
     { action: "hover", selector: { strategy: "custom", value: "a[href*='editor']" }, delayAfterMs: 600 },
     { action: "click", selector: { strategy: "custom", value: "a[href*='editor']" }, delayAfterMs: 2500 },
   ],
-});
+}, { verbose: true });

@@ -388,8 +388,27 @@ async function main(): Promise<void> {
         process.exit(1);
       }
     } else if (scenario) {
-      // Run specific scenario
-      const configPath = await loadScenario(scenario);
+      // Run specific scenario — accept full file path or scenario name
+      let configPath: string | null = null;
+
+      // Check if it's a direct file path
+      const ext = scenario.split(".").pop();
+      if (ext && ["ts", "js", "mjs", "json"].includes(ext)) {
+        const { resolve } = await import("path");
+        const fullPath = resolve(scenario);
+        const { access } = await import("fs/promises");
+        try {
+          await access(fullPath);
+          configPath = fullPath;
+        } catch {
+          // File doesn't exist, try as scenario name
+        }
+      }
+
+      // Fall back to scenario name lookup
+      if (!configPath) {
+        configPath = await loadScenario(scenario);
+      }
 
       if (!configPath) {
         console.error(`Scenario not found: ${scenario}`);

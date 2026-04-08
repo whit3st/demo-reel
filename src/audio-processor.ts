@@ -14,14 +14,22 @@ export interface MergeOptions {
   audio?: AudioConfig;
 }
 
-// Import ffmpeg-static dynamically to avoid type issues
+// Import ffmpeg-static dynamically, fall back to system ffmpeg
 async function getFfmpegPath(): Promise<string | null> {
   try {
     const module: any = await import("ffmpeg-static");
-    return module.default as string | null;
+    const path = module.default as string | null;
+    if (path) {
+      // Verify the binary exists (ffmpeg-static may not ship it in prod)
+      const { accessSync } = await import("fs");
+      accessSync(path);
+      return path;
+    }
   } catch {
-    return null;
+    // ffmpeg-static not available or binary missing
   }
+  // Fall back to system ffmpeg
+  return "ffmpeg";
 }
 
 /**

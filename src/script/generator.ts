@@ -1,4 +1,3 @@
-import Anthropic from "@anthropic-ai/sdk";
 import type { DemoScript, ScriptScene } from "./types.js";
 import { crawlUrl, formatPageContext } from "./crawler.js";
 import { chromium } from "playwright";
@@ -114,6 +113,8 @@ export async function generateScript(options: GenerateOptions): Promise<DemoScri
 		console.log("Generating script with Claude...");
 	}
 
+	// @ts-ignore — @anthropic-ai/sdk is an optional peer dependency
+	const { default: Anthropic } = await import("@anthropic-ai/sdk");
 	const client = new Anthropic(apiKey ? { apiKey } : undefined);
 
 	const message = await client.messages.create({
@@ -128,9 +129,9 @@ export async function generateScript(options: GenerateOptions): Promise<DemoScri
 		],
 	});
 
-	const responseText = message.content
-		.filter((block): block is Anthropic.TextBlock => block.type === "text")
-		.map((block) => block.text)
+	const responseText = (message.content as any[])
+		.filter((block: any) => block.type === "text")
+		.map((block: any) => block.text)
 		.join("");
 
 	if (!responseText) {
@@ -217,6 +218,8 @@ export async function fixBrokenSteps(
 		})
 		.join("\n");
 
+	// @ts-ignore — @anthropic-ai/sdk is an optional peer dependency
+	const { default: Anthropic } = await import("@anthropic-ai/sdk");
 	const client = new Anthropic(options.apiKey ? { apiKey: options.apiKey } : undefined);
 
 	const message = await client.messages.create({
@@ -242,9 +245,9 @@ Return the full corrected JSON script (same format as before). Fix only the brok
 		],
 	});
 
-	const responseText = message.content
-		.filter((block): block is Anthropic.TextBlock => block.type === "text")
-		.map((block) => block.text)
+	const responseText = (message.content as any[])
+		.filter((block: any) => block.type === "text")
+		.map((block: any) => block.text)
 		.join("");
 
 	const { title, scenes } = parseScriptResponse(responseText);
