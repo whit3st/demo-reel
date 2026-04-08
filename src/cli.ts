@@ -3,15 +3,33 @@ import { loadConfig, loadScenario, findScenarioFiles } from "./config-loader.js"
 import { runVideoScenario, setOnBrowserCreated } from "./video-handler.js";
 import { writeFile } from "fs/promises";
 import { join } from "path";
+import {
+  scriptGenerate,
+  scriptVoice,
+  scriptBuild,
+  scriptValidate,
+  scriptFix,
+  scriptFullPipeline,
+} from "./script/cli.js";
 
 interface CliOptions {
   verbose: boolean;
   dryRun: boolean;
   all: boolean;
   init?: boolean;
+  script?: boolean;
   outputDir?: string;
   headed?: boolean;
   tags?: string[];
+  // Script-specific options
+  scriptUrl?: string;
+  scriptOutput?: string;
+  scriptVoice?: string;
+  scriptSpeed?: number;
+  scriptHints?: string[];
+  noCache?: boolean;
+  resolution?: string;
+  format?: string;
 }
 
 let currentBrowser: { browser: any; context: any } | null = null;
@@ -110,11 +128,32 @@ function parseArgs(): { scenario?: string; options: CliOptions } {
       options.tags = addTags(options.tags, args[++i]);
     } else if (arg.startsWith("--tag=")) {
       options.tags = addTags(options.tags, arg.slice("--tag=".length));
+    } else if (arg === "--url") {
+      options.scriptUrl = args[++i];
+    } else if (arg.startsWith("--url=")) {
+      options.scriptUrl = arg.slice("--url=".length);
+    } else if (arg === "--output" || arg === "--name") {
+      options.scriptOutput = args[++i];
+    } else if (arg === "--voice") {
+      options.scriptVoice = args[++i];
+    } else if (arg === "--speed") {
+      options.scriptSpeed = parseFloat(args[++i]);
+    } else if (arg === "--hint") {
+      options.scriptHints = options.scriptHints || [];
+      options.scriptHints.push(args[++i]);
+    } else if (arg === "--no-cache") {
+      options.noCache = true;
+    } else if (arg === "--resolution") {
+      options.resolution = args[++i];
+    } else if (arg === "--format") {
+      options.format = args[++i];
     } else if (arg === "--help" || arg === "-h") {
       showHelp();
       process.exit(0);
     } else if (arg === "init") {
       options.init = true;
+    } else if (arg === "script") {
+      options.script = true;
     } else if (!arg.startsWith("-")) {
       scenario = arg;
     }
@@ -132,7 +171,16 @@ Usage:
 
 Commands:
   init                         Create example .demo.ts scenario file
+  script <subcommand>          AI-powered script generation
   [scenario]                   Run a specific scenario
+
+Script subcommands:
+  script generate "desc" --url <url>   Generate a script from description
+  script voice <script.json>           Generate voiceover audio
+  script build <script.json>           Build .demo.ts from timed script
+  script validate <script.json>        Validate selectors against live app
+  script fix <script.json>             Fix broken selectors via re-crawl
+  script "description" --url <url>     Full pipeline (generate → voice → build)
 
 Options:
   --all                        Run all *.demo.ts files in the project
@@ -143,13 +191,136 @@ Options:
   --verbose, -v                Show detailed output
   --help, -h                   Show this help message
 
+Script options:
+  --url <url>                  Starting URL for script generation
+  --output, --name <name>      Output name (without extension)
+  --voice <voice>              TTS voice name (default: alloy)
+  --speed <number>             TTS speed multiplier (default: 1.0)
+  --hint <text>                Hint for script generator (repeatable)
+  --no-cache                   Skip voice cache
+  --resolution <preset>        Video resolution (HD, FHD, 2K, 4K)
+  --format <format>            Output format (mp4, webm)
+
 Examples:
   demo-reel init                        # Create example.demo.ts
   demo-reel                             # Run all *.demo.ts files
   demo-reel onboarding                  # Run onboarding.demo.ts
   demo-reel --dry-run                   # Validate without recording
   demo-reel -o ./public/videos          # Override output directory
+  demo-reel script "Show signup flow" --url https://app.example.com
+  demo-reel script generate "Show signup" --url https://app.example.com
+  demo-reel script voice demo.script.json
+  demo-reel script build demo.script.json
 `);
+}
+
+async function handleScriptCommand(
+  subcommandOrDescription: string | undefined,
+  options: CliOptions,
+): Promise<void> {
+  const voice = {
+    provider: "openai" as const,
+    voice: options.scriptVoice || "alloy",
+    speed: options.scriptSpeed || 1.0,
+  };
+
+  const baseOpts = {
+    verbose: options.verbose,
+    headed: options.headed,
+    noCache: options.noCache,
+  };
+
+  if (!subcommandOrDescription) {
+    console.error("Usage: demo-reel script <subcommand|description> [options]");
+    console.error('Run "demo-reel --help" for details.');
+    process.exit(1);
+  }
+
+  // Check if it's a known subcommand
+  switch (subcommandOrDescription) {
+    case "generate": {
+      // demo-reel script generate "description" --url <url>
+      // The actual description is the next positional arg — we need to re-parse
+      const descIndex = process.argv.indexOf("generate") + 1;
+      const description = process.argv[descIndex];
+      if (!description || !options.scriptUrl) {
+        console.error("Usage: demo-reel script generate <description> --url <url>");
+        process.exit(1);
+      }
+      await scriptGenerate(description, options.scriptUrl, options.scriptOutput || "demo", {
+        ...baseOpts,
+        hints: options.scriptHints,
+      });
+      return;
+    }
+
+    case "voice": {
+      const descIndex = process.argv.indexOf("voice") + 1;
+      const scriptPath = process.argv[descIndex];
+      if (!scriptPath) {
+        console.error("Usage: demo-reel script voice <script.json>");
+        process.exit(1);
+      }
+      await scriptVoice(scriptPath, voice, baseOpts);
+      return;
+    }
+
+    case "build": {
+      const descIndex = process.argv.indexOf("build") + 1;
+      const scriptPath = process.argv[descIndex];
+      if (!scriptPath) {
+        console.error("Usage: demo-reel script build <script.json>");
+        process.exit(1);
+      }
+      await scriptBuild(scriptPath, {
+        ...baseOpts,
+        resolution: options.resolution,
+        format: options.format,
+      });
+      return;
+    }
+
+    case "validate": {
+      const descIndex = process.argv.indexOf("validate") + 1;
+      const scriptPath = process.argv[descIndex];
+      if (!scriptPath) {
+        console.error("Usage: demo-reel script validate <script.json>");
+        process.exit(1);
+      }
+      const valid = await scriptValidate(scriptPath, baseOpts);
+      if (!valid) process.exit(1);
+      return;
+    }
+
+    case "fix": {
+      const descIndex = process.argv.indexOf("fix") + 1;
+      const scriptPath = process.argv[descIndex];
+      if (!scriptPath) {
+        console.error("Usage: demo-reel script fix <script.json>");
+        process.exit(1);
+      }
+      await scriptFix(scriptPath, baseOpts);
+      return;
+    }
+
+    default: {
+      // Full pipeline: demo-reel script "description" --url <url>
+      if (!options.scriptUrl) {
+        console.error("Usage: demo-reel script <description> --url <url>");
+        console.error("Or use a subcommand: generate, voice, build, validate, fix");
+        process.exit(1);
+      }
+      await scriptFullPipeline(subcommandOrDescription, options.scriptUrl, {
+        ...baseOpts,
+        output: options.scriptOutput,
+        voice,
+        hints: options.scriptHints,
+        resolution: options.resolution,
+        format: options.format,
+      });
+      return;
+    }
+  }
 }
 
 async function main(): Promise<void> {
@@ -175,6 +346,11 @@ async function main(): Promise<void> {
       const demoPath = join(process.cwd(), "example.demo.ts");
       await writeFile(demoPath, EXAMPLE_SCENARIO, "utf-8");
       console.log(`Created ${demoPath}`);
+      process.exit(0);
+    }
+
+    if (options.script) {
+      await handleScriptCommand(scenario, options);
       process.exit(0);
     }
 

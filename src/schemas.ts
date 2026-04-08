@@ -409,7 +409,11 @@ export const demoReelConfigInputSchema = z
     preSteps: z
       .array(stepSchema)
       .optional()
-      .describe("Steps to run before recording (e.g., login)"),
+      .describe("Steps to run before recording (e.g., setup data, navigate)"),
+    postSteps: z
+      .array(stepSchema)
+      .optional()
+      .describe("Steps to run after recording (e.g., cleanup, delete test data)"),
     name: z.string().min(1).optional().describe("Output file name without extension"),
     outputDir: z.string().min(1).optional().describe("Output directory for video files"),
     outputPath: z
@@ -431,6 +435,16 @@ export const demoReelConfigInputSchema = z
     randomization: randomizationSchema.optional().describe("Randomization settings"),
     timestamp: z.boolean().optional().describe("Add timestamp to output filename"),
     auth: authConfigSchema.optional().describe("Authentication/session persistence settings"),
+    scenes: z
+      .array(
+        z.object({
+          narration: z.string().describe("Voiceover narration text for this scene"),
+          stepIndex: z.number().int().min(0).describe("Index of the first step in this scene"),
+          isIntro: z.boolean().optional().describe("Whether this scene is the intro/context scene"),
+        }),
+      )
+      .optional()
+      .describe("Scene markers for timeline tracking and subtitle generation"),
   })
   .superRefine((value, ctx) => {
     if (value.outputFormat === "webm" && (value.audio?.narration || value.audio?.background)) {

@@ -1,0 +1,112 @@
+{
+  "title": "Template aanmaken in Epistola",
+  "description": "Login, maak een tenant aan, maak een ontvangstbevestiging-klacht template en open de editor",
+  "url": "https://demo.epistola.app",
+  "scenes": [
+    {
+      "narration": "Welkom in Epistola. We beginnen in het templateoverzicht, waar je al je documenttemplates vindt.",
+      "steps": [
+        {
+          "delayAfterMs": 6549,
+          "action": "click",
+          "selector": {
+            "strategy": "href",
+            "value": "/tenants/demo-vid5/templates"
+          }
+        }
+      ],
+      "audioDurationMs": 6949,
+      "audioOffsetMs": 0,
+      "gapAfterMs": 800
+    },
+    {
+      "narration": "Laten we een nieuw template aanmaken. We maken een ontvangstbevestiging voor klachten.",
+      "steps": [
+        {
+          "delayAfterMs": 500,
+          "action": "click",
+          "selector": {
+            "strategy": "href",
+            "value": "/tenants/demo-vid5/templates/new"
+          }
+        },
+        {
+          "action": "waitFor",
+          "kind": "selector",
+          "selector": {
+            "strategy": "id",
+            "value": "slug"
+          },
+          "state": "visible"
+        },
+        {
+          "delayAfterMs": 300,
+          "action": "type",
+          "selector": {
+            "strategy": "id",
+            "value": "slug"
+          },
+          "text": "ontvangstbevestiging-klacht"
+        },
+        {
+          "delayAfterMs": 500,
+          "action": "type",
+          "selector": {
+            "strategy": "id",
+            "value": "name"
+          },
+          "text": "Ontvangstbevestiging Klacht"
+        }
+      ],
+      "audioDurationMs": 4911,
+      "audioOffsetMs": 7749,
+      "gapAfterMs": 800
+    },
+    {
+      "narration": "Met een klik op 'Create Template' wordt het template direct aangemaakt inclusief een standaard variant.",
+      "steps": [
+        {
+          "delayAfterMs": 6888,
+          "action": "click",
+          "selector": {
+            "strategy": "custom",
+            "value": "button[type='submit']:has-text('Create Template')"
+          }
+        }
+      ],
+      "audioDurationMs": 6217,
+      "audioOffsetMs": 13460,
+      "gapAfterMs": 800
+    },
+    {
+      "narration": "We openen de editor om het template te gaan bewerken.",
+      "steps": [
+        {
+          "delayAfterMs": 2970,
+          "action": "click",
+          "selector": {
+            "strategy": "custom",
+            "value": "a[href*='editor']"
+          }
+        }
+      ],
+      "audioDurationMs": 3239,
+      "audioOffsetMs": 20477,
+      "gapAfterMs": 0
+    }
+  ],
+  "audioPath": "demos/epistola/01-create-template/output/create-template-narration.mp3",
+  "totalDurationMs": 23716,
+  "voice": {
+    "provider": "elevenlabs",
+    "voice": "5zhopMftSdRGaPYVcwKK",
+    "speed": 1,
+    "pronunciation": {
+      "template": "template",
+      "templates": "templates",
+      "templateoverzicht": "template overzicht",
+      "documenttemplates": "document templates",
+      "editor": "editor"
+    }
+  }
+}

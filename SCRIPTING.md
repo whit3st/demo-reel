@@ -2,84 +2,205 @@
 
 ## Vision
 
-Instead of manually writing step-by-step `.demo.ts` config files, describe what you want to demo in natural language and let an AI generate everything: the script, the narration text, the voiceover audio, and the scenario config — then produce the final video.
+Instead of manually writing step-by-step `.demo.ts` config files, describe what you want to demo in natural language and get a generated scenario with voiceover narration. The output is always an editable `.demo.ts` file — not a black box.
 
 ---
 
-## How It Would Work
+## Modular Video Series
 
-### Input
+Demo videos are designed as **modular, standalone segments** that also work as a guided learning path. Each video is fully independent — it sets up its own state via `auth` and `preSteps` — but opens with brief narration context so viewers following the series aren't disoriented.
 
-A plain-English description of the demo:
+### Design principles
+
+- **Each video is self-contained.** PreSteps recreate the required state from scratch (login, create tenant, create template, etc.), even if a previous video already demonstrated that.
+- **Brief context intro.** Each video opens with ~3-5 seconds of narration explaining where we are: "We hebben een template aangemaakt — laten we varianten toevoegen."
+- **One focused topic per video.** 30-90 seconds, one clear goal, one clear outcome.
+- **Ends on the result.** The final frame shows the accomplished outcome — the created template, the rendered preview, the applied theme.
+
+### Series example
 
 ```
-Show how a new user signs up for Acme, fills out their profile,
-and creates their first project. Emphasize how fast the onboarding is.
+01-create-template.demo.ts
+  preSteps: login → create fresh tenant
+  recorded: navigate to templates → create template → open editor
+
+02-add-variants.demo.ts
+  preSteps: login → create tenant → create template (off-screen)
+  recorded: open template → add variants → show variant list
+
+03-editor-walkthrough.demo.ts
+  preSteps: login → create tenant → create template (off-screen)
+  recorded: open editor → drag blocks → edit text → preview
+
+04-theming.demo.ts
+  preSteps: login → create tenant → create template (off-screen)
+  recorded: create theme → apply to template → preview
 ```
 
-### Output
+Later videos have heavier preSteps because they need to recreate earlier videos' outcomes off-screen. This is intentional — it keeps every video independently runnable and re-recordable.
 
-1. **Script** — A structured narration script with timing cues
-2. **Scenario config** — A complete `.demo.ts` file with steps, timing, and delays matched to narration
-3. **Voiceover audio** — Generated MP3 from the script via TTS
-4. **Final video** — The recorded demo with voiceover baked in
+### Interactive presentation
+
+The videos are designed to be presented in an interactive system (website, LMS, product docs) where users can choose what to watch. They don't need to be stitched into one long video, but the narration supports sequential viewing.
 
 ---
 
-## Architecture
+## The Core Problem
 
-### Phase 1: Script Generation
+Two things need to be generated and synchronized:
 
-Use an LLM (Claude API) to transform a natural language description into a structured script:
+1. **What happens on screen** — browser automation steps with real selectors
+2. **What the voice says** — narration that matches the on-screen actions
+
+These constrain each other. The narration can't say "click the submit button" 3 seconds after the click already happened. And you can't speed up a 10-second typing animation to fit a 2-second narration pause.
+
+---
+
+## Workflow
+
+The pipeline has four independent stages. Each produces an editable artifact that can be re-run in isolation.
+
+```
+describe → [1. Script] → [2. Voice] → [3. Timing] → [4. Record]
+               ↓              ↓             ↓             ↓
+         .script.json    narration.mp3   .demo.ts      video.mp4
+```
+
+```bash
+demo-reel script generate "description" --url ...  # → .script.json
+demo-reel script voice onboarding.script.json      # → narration.mp3
+demo-reel script build onboarding.script.json      # → .demo.ts (timed)
+demo-reel onboarding                               # → video.mp4
+```
+
+Each stage can be re-run independently. Changed the narration text for scene 3? Regenerate just the voice and re-sync timing. Selectors broke after a deploy? Edit the `.script.json` and rebuild.
+
+### Stage 1: Script Generation
+
+**Input:** Natural language description + app URL
+**Output:** `onboarding.script.json`
 
 ```typescript
 interface DemoScript {
   title: string;
+  url: string;
   scenes: ScriptScene[];
-  totalEstimatedDuration: number;
 }
 
 interface ScriptScene {
-  narration: string;           // What the voiceover says
-  actions: string[];           // What happens on screen (human-readable)
-  estimatedDuration: number;   // Seconds
-  emphasis?: string;           // What to highlight visually
+  narration: string;             // What the voiceover says
+  steps: Step[];                 // demo-reel steps with real selectors
+  emphasis?: string;             // What to highlight visually
 }
 ```
 
-The LLM needs context about the target app to generate accurate scripts:
+This is the hardest stage — see "The Selector Problem" below.
 
-- **URL and sitemap** — Which pages exist
-- **Selectors** — What elements can be interacted with (could be extracted via Playwright crawl)
-- **Current page state** — What's visible after each action
+### Stage 2: Voice Generation
 
-#### Approach: Crawl-then-script
+**Input:** `.script.json`
+**Output:** `narration.mp3` (one file, concatenated from per-scene segments)
 
-1. Launch Playwright, navigate to the starting URL
-2. Extract interactive elements (buttons, inputs, links) with their selectors and visible text
-3. Feed this DOM context + the user's description to the LLM
-4. LLM generates the script with concrete selectors and realistic narration
-5. After each `goto` or navigation, re-crawl to get updated DOM context for subsequent steps
+Each scene's narration text is sent to a TTS provider. Segments are concatenated with silence gaps. Per-scene audio durations are measured and written back into the script for timing.
 
-This two-pass approach (crawl, then script) avoids hallucinated selectors.
+### Stage 3: Timing Synchronization
 
-### Phase 2: TTS Voice Generation
+**Input:** `.script.json` (with audio durations) + `narration.mp3`
+**Output:** `onboarding.demo.ts` (a standard demo-reel config)
 
-Convert script narration to audio. Options:
+Uses audio-first timing: step delays are adjusted so on-screen actions align with what the voice is saying. See "The Timing Problem" below.
 
-| Provider | Quality | Cost | Latency |
-|----------|---------|------|---------|
-| ElevenLabs | Excellent | ~$0.30/1K chars | Fast |
-| OpenAI TTS | Good | $0.015/1K chars | Fast |
-| Google Cloud TTS | Good | $0.016/1K chars | Fast |
-| Local (Piper) | Decent | Free | Instant |
+### Stage 4: Recording
 
-Recommended: Support multiple providers via a plugin interface, default to OpenAI TTS for cost/quality balance.
+Standard `demo-reel` recording — no special logic needed. The generated `.demo.ts` already has the audio path and timing baked in.
+
+---
+
+## The Selector Problem
+
+The LLM needs to produce steps with selectors that match real elements. This is the single hardest technical challenge.
+
+### Approach: Crawl → Generate → Validate
+
+**Step 1: Crawl the page**
+
+Launch Playwright, visit the URL, extract all interactive elements:
+
+```typescript
+interface CrawledElement {
+  tag: string;                    // button, input, a, select, etc.
+  text: string;                   // visible text / aria-label / placeholder
+  selector: SelectorConfig;       // best stable selector found
+  attributes: Record<string, string>;
+  boundingBox: { x, y, w, h };
+}
+```
+
+Selector priority: `data-testid` > `id` > unique `aria-label` > unique text content > CSS path.
+
+**Step 2: Generate steps with real selectors**
+
+Feed the crawled elements + user description to the LLM. The LLM picks from the available selectors — it doesn't invent them.
+
+**Step 3: Validate with dry-run**
+
+Execute the generated steps in a headless browser. If a step fails (element not found, timeout), re-crawl from that page state and ask the LLM to fix just the broken step.
+
+### The page-state problem
+
+After each navigation or click, the page changes. The crawl from step 1 is stale. Two options:
+
+**Option A: Full step-by-step crawl** — Execute one step, re-crawl, generate the next step. Accurate but slow (LLM call per step).
+
+**Option B: Crawl key pages upfront** — Crawl the starting URL and any URLs mentioned in the description. Generate the full script, then validate. Fix broken steps with targeted re-crawls. Faster, good enough for most cases.
+
+Option B is the practical default. Option A could be a `--thorough` flag for complex flows.
+
+### When selectors break
+
+Apps change. Selectors that worked last week may not work today. Since the output is an editable `.demo.ts`, users can fix selectors by hand. But we should also support:
+
+```bash
+demo-reel script validate onboarding.script.json  # dry-run all steps, report failures
+demo-reel script fix onboarding.script.json        # re-crawl + LLM fix for broken steps
+```
+
+---
+
+## The Timing Problem
+
+Narration and actions need to feel naturally synchronized.
+
+### Audio-first timing strategy
+
+1. Generate all voiceover audio segments
+2. Measure actual duration of each segment (in ms)
+3. Estimate step durations (typing speed × characters, movement duration, wait times)
+4. Fit steps into audio windows:
+   - If steps are shorter than narration: add `delayAfterMs` padding
+   - If steps are longer than narration: insert silence in the audio gap
+5. Write the final `.demo.ts` with all delays calculated
+
+### Pacing rules
+
+- Narration for a scene starts slightly before the first action (~300ms lead-in)
+- Fast actions (clicks) happen during sentence breaks in narration
+- Typing is visible while narration describes what's being typed
+- After important visual changes (page navigation, modal open), add 1-2s pause for the viewer to absorb
+- Between scenes, insert 0.5-1s of silence
+
+### What happens when timing changes?
+
+Regenerating audio (different voice, speed) invalidates timing. But since timing is a separate stage, you just re-run `demo-reel script build` and it recalculates everything.
+
+---
+
+## TTS Provider Support
 
 ```typescript
 interface TTSProvider {
   name: string;
-  generate(text: string, options: TTSOptions): Promise<Buffer>;
+  generate(text: string, options: TTSOptions): Promise<{ audio: Buffer; durationMs: number }>;
 }
 
 interface TTSOptions {
@@ -89,87 +210,41 @@ interface TTSOptions {
 }
 ```
 
-Each scene's narration is generated as a separate audio segment, then concatenated with appropriate silence gaps to match step timing.
+| Provider | Quality | Cost | Notes |
+|----------|---------|------|-------|
+| OpenAI TTS | Good | $0.015/1K chars | Good default, many voices |
+| ElevenLabs | Excellent | ~$0.30/1K chars | Best quality, expensive |
+| Google Cloud TTS | Good | $0.016/1K chars | Many languages |
+| Local (Piper) | Decent | Free | Offline, no API key needed |
 
-### Phase 3: Timing Synchronization
+Default to OpenAI TTS for cost/quality balance. Support others via plugin interface.
 
-The hardest part: aligning narration audio with on-screen actions.
+### Caching
 
-#### Strategy: Audio-first timing
+Audio generation is expensive and slow. Cache aggressively:
 
-1. Generate all voiceover audio segments
-2. Measure actual duration of each segment
-3. Adjust step delays (`delayBeforeMs`, `delayAfterMs`, `wait`) to match audio timing
-4. Insert `wait` steps between scenes to sync narration with actions
-5. Generate the final `.demo.ts` with timing locked to audio
-
-```typescript
-interface TimedScene {
-  narration: string;
-  audioDurationMs: number;
-  steps: Step[];                // With delays adjusted to fill audioDurationMs
-  gapAfterMs: number;          // Silence between scenes
-}
-```
-
-#### Pacing rules
-
-- Narration should start slightly before or with the first action of a scene
-- Fast actions (clicks) should happen during narration pauses or between sentences
-- Typing should be visible while narration describes what's being typed
-- After important actions, add a brief pause for the viewer to absorb
-
-### Phase 4: Scenario Generation
-
-Assemble the timed script into a complete `.demo.ts`:
-
-```typescript
-// Generated by demo-reel script
-import { defineConfig } from "demo-reel";
-
-export default defineConfig({
-  video: { resolution: "FHD" },
-  cursor: "dot",
-  motion: "smooth",
-  typing: "humanlike",
-  timing: "normal",
-  outputFormat: "mp4",
-
-  audio: {
-    narration: "./generated/onboarding-narration.mp3",
-    narrationDelay: 500,
-  },
-
-  steps: [
-    // Scene 1: "Let's create a new account on Acme..."
-    { action: "goto", url: "https://acme.app/signup" },
-    { action: "wait", ms: 2500 },  // Wait for narration: "Let's create a new account"
-    { action: "click", selector: { strategy: "id", value: "email" }, delayBeforeMs: 500 },
-    { action: "type", selector: { strategy: "id", value: "email" }, text: "jane@example.com" },
-    // ... more steps with timing aligned to narration
-  ],
-});
-```
+- Key: hash of (narration text + voice + speed)
+- Store in `.demo-reel-cache/voice/`
+- Only regenerate when narration text or voice settings change
+- `--no-cache` flag to force regeneration
 
 ---
 
 ## CLI Interface
 
 ```bash
-# Generate a scripted demo from a description
-demo-reel script "Show the signup flow and first project creation" \
-  --url https://acme.app \
-  --voice alloy \
-  --output onboarding
+# Full pipeline: describe → video
+demo-reel script "Show the signup flow" --url https://acme.app --output onboarding
 
-# Generate script only (no video yet)
-demo-reel script "..." --url https://acme.app --dry-run
+# Individual stages
+demo-reel script generate "Show the signup flow" --url https://acme.app  # → .script.json
+demo-reel script voice onboarding.script.json --voice nova               # → narration.mp3
+demo-reel script build onboarding.script.json                            # → .demo.ts
+demo-reel onboarding                                                     # → video.mp4
 
-# Regenerate voiceover for an existing script
-demo-reel voice ./onboarding.script.json --voice nova
-
-# Run the generated scenario
-demo-reel onboarding
+# Maintenance
+demo-reel script validate onboarding.script.json   # check selectors still work
+demo-reel script fix onboarding.script.json         # re-crawl + fix broken selectors
 ```
 
 ### Config file alternative
@@ -191,6 +266,9 @@ export default defineScript({
     "The password should be visible while typing",
     "Pause after project creation to show the dashboard",
   ],
+  auth: {
+    // Reuse existing auth config, or describe login in the description
+  },
   output: {
     name: "onboarding",
     format: "mp4",
@@ -201,68 +279,72 @@ export default defineScript({
 
 ---
 
-## Implementation Plan
+## Known Hard Problems
 
-### Step 1: DOM Crawler
+### 1. Dynamic content and non-determinism
 
-Build a Playwright-based crawler that extracts interactive elements from a page:
+Apps with random data, timestamps, A/B tests, or animated content produce different results on each run. Mitigation:
 
-- Buttons, links, inputs, selects, checkboxes
-- Their visible text, placeholder, aria-label
-- Their best selector (prefer testId > id > unique class > custom)
-- Page title and visible headings for context
+- Use `preSteps` to seed deterministic state
+- Use `evaluate` step (once implemented) to mock APIs or set feature flags
+- Accept that some variation is unavoidable
 
-### Step 2: Script Generator
+### 2. Complex multi-step flows
 
-LLM integration that takes:
+The LLM doesn't inherently know that clicking "New Project" opens a modal with three required fields, or that form submission triggers a redirect. The crawl helps, but deep multi-step flows with conditional logic are hard to script automatically.
 
-- User's natural language description
-- Crawled DOM context per page
-- App URL structure
-- Optional hints/constraints
+Mitigation: The `hints` field lets users guide the LLM through tricky flows. For very complex scenarios, generating the script is a starting point for manual editing, not the final product.
 
-And outputs a structured `DemoScript` with concrete selectors.
+### 3. Authentication
 
-### Step 3: TTS Integration
+Demos usually require being logged in. Options:
 
-- Provider abstraction with OpenAI TTS as default
-- Per-scene audio generation
-- Audio concatenation with silence gaps
-- Duration measurement for timing sync
+- Reuse existing `auth` config — script generator skips login
+- Include login in the description — script generator creates login steps
+- Separate concern — auth is always configured independently
 
-### Step 4: Timing Engine
+Recommend: auth is always separate config. The script generator focuses on the demo flow, not login.
 
-- Audio-first timing calculation
-- Step delay injection
-- Pacing rule application
-- Gap calculation between scenes
+### 4. Cost accumulation
 
-### Step 5: Scenario Assembler
+Each script generation needs LLM calls. Each voiceover needs TTS calls. Iterating gets expensive. Mitigation:
 
-- Generate complete `.demo.ts` from timed script
-- Generate narration MP3
-- Wire up audio config
-- Validate the generated config against schema
+- Cache voice segments (only regenerate changed narration)
+- Cache crawl results (invalidate on URL change)
+- `--dry-run` to preview script without generating voice/video
+- Local TTS option (Piper) for development iteration
+
+### 5. App-specific knowledge gaps
+
+The LLM may not understand domain-specific UI patterns (custom date pickers, drag-and-drop builders, canvas-based editors). These require manual step authoring. The scripting pipeline should gracefully handle mixed auto-generated and hand-written steps.
 
 ---
 
-## Open Questions
+## What This Is and Isn't
 
-1. **Auth handling** — How should the script generator handle login? Should it use existing `auth` config, or should the description include "log in as admin"?
+**This is:** A tool that gets you 80% of the way to a demo video from a natural language description, producing editable artifacts you can refine.
 
-2. **Error correction** — When the generated scenario fails (wrong selector, element not found), should it auto-retry with updated DOM context?
+**This is not:** A fully autonomous system that produces perfect videos without human review. The generated `.demo.ts` is a starting point. Expect to tweak selectors, adjust timing, and edit narration text.
 
-3. **Multi-page crawling** — Should the crawler follow links to build a sitemap, or only crawl pages that the LLM requests?
+The value is in dramatically reducing the time from "I want a demo" to "I have a working first draft" — from hours of manual config authoring to minutes of description + review.
 
-4. **Voice caching** — Should generated audio be cached to avoid re-generating on config tweaks that don't change narration?
+---
 
-5. **Human review step** — Should there be a `--review` mode that shows the generated script for approval before recording?
+## Implementation Order
+
+1. **DOM Crawler** — Playwright-based element extraction with selector ranking
+2. **Script Generator** — LLM integration with crawl context, structured output
+3. **Dry-run Validator** — Execute steps headlessly, report failures
+4. **TTS Integration** — Provider abstraction, per-scene generation, caching
+5. **Timing Engine** — Audio-first timing calculation, delay injection
+6. **Scenario Assembler** — Generate `.demo.ts` from timed script
+7. **CLI Commands** — Wire up `demo-reel script` subcommands
 
 ---
 
 ## Dependencies
 
-- Claude API or other LLM for script generation
-- TTS provider SDK (OpenAI, ElevenLabs, or local)
-- FFmpeg (already a dependency) for audio concatenation
-- Playwright (already a dependency) for DOM crawling
+- **LLM** — Claude API for script generation (structured output with tool use)
+- **TTS** — OpenAI TTS SDK (default), provider plugin interface for alternatives
+- **FFmpeg** — Already a dependency, used for audio concatenation and silence insertion
+- **Playwright** — Already a dependency, used for DOM crawling and validation

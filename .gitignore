@@ -2,8 +2,18 @@ node_modules
 dist
 test-videos
 .demo-reel-temp
+.demo-reel-cache
+.demo-reel-sessions
+
+# Demo output (generated artifacts)
+**/output/
+
+# Demo config files are source, but allow them in demos/
 *.demo.ts
 !templates/*.demo.ts
+!demos/**/*.demo.ts
 
 # Example app for testing
 example-app/
+
+.env

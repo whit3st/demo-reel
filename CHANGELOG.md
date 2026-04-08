@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **AI Script Generation**: New `demo-reel script` command for AI-powered demo video creation
+  - `script generate` — Generate a demo script from a natural language description using Claude API
+  - `script voice` — Generate voiceover narration audio via OpenAI TTS with caching
+  - `script build` — Assemble a timed `.demo.ts` from a script with audio-synced timing
+  - `script validate` — Validate selectors against the live app
+  - `script fix` — Re-crawl and fix broken selectors via LLM
+  - Full pipeline shortcut: `demo-reel script "description" --url <url>`
+- **DOM Crawler**: Playwright-based interactive element extraction with selector ranking (data-testid > id > href > class > custom)
+- **Timing Engine**: Audio-first synchronization that adjusts step delays to match narration duration
+- **Voice Caching**: Generated audio cached by content hash in `.demo-reel-cache/voice/`
+- **`/demo-script` Claude Code Skill**: Interactive, collaborative script building inside Claude Code — crawl pages, draft scenes together, iterate on narration, generate `.demo.ts` files
+- **Site Explorer**: `explore.ts` logs in and clicks through SPA pages to discover selectors and page structure
+- **Modular Video Series Pattern**: Design pattern for standalone videos that work independently and as a guided series — each video has its own preSteps for reproducible state setup
+- **Piper TTS Provider**: Local, free text-to-speech via Piper with Dutch voice support (`nl_NL-mls-medium`). No API key required for development iteration.
+- **TTS Provider Interface**: Pluggable provider system — `piper` (local/free, default) and `openai` built-in, with `registerTTSProvider()` for custom providers
+- **Scene Timeline Tracking**: `runDemo()` now records wall-clock timestamps for each scene boundary during recording
+- **Subtitle Generation**: Automatically generates `.srt` and `.vtt` subtitle files alongside the video, with per-scene narration text and actual timestamps
+- **Scene Metadata**: Generates `.meta.json` with scene timestamps, intro end point, and chapter markers for interactive presentation systems
+- **`scenes` Config Field**: New optional config field to declare scene boundaries with narration text, step indices, and intro markers
+
 ### Fixed
 
 - **Video recording without auth**: Scenarios without `auth` config now correctly record video (was calling `startBrowser` instead of `startRecording`)
