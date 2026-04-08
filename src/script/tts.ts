@@ -16,12 +16,16 @@ export interface TTSProvider {
 // --- Audio utilities (shared by all providers) ---
 
 async function getFFmpegPath(): Promise<string> {
-	const mod: any = await import("ffmpeg-static");
-	const ffmpegPath = mod.default || mod;
-	if (!ffmpegPath || typeof ffmpegPath !== "string") {
-		throw new Error("ffmpeg-static not found");
-	}
-	return ffmpegPath;
+	try {
+		const mod: any = await import("ffmpeg-static");
+		const ffmpegPath = mod.default || mod;
+		if (ffmpegPath && typeof ffmpegPath === "string") {
+			const { accessSync } = await import("fs");
+			accessSync(ffmpegPath);
+			return ffmpegPath;
+		}
+	} catch { /* ffmpeg-static not available or binary missing */ }
+	return "ffmpeg";
 }
 
 async function getFFprobePath(ffmpegPath: string): Promise<string> {
