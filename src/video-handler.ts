@@ -2,7 +2,7 @@ import { mkdir, unlink, rmdir, writeFile as fsWriteFile, readFile } from "fs/pro
 import { basename, dirname, join, resolve } from "path";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import type { DemoReelConfig, AuthConfig, AuthBehaviorConfig } from "./schemas.js";
-import { runDemo, runPreSteps, runStepSimple, type SceneTimestamp } from "./runner.js";
+import { runDemo, runSteps, runStepSimple, type SceneTimestamp } from "./runner.js";
 import { mergeAudioVideo, type AudioConfig } from "./audio-processor.js";
 import {
   loadSession,
@@ -448,7 +448,7 @@ export async function runVideoScenario(
         if (verbose) {
           console.log("Running pre-steps...");
         }
-        await runPreSteps(setupBrowser.page, config.preSteps, { tolerant: true });
+        await runSteps(setupBrowser.page, config.preSteps, { tolerant: true });
       }
     } finally {
       await setupBrowser.context.close();
@@ -557,7 +557,7 @@ export async function runVideoScenario(
         if (config.auth) {
           await handleAuth(postBrowser.context, postBrowser.page, config.auth, configPath, verbose);
         }
-        await runPreSteps(postBrowser.page, config.postSteps, { tolerant: true });
+        await runSteps(postBrowser.page, config.postSteps, { tolerant: true });
         if (verbose) {
           console.log("✓ Post-steps complete");
         }
@@ -583,7 +583,7 @@ export async function runVideoScenario(
           if (config.auth) {
             await handleAuth(postBrowser.context, postBrowser.page, config.auth, configPath, verbose);
           }
-          await runPreSteps(postBrowser.page, config.postSteps, { tolerant: true });
+          await runSteps(postBrowser.page, config.postSteps, { tolerant: true });
         } finally {
           await postBrowser.context.close().catch(() => {});
           await postBrowser.browser.close().catch(() => {});

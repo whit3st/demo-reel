@@ -825,7 +825,7 @@ const runStep = async (
   return startDelayApplied;
 };
 
-export const runPreSteps = async (page: Page, preSteps: Step[], options?: { tolerant?: boolean }) => {
+export const runSteps = async (page: Page, preSteps: Step[], options?: { tolerant?: boolean }) => {
   for (const step of preSteps) {
     if (options?.tolerant) {
       try {

@@ -19,7 +19,7 @@
     "bin",
     "src",
     "templates",
-    ".claude"
+    ".claude-plugin"
   ],
   "type": "module",
   "main": "./src/index.ts",
