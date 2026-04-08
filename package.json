@@ -17,17 +17,19 @@
   },
   "files": [
     "bin",
+    "dist/define.js",
+    "dist/define.d.ts",
     "src",
     "templates",
     ".claude-plugin"
   ],
   "type": "module",
-  "main": "./src/define.ts",
-  "types": "./src/define.ts",
+  "main": "./dist/define.js",
+  "types": "./dist/define.d.ts",
   "exports": {
     ".": {
-      "import": "./src/define.ts",
-      "types": "./src/define.ts"
+      "import": "./dist/define.js",
+      "types": "./dist/define.d.ts"
     },
     "./package.json": "./package.json"
   },

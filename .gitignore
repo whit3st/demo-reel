@@ -1,5 +1,7 @@
 node_modules
 dist
+!dist/define.js
+!dist/define.d.ts
 test-videos
 .demo-reel-temp
 .demo-reel-cache
