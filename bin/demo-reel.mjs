@@ -2,15 +2,16 @@
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { execFileSync } from "child_process";
+import { createRequire } from "module";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
 
-// Find tsx ESM loader relative to our package
-const tsxPath = join(root, "node_modules", "tsx", "dist", "esm", "index.mjs");
+// Resolve tsx from our package's dependency tree (works with pnpm strict hoisting)
+const require = createRequire(join(root, "package.json"));
+const tsxEsm = join(dirname(require.resolve("tsx")), "esm", "index.mjs");
 
-// Re-exec node with tsx loaded, running the actual CLI
-const args = ["--import", tsxPath, join(root, "src", "docker-cli.ts"), ...process.argv.slice(2)];
+const args = ["--import", tsxEsm, join(root, "src", "docker-cli.ts"), ...process.argv.slice(2)];
 
 try {
 	execFileSync("node", args, { stdio: "inherit", env: process.env });
