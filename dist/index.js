@@ -67,9 +67,12 @@ export async function generate(config, options = {}) {
 		// Write a script JSON for the voice CLI
 		const scriptJson = {
 			title: name,
-			description: "",
-			url: "",
-			scenes: config.scenes.filter(s => s.narration).map(s => ({ narration: s.narration, steps: [] })),
+			description: "auto-generated",
+			url: "https://placeholder.local",
+			scenes: config.scenes.filter(s => s.narration).map(s => ({
+				narration: s.narration,
+				steps: [{ action: "wait", ms: 0 }],
+			})),
 			voice: config.voice,
 		};
 		const scriptPath = `.${name}.voice.tmp.json`;
@@ -85,11 +88,13 @@ export async function generate(config, options = {}) {
 			for (const envVar of ENV_PASSTHROUGH) {
 				if (process.env[envVar]) voiceArgs.push("-e", `${envVar}=${process.env[envVar]}`);
 			}
+			const relAudioPath = relative(process.cwd(), audioPath);
 			voiceArgs.push(
 				"--entrypoint", "node",
 				image,
 				"/app/dist/script/voice-cli.js",
 				scriptPath,
+				"--output", relAudioPath,
 			);
 			execSync(`docker ${voiceArgs.join(" ")}`, { stdio: "inherit" });
 		} finally {

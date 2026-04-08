@@ -47,6 +47,7 @@ async function main() {
 	let cliVoice: string | undefined;
 	let cliSpeed: number | undefined;
 	let cliPronunciation: Record<string, string> | undefined;
+	let cliOutput: string | undefined;
 
 	for (let i = 0; i < args.length; i++) {
 		if (args[i] === "--provider") {
@@ -55,6 +56,8 @@ async function main() {
 			cliVoice = args[++i];
 		} else if (args[i] === "--speed") {
 			cliSpeed = parseFloat(args[++i]);
+		} else if (args[i] === "--output" || args[i] === "-o") {
+			cliOutput = args[++i];
 		} else if (args[i] === "--pronunciation") {
 			const val = args[++i];
 			if (val.startsWith("{")) {
@@ -103,12 +106,17 @@ async function main() {
 
 		const segments = await generateVoiceSegments(script, voice, { verbose: true });
 
-		// Output narration to output/ subfolder next to the script file
-		const scriptDir = dirname(scriptPath);
-		const scriptBase = basename(scriptPath, ".script.json");
-		const outputDir = join(scriptDir, "output");
-		await mkdir(outputDir, { recursive: true });
-		const audioPath = join(outputDir, `${scriptBase}-narration.mp3`);
+		let audioPath: string;
+		if (cliOutput) {
+			audioPath = cliOutput;
+			await mkdir(dirname(cliOutput), { recursive: true });
+		} else {
+			const scriptDir = dirname(scriptPath);
+			const scriptBase = basename(scriptPath, ".script.json");
+			const voiceOutputDir = join(scriptDir, "output");
+			await mkdir(voiceOutputDir, { recursive: true });
+			audioPath = join(voiceOutputDir, `${scriptBase}-narration.mp3`);
+		}
 		const timedScenes = await generateNarrationAudio(segments, audioPath, { verbose: true });
 
 		// Save voice config into the script so it's reproducible
