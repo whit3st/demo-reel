@@ -1,16 +1,12 @@
+// Re-export consumer-facing API from define.ts (zero-dep)
+export { defineConfig, demo } from "./define.js";
+
+// Internal API (requires full dependency tree)
 import {
   demoReelConfigSchema,
   demoReelConfigInputSchema,
   type DemoReelConfig,
-  type DemoReelConfigInput,
 } from "./schemas.js";
-
-export function defineConfig(config: DemoReelConfigInput): DemoReelConfig {
-  return demoReelConfigSchema.parse(config);
-}
-
-/** Alias for defineConfig — shorter syntax for demo configs */
-export const demo = defineConfig;
 
 export function validateConfig(config: unknown): DemoReelConfig {
   return demoReelConfigSchema.parse(config);
