@@ -11,7 +11,13 @@
 import { execSync, spawn } from "child_process";
 import { existsSync, writeFileSync, unlinkSync, readFileSync, mkdirSync } from "fs";
 import { resolve, dirname, basename, extname, join, relative } from "path";
-import { pathToFileURL } from "url";
+import { fileURLToPath } from "url";
+import { createRequire } from "module";
+
+// Resolve tsx ESM loader path from our package's dependencies
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const require = createRequire(join(__dirname, "..", "package.json"));
+const tsxEsmPath = join(dirname(require.resolve("tsx")), "esm", "index.mjs");
 
 const DEFAULT_IMAGE = "ghcr.io/whit3st/demo-reel:latest";
 const LOCAL_IMAGE = "demo-reel:latest";
@@ -49,7 +55,8 @@ function getImage(): string {
 }
 
 /**
- * Compile a .demo.ts file to a temporary .demo.json by importing it with tsx.
+ * Compile a .demo.ts file to a temporary .demo.json.
+ * Runs in a subprocess to avoid circular import issues.
  */
 async function compileConfig(tsPath: string): Promise<string> {
 	const absPath = resolve(tsPath);
@@ -57,18 +64,28 @@ async function compileConfig(tsPath: string): Promise<string> {
 	const base = basename(absPath, extname(absPath));
 	const jsonPath = join(dir, `.${base}.tmp.json`);
 
-	try {
-		const module = await import(pathToFileURL(absPath).href);
-		const config = module.default || module;
-
+	// Compile in a subprocess to avoid CJS/ESM cycle with demo-reel imports
+	const script = `
+		import { pathToFileURL } from "url";
+		import { writeFileSync } from "fs";
+		const m = await import(pathToFileURL("${absPath}").href);
+		const config = m.default || m;
 		if (!config || typeof config !== "object" || !config.steps) {
 			throw new Error("Config must export an object with a 'steps' array");
 		}
+		writeFileSync("${jsonPath}", JSON.stringify(config, null, 2), "utf-8");
+	`;
 
-		writeFileSync(jsonPath, JSON.stringify(config, null, 2), "utf-8");
+	try {
+		execSync(`node --import "${tsxEsmPath}" -e '${script.replace(/'/g, "\\'")}'`, {
+			stdio: "pipe",
+			env: process.env,
+			cwd: dirname(absPath),
+		});
 		return jsonPath;
-	} catch (err) {
-		throw new Error(`Failed to compile ${tsPath}: ${err instanceof Error ? err.message : err}`);
+	} catch (err: any) {
+		const stderr = err.stderr?.toString() || err.message;
+		throw new Error(`Failed to compile ${tsPath}: ${stderr}`);
 	}
 }
 
