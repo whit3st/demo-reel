@@ -12,9 +12,6 @@ COPY tsconfig.json ./
 COPY templates/ templates/
 RUN pnpm run build:tsc
 
-# Prune to production deps only
-RUN pnpm install --frozen-lockfile --prod
-
 # Stage 2: Piper TTS binary + Dutch voice model
 FROM debian:bookworm-slim AS piper
 
@@ -53,6 +50,7 @@ COPY --from=builder /build/node_modules node_modules/
 COPY --from=builder /build/dist dist/
 COPY --from=builder /build/templates templates/
 COPY --from=builder /build/package.json ./
+COPY --from=builder /build/pnpm-lock.yaml ./
 
 # Install Playwright Chromium browser
 RUN npx playwright install chromium

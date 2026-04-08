@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node --import tsx/esm
 /**
  * Docker CLI wrapper for demo-reel.
  *
