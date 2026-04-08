@@ -65,19 +65,22 @@ async function compileConfig(tsPath: string): Promise<string> {
 	const jsonPath = join(dir, `.${base}.tmp.json`);
 
 	// Compile in a subprocess to avoid CJS/ESM cycle with demo-reel imports
-	const script = `
-		import { pathToFileURL } from "url";
-		import { writeFileSync } from "fs";
-		const m = await import(pathToFileURL("${absPath}").href);
-		const config = m.default || m;
-		if (!config || typeof config !== "object" || !config.steps) {
-			throw new Error("Config must export an object with a 'steps' array");
-		}
-		writeFileSync("${jsonPath}", JSON.stringify(config, null, 2), "utf-8");
-	`;
+	const scriptPath = join(dir, `.${base}.compile.mjs`);
+	const script = [
+		`import { pathToFileURL } from "url";`,
+		`import { writeFileSync } from "fs";`,
+		`const m = await import(pathToFileURL(${JSON.stringify(absPath)}).href);`,
+		`const config = m.default || m;`,
+		`if (!config || typeof config !== "object" || !config.steps) {`,
+		`  throw new Error("Config must export an object with a 'steps' array");`,
+		`}`,
+		`writeFileSync(${JSON.stringify(jsonPath)}, JSON.stringify(config, null, 2), "utf-8");`,
+	].join("\n");
+
+	writeFileSync(scriptPath, script, "utf-8");
 
 	try {
-		execSync(`node --import "${tsxEsmPath}" -e '${script.replace(/'/g, "\\'")}'`, {
+		execSync(`node --import ${JSON.stringify(tsxEsmPath)} ${JSON.stringify(scriptPath)}`, {
 			stdio: "pipe",
 			env: process.env,
 			cwd: dirname(absPath),
@@ -86,6 +89,8 @@ async function compileConfig(tsPath: string): Promise<string> {
 	} catch (err: any) {
 		const stderr = err.stderr?.toString() || err.message;
 		throw new Error(`Failed to compile ${tsPath}: ${stderr}`);
+	} finally {
+		try { unlinkSync(scriptPath); } catch { /* ignore */ }
 	}
 }
 
