@@ -10,10 +10,13 @@
 import { execSync, spawn } from "child_process";
 import { existsSync, writeFileSync, unlinkSync, readFileSync, mkdirSync } from "fs";
 import { resolve, dirname, basename, extname, join } from "path";
+
 import { pathToFileURL } from "url";
 
 const DEFAULT_IMAGE = "ghcr.io/whit3st/demo-reel:latest";
 const LOCAL_IMAGE = "demo-reel:latest";
+const SKILL_URL = "https://raw.githubusercontent.com/whit3st/demo-reel/main/.claude/commands/demo-script.md";
+const SKILL_PATH = ".claude/commands/demo-script.md";
 const ENV_PASSTHROUGH = [
 	"ELEVENLABS_KEY",
 	"ELEVENLABS_API_KEY",
@@ -179,6 +182,35 @@ async function main(): Promise<void> {
 	// Check for --no-docker flag
 	const noDocker = args.includes("--no-docker");
 	const filteredArgs = args.filter((a) => a !== "--no-docker");
+
+	// Handle setup command — installs the Claude Code skill
+	if (filteredArgs[0] === "setup") {
+		const dest = join(process.cwd(), SKILL_PATH);
+		if (existsSync(dest)) {
+			console.log(`✓ /demo-script skill already installed at ${SKILL_PATH}`);
+		} else {
+			try {
+				const response = await fetch(SKILL_URL);
+				if (!response.ok) throw new Error(`HTTP ${response.status}`);
+				const content = await response.text();
+				mkdirSync(dirname(dest), { recursive: true });
+				writeFileSync(dest, content, "utf-8");
+				console.log(`✓ Installed /demo-script skill → ${SKILL_PATH}`);
+				console.log(`  Use /demo-script in Claude Code to build demo scripts interactively.`);
+			} catch (err) {
+				console.error(`Failed to download skill: ${err instanceof Error ? err.message : err}`);
+				console.error(`Manual install:\n  mkdir -p .claude/commands`);
+				console.error(`  curl -sL ${SKILL_URL} -o ${SKILL_PATH}`);
+				process.exit(1);
+			}
+		}
+		return;
+	}
+
+	// Hint about the skill if not installed (only on first run, non-verbose)
+	if (!existsSync(join(process.cwd(), SKILL_PATH)) && !filteredArgs.includes("--help") && !filteredArgs.includes("-h")) {
+		console.log(`tip: Run "demo-reel setup" to install the /demo-script Claude Code skill\n`);
+	}
 
 	// Handle explore subcommand (runs in Docker, no config needed)
 	if (filteredArgs[0] === "explore") {
