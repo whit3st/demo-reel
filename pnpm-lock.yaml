@@ -4,28 +4,28 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  demo-reel: link:../../.local/share/pnpm/global/5/node_modules/demo-reel
-
 importers:
 
   .:
     dependencies:
       '@anthropic-ai/sdk':
-        specifier: ^0.82.0
-        version: 0.82.0(zod@3.25.76)
-      demo-reel:
-        specifier: link:../../.local/share/pnpm/global/5/node_modules/demo-reel
-        version: link:../../.local/share/pnpm/global/5/node_modules/demo-reel
+        specifier: ^0.80.0
+        version: 0.80.0(zod@3.25.76)
       ffmpeg-static:
         specifier: ^5.2.0
         version: 5.3.0
       glob:
         specifier: ^13.0.6
         version: 13.0.6
+      openai:
+        specifier: ^4.0.0 || ^5.0.0
+        version: 5.23.2(zod@3.25.76)
       playwright:
         specifier: ^1.58.0
         version: 1.58.2
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
       zod:
         specifier: ^3.22.0
         version: 3.25.76
@@ -45,9 +45,6 @@ importers:
       oxlint:
         specifier: ^1.58.0
         version: 1.58.0
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
       typescript:
         specifier: ^5.0.0
         version: 5.9.3
@@ -57,8 +54,8 @@ importers:
 
 packages:
 
-  '@anthropic-ai/sdk@0.82.0':
-    resolution: {integrity: sha512-xdHTjL1GlUlDugHq/I47qdOKp/ROPvuHl7ROJCgUQigbvPu7asf9KcAcU1EqdrP2LuVhEKaTs7Z+ShpZDRzHdQ==}
+  '@anthropic-ai/sdk@0.80.0':
+    resolution: {integrity: sha512-WeXLn7zNVk3yjeshn+xZHvld6AoFUOR3Sep6pSoHho5YbSi6HwcirqgPA5ccFuW8QTVJAAU7N8uQQC6Wa9TG+g==}
     hasBin: true
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
@@ -906,6 +903,18 @@ packages:
   obug@2.1.1:
     resolution: {integrity: sha512-uTqF9MuPraAQ+IsnPf366RG4cP9RtUi7MLO1N3KEc+wb0a6yKpeL0lmk2IB1jY5KHPAlTc6T/JRdC/YqxHNwkQ==}
 
+  openai@5.23.2:
+    resolution: {integrity: sha512-MQBzmTulj+MM5O8SKEk/gL8a7s5mktS9zUtAkU257WjvobGc9nKcBuVwjyEEcb9SI8a8Y2G/mzn3vm9n1Jlleg==}
+    hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.23.8
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
+
   oxfmt@0.43.0:
     resolution: {integrity: sha512-KTYNG5ISfHSdmeZ25Xzb3qgz9EmQvkaGAxgBY/p38+ZiAet3uZeu7FnMwcSQJg152Qwl0wnYAxDc+Z/H6cvrwA==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -1127,7 +1136,7 @@ packages:
 
 snapshots:
 
-  '@anthropic-ai/sdk@0.82.0(zod@3.25.76)':
+  '@anthropic-ai/sdk@0.80.0(zod@3.25.76)':
     dependencies:
       json-schema-to-ts: 3.1.1
     optionalDependencies:
@@ -1710,6 +1719,10 @@ snapshots:
   nanoid@3.3.11: {}
 
   obug@2.1.1: {}
+
+  openai@5.23.2(zod@3.25.76):
+    optionalDependencies:
+      zod: 3.25.76
 
   oxfmt@0.43.0:
     dependencies:

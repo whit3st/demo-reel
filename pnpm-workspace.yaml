@@ -13,5 +13,3 @@ allowBuilds:
   p: true
   s: true
   t: true
-overrides:
-  demo-reel: link:../../.local/share/pnpm/global/5/node_modules/demo-reel
