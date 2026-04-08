@@ -1,4 +1,4 @@
-import { defineConfig } from "demo-reel";
+import { demo } from "demo-reel";
 
 const TENANT_SLUG = "demo-reel";
 const BASE = "https://demo.epistola.app";
@@ -11,7 +11,7 @@ const deleteTenantSteps = [
   { action: "wait" as const, ms: 1000 },
 ];
 
-export default defineConfig({
+export default demo({
   video: {
     resolution: "FHD",
   },
@@ -23,6 +23,18 @@ export default defineConfig({
   outputFormat: "mp4",
   name: "create-template",
   outputDir: "./output",
+
+  voice: {
+    provider: "elevenlabs",
+    voice: "5zhopMftSdRGaPYVcwKK",
+    pronunciation: {
+      "template": "template",
+      "templates": "templates",
+      "templateoverzicht": "template overzicht",
+      "documenttemplates": "document templates",
+      "editor": "editor",
+    },
+  },
 
   audio: {
     narration: "./output/create-template-narration.mp3",
@@ -46,7 +58,7 @@ export default defineConfig({
     },
   },
 
-  preSteps: [
+  setup: [
     // Delete tenant if it exists (tolerant — won't fail if it doesn't)
     ...deleteTenantSteps,
     // Create fresh tenant
@@ -60,7 +72,7 @@ export default defineConfig({
     { action: "wait", ms: 1500 },
   ],
 
-  postSteps: deleteTenantSteps,
+  cleanup: deleteTenantSteps,
 
   scenes: [
     { narration: "Welkom in Epistola. Vanuit het dashboard navigeren we naar het templateoverzicht.", stepIndex: 1, isIntro: true },

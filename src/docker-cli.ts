@@ -8,7 +8,7 @@
  * 3. Falls back to local execution with --no-docker flag
  */
 import { execSync, spawn } from "child_process";
-import { existsSync, writeFileSync, unlinkSync } from "fs";
+import { existsSync, writeFileSync, unlinkSync, readFileSync, mkdirSync } from "fs";
 import { resolve, dirname, basename, extname, join } from "path";
 import { pathToFileURL } from "url";
 
@@ -64,6 +64,54 @@ async function compileConfig(tsPath: string): Promise<string> {
 
 	writeFileSync(jsonPath, JSON.stringify(config, null, 2), "utf-8");
 	return jsonPath;
+}
+
+/**
+ * If config has scenes with narration + voice settings, generate voiceover audio.
+ * Mutates the config JSON in place to add the audio.narration path.
+ */
+async function generateVoiceIfNeeded(configJsonPath: string, verbose: boolean): Promise<void> {
+	const config = JSON.parse(readFileSync(configJsonPath, "utf-8"));
+
+	// Check if we have scenes with narration text and voice config
+	const hasNarration = config.scenes?.some((s: any) => s.narration);
+	const hasVoice = config.voice;
+	if (!hasNarration || !hasVoice) return;
+
+	// Build a script object for the TTS pipeline
+	const script = {
+		title: config.name || "demo",
+		description: "",
+		url: "",
+		scenes: config.scenes.map((s: any) => ({
+			narration: s.narration,
+			steps: [],
+		})),
+		voice: config.voice,
+	};
+
+	// Determine output path for narration
+	const configDir = dirname(configJsonPath);
+	const configBase = basename(configJsonPath, extname(configJsonPath)).replace(/\.tmp$/, "");
+	const outputDir = join(configDir, "output");
+	mkdirSync(outputDir, { recursive: true });
+	const audioPath = join(outputDir, `${configBase}-narration.mp3`);
+
+	// Import TTS modules dynamically
+	const { generateVoiceSegments, generateNarrationAudio } = await import("./script/tts.js");
+
+	if (verbose) console.log("Generating voiceover...");
+
+	const segments = await generateVoiceSegments(script, config.voice, { verbose });
+	await generateNarrationAudio(segments, audioPath, { verbose });
+
+	// Update config with audio path (relative to config file location)
+	const relAudioPath = "./" + audioPath.split(configDir + "/").pop();
+	config.audio = { ...config.audio, narration: relAudioPath, narrationDelay: config.audio?.narrationDelay ?? 300 };
+	config.outputFormat = "mp4";
+	writeFileSync(configJsonPath, JSON.stringify(config, null, 2), "utf-8");
+
+	if (verbose) console.log(`✓ Voiceover: ${audioPath}`);
 }
 
 function runDocker(image: string, args: string[], configJsonPath?: string): void {
@@ -132,6 +180,27 @@ async function main(): Promise<void> {
 	const noDocker = args.includes("--no-docker");
 	const filteredArgs = args.filter((a) => a !== "--no-docker");
 
+	// Handle explore subcommand (runs in Docker, no config needed)
+	if (filteredArgs[0] === "explore") {
+		const image = getImage();
+		const exploreArgs = filteredArgs.slice(1);
+		const cwd = process.cwd();
+		const dockerArgs = [
+			"run", "--rm",
+			"-v", `${cwd}:/work:z`,
+			"-w", "/work",
+		];
+		for (const envVar of ENV_PASSTHROUGH) {
+			if (process.env[envVar]) {
+				dockerArgs.push("-e", `${envVar}=${process.env[envVar]}`);
+			}
+		}
+		dockerArgs.push("--entrypoint", "node", image, "/app/dist/script/crawl-cli.js", ...exploreArgs);
+		const proc = spawn("docker", dockerArgs, { stdio: "inherit" });
+		proc.on("close", (code) => process.exit(code ?? 1));
+		return;
+	}
+
 	if (noDocker || !isDockerAvailable()) {
 		if (!noDocker && !isDockerAvailable()) {
 			console.log("Docker not available, running locally (requires Playwright, FFmpeg, etc.)");
@@ -185,6 +254,12 @@ async function main(): Promise<void> {
 				}
 			}
 		}
+	}
+
+	// Generate voice if the config has scenes with narration
+	const verbose = filteredArgs.includes("--verbose") || filteredArgs.includes("-v");
+	if (configJsonPath) {
+		await generateVoiceIfNeeded(configJsonPath, verbose);
 	}
 
 	runDocker(image, processedArgs, configJsonPath);

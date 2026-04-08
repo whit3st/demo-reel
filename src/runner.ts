@@ -894,16 +894,34 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
       currentScene = { index: sceneIdx, startMs: now };
     }
 
-    startDelayApplied = await runStep(
-      page,
-      step,
-      config,
-      mouseState,
-      resolvedCursor.start,
-      resolvedCursor,
-      startDelayApplied,
-      rng,
-    );
+    try {
+      startDelayApplied = await runStep(
+        page,
+        step,
+        config,
+        mouseState,
+        resolvedCursor.start,
+        resolvedCursor,
+        startDelayApplied,
+        rng,
+      );
+    } catch (error) {
+      // Screenshot on failure for debugging
+      try {
+        const debugDir = "output/debug";
+        const { mkdirSync } = await import("fs");
+        mkdirSync(debugDir, { recursive: true });
+        const screenshotPath = `${debugDir}/step-${stepIdx}-failure.png`;
+        await page.screenshot({ path: screenshotPath, fullPage: true });
+        const url = page.url();
+        console.error(`\n✗ Step ${stepIdx} failed: ${(step as Step).action}`);
+        console.error(`  URL: ${url}`);
+        console.error(`  Screenshot: ${screenshotPath}`);
+      } catch {
+        // Ignore screenshot errors
+      }
+      throw error;
+    }
   }
 
   if (config.timing.endDelayMs > 0) {
