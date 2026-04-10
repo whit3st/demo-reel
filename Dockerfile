@@ -24,7 +24,11 @@ RUN mkdir -p /piper-voices && \
     curl -sL https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_NL/mls/medium/nl_NL-mls-medium.onnx \
       -o /piper-voices/nl_NL-mls-medium.onnx && \
     curl -sL https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_NL/mls/medium/nl_NL-mls-medium.onnx.json \
-      -o /piper-voices/nl_NL-mls-medium.onnx.json
+      -o /piper-voices/nl_NL-mls-medium.onnx.json && \
+    curl -sL https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx \
+      -o /piper-voices/en_US-amy-medium.onnx && \
+    curl -sL https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx.json \
+      -o /piper-voices/en_US-amy-medium.onnx.json
 
 # Stage 3: Lean runtime
 FROM node:22-slim AS runtime
