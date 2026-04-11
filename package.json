@@ -37,6 +37,7 @@
     "dev": "tsc --watch",
     "prepare": "pnpm run build",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "lint": "oxlint .",
@@ -53,12 +54,14 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@typescript/native-preview": "7.0.0-dev.20260321.1",
-    "tsx": "^4.21.0",
-    "@vitest/ui": "^4.1.0",
+    "@vitest/coverage-v8": "^4.1.4",
+    "@vitest/ui": "^4.1.4",
+    "dotenv": "^17.4.1",
     "oxfmt": "^0.43.0",
     "oxlint": "^1.58.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.0.0",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.4"
   },
   "peerDependencies": {
     "@anthropic-ai/sdk": "^0.80.0",

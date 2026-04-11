@@ -4,6 +4,7 @@ test-videos
 .demo-reel-temp
 .demo-reel-cache
 .demo-reel-sessions
+coverage
 
 # Demo output (generated artifacts)
 **/output/

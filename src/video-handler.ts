@@ -303,21 +303,31 @@ function buildSubtitleCues(
 async function loadAudioTiming(
   configPath: string,
 ): Promise<{ audioOffsetMs: number; audioDurationMs: number; gapAfterMs: number }[] | null> {
-  // Look for a .script.json next to the config
-  const scriptPath = configPath.replace(/\.demo\.ts$/, ".script.json");
-  try {
-    const raw = await readFile(scriptPath, "utf-8");
-    const script = JSON.parse(raw);
-    if (script.scenes && script.audioPath) {
-      return script.scenes.map((s: any) => ({
-        audioOffsetMs: s.audioOffsetMs ?? 0,
-        audioDurationMs: s.audioDurationMs ?? 0,
-        gapAfterMs: s.gapAfterMs ?? 0,
-      }));
+  const candidatePaths = [
+    configPath.replace(/\.demo\.ts$/, ".script.json"),
+    configPath.replace(/\.tmp\.json$/, ".voice.tmp.json"),
+  ];
+
+  for (const scriptPath of candidatePaths) {
+    if (scriptPath === configPath) {
+      continue;
     }
-  } catch {
-    // No script file or invalid format
+
+    try {
+      const raw = await readFile(scriptPath, "utf-8");
+      const script = JSON.parse(raw);
+      if (script.scenes && script.audioPath) {
+        return script.scenes.map((s: any) => ({
+          audioOffsetMs: s.audioOffsetMs ?? 0,
+          audioDurationMs: s.audioDurationMs ?? 0,
+          gapAfterMs: s.gapAfterMs ?? 0,
+        }));
+      }
+    } catch {
+      // No script file or invalid format, try the next candidate.
+    }
   }
+
   return null;
 }
 

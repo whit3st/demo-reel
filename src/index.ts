@@ -87,15 +87,27 @@ function getAudioPath(config: DemoReelConfig): string {
   return join(outputDir, `${getBaseName(config)}-narration.mp3`);
 }
 
+function getNarratedScenesInPlaybackOrder(config: DemoReelConfig) {
+  return (config.scenes ?? [])
+    .map((scene, index) => ({ scene, index }))
+    .filter(({ scene }) => Boolean(scene.narration))
+    .sort((left, right) => {
+      const stepIndexDiff = left.scene.stepIndex - right.scene.stepIndex;
+      return stepIndexDiff !== 0 ? stepIndexDiff : left.index - right.index;
+    })
+    .map(({ scene }) => scene);
+}
+
 export async function generate(config: DemoConfig, options: GenerateOptions = {}): Promise<void> {
   const { verbose = false, noDocker = false } = options;
   const resolvedConfig = validateConfig(config);
   const name = getBaseName(resolvedConfig);
-  const narratedScenes = resolvedConfig.scenes?.filter((scene) => scene.narration) ?? [];
+  const narratedScenes = getNarratedScenesInPlaybackOrder(resolvedConfig);
 
   const hasNarration = narratedScenes.length > 0;
   const hasVoice = resolvedConfig.voice;
   const audioPath = getAudioPath(resolvedConfig);
+  const voiceScriptPath = `.${name}.voice.tmp.json`;
   mkdirSync(dirname(audioPath), { recursive: true });
 
   if (hasNarration && hasVoice && !existsSync(audioPath)) {
@@ -113,36 +125,27 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
       })),
       voice: resolvedConfig.voice,
     };
-    const scriptPath = `.${name}.voice.tmp.json`;
-    writeFileSync(scriptPath, JSON.stringify(scriptJson, null, 2), "utf-8");
+    writeFileSync(voiceScriptPath, JSON.stringify(scriptJson, null, 2), "utf-8");
 
-    try {
-      const image = getImage();
-      const voiceArgs = ["run", "--rm", "-v", `${process.cwd()}:/work:z`, "-w", "/work"];
+    const image = getImage();
+    const voiceArgs = ["run", "--rm", "-v", `${process.cwd()}:/work:z`, "-w", "/work"];
 
-      for (const envVar of ENV_PASSTHROUGH) {
-        if (process.env[envVar]) {
-          voiceArgs.push("-e", `${envVar}=${process.env[envVar]}`);
-        }
-      }
-
-      voiceArgs.push(
-        "--entrypoint",
-        "node",
-        image,
-        "/app/dist/script/voice-cli.js",
-        scriptPath,
-        "--output",
-        relative(process.cwd(), audioPath),
-      );
-      execSync(`docker ${voiceArgs.join(" ")}`, { stdio: "inherit" });
-    } finally {
-      try {
-        unlinkSync(scriptPath);
-      } catch {
-        // Best-effort cleanup for temp files.
+    for (const envVar of ENV_PASSTHROUGH) {
+      if (process.env[envVar]) {
+        voiceArgs.push("-e", `${envVar}=${process.env[envVar]}`);
       }
     }
+
+    voiceArgs.push(
+      "--entrypoint",
+      "node",
+      image,
+      "/app/dist/script/voice-cli.js",
+      voiceScriptPath,
+      "--output",
+      relative(process.cwd(), audioPath),
+    );
+    execSync(`docker ${voiceArgs.join(" ")}`, { stdio: "inherit" });
   }
 
   const configWithAudio: DemoConfig = hasNarration && existsSync(audioPath)
@@ -218,6 +221,12 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
   } finally {
     try {
       unlinkSync(jsonPath);
+    } catch {
+      // Best-effort cleanup for temp files.
+    }
+
+    try {
+      unlinkSync(voiceScriptPath);
     } catch {
       // Best-effort cleanup for temp files.
     }
