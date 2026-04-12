@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 import { execSync, spawn } from "child_process";
-import { existsSync } from "fs";
-import { join } from "path";
 
 const SKILL_URL =
   "https://raw.githubusercontent.com/whit3st/demo-reel/main/.claude-plugin/commands/demo-script.md";

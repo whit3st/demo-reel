@@ -28,14 +28,7 @@ vi.mock("../src/script/cli.js", () => ({
 import { writeFile, access } from "fs/promises";
 import { loadConfig, loadScenario, findScenarioFiles } from "../src/config-loader.js";
 import { runVideoScenario, setOnBrowserCreated } from "../src/video-handler.js";
-import {
-  scriptGenerate,
-  scriptVoice,
-  scriptBuild,
-  scriptValidate,
-  scriptFix,
-  scriptFullPipeline,
-} from "../src/script/cli.js";
+import { scriptGenerate, scriptValidate, scriptFullPipeline } from "../src/script/cli.js";
 
 const ORIGINAL_ARGV = [...process.argv];
 

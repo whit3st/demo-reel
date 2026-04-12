@@ -147,14 +147,16 @@ describe("index runtime", () => {
     const voiceScriptCall = vi
       .mocked(writeFileSync)
       .mock.calls.find(([path]) => path === ".demo.voice.tmp.json");
-    expect(voiceScriptCall?.[1]).toContain('"First scene"');
-    expect(voiceScriptCall?.[1]).toContain('"Second scene"');
-    expect(voiceScriptCall?.[1]).toContain('"Third scene"');
-    expect((voiceScriptCall?.[1] as string).indexOf('"First scene"')).toBeLessThan(
-      (voiceScriptCall?.[1] as string).indexOf('"Second scene"'),
+    expect(voiceScriptCall).toBeDefined();
+    const voiceScriptContents = voiceScriptCall?.[1] as string;
+    expect(voiceScriptContents).toContain('"First scene"');
+    expect(voiceScriptContents).toContain('"Second scene"');
+    expect(voiceScriptContents).toContain('"Third scene"');
+    expect(voiceScriptContents.indexOf('"First scene"')).toBeLessThan(
+      voiceScriptContents.indexOf('"Second scene"'),
     );
-    expect((voiceScriptCall?.[1] as string).indexOf('"Second scene"')).toBeLessThan(
-      (voiceScriptCall?.[1] as string).indexOf('"Third scene"'),
+    expect(voiceScriptContents.indexOf('"Second scene"')).toBeLessThan(
+      voiceScriptContents.indexOf('"Third scene"'),
     );
     expect(spawnSync).toHaveBeenCalledWith(
       "docker",
