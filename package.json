@@ -40,6 +40,7 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
+    "coverage:badge": "node scripts/write-coverage-badge.mjs coverage/coverage-summary.json .github/badges/coverage.json",
     "lint": "oxlint .",
     "lint:ci": "oxlint .",
     "format": "oxfmt . --write",
