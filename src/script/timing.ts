@@ -147,6 +147,8 @@ export function synchronizeTiming(
 			narration: scene.narration,
 			steps: adjustedSteps,
 			emphasis: scene.emphasis,
+			stepIndex: timed.stepIndex ?? scene.stepIndex,
+			sourceSceneIndex: timed.sourceSceneIndex ?? scene.sourceSceneIndex,
 			audioDurationMs: timed.audioDurationMs,
 			audioOffsetMs: timed.audioOffsetMs,
 			gapAfterMs: timed.gapAfterMs,

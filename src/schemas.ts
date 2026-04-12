@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { voiceConfigSchema } from "./voice-config.js";
 import { cursorPresets, motionPresets, typingPresets, timingPresets } from "./presets.js";
 
 export const sizeSchema = z.object({
@@ -210,6 +211,12 @@ export const waitStepSchema = z.object({
   ms: z.number().int().min(0).describe("Duration to wait in ms"),
 });
 
+export const confirmStepSchema = z.object({
+  action: z.literal("confirm").describe("Handle the next browser confirm/dialog"),
+  accept: z.boolean().describe("True to accept the dialog, false to dismiss it"),
+  timeoutMs: z.number().int().min(0).optional().describe("Timeout in ms (0 = no timeout)"),
+});
+
 export const waitForSelectorStepSchema = z.object({
   action: z.literal("waitFor").describe("Wait for element"),
   kind: z.literal("selector").describe("Wait for selector"),
@@ -300,6 +307,7 @@ export const stepSchema = z
     uploadStepSchema,
     dragStepSchema,
     waitStepSchema,
+    confirmStepSchema,
   ])
   .or(waitForStepUnion);
 
@@ -320,6 +328,11 @@ export const randomizationSchema = z
 
 export const audioConfigSchema = z.object({
   narration: z.string().min(1).optional().describe("Path to narration MP3 file"),
+  narrationManifest: z
+    .string()
+    .min(1)
+    .optional()
+    .describe("Path to per-scene narration manifest JSON for exact scene-based placement"),
   narrationDelay: z.number().min(0).optional().describe("Delay before narration starts in ms"),
   background: z.string().min(1).optional().describe("Path to background music MP3 file"),
   backgroundVolume: z
@@ -432,15 +445,7 @@ export const demoReelConfigInputSchema = z
     randomization: randomizationSchema.optional().describe("Randomization settings"),
     timestamp: z.boolean().optional().describe("Add timestamp to output filename"),
     auth: authConfigSchema.optional().describe("Authentication/session persistence settings"),
-    voice: z
-      .object({
-        provider: z.enum(["piper", "openai", "elevenlabs"]).default("piper").describe("TTS provider"),
-        voice: z.string().default("nl_NL-mls-medium").describe("Voice name/ID"),
-        speed: z.number().min(0.5).max(2.0).default(1.0).describe("Speech speed"),
-        pronunciation: z.record(z.string()).optional().describe("Word replacements for pronunciation"),
-      })
-      .optional()
-      .describe("Voice/TTS configuration for narration generation"),
+    voice: voiceConfigSchema.optional().describe("Voice/TTS configuration for narration generation"),
     scenes: z
       .array(
         z.object({

@@ -277,6 +277,22 @@ export default defineScript({
 });
 ```
 
+Provider-specific built-in voice values:
+
+- `piper`: `"nl_NL-mls-medium"`, `"en_US-amy-medium"`
+- `openai`: `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`
+- `elevenlabs`: `"21m00Tcm4TlvDq8ikWAM"`, `"5zhopMftSdRGaPYVcwKK"`, `CwhRBWXzGAHq8TQ4Fs17`
+
+For a custom Piper model, use `voicePath`:
+
+```typescript
+voice: {
+  provider: "piper",
+  voicePath: "/models/custom-voice.onnx",
+  speed: 1.0,
+}
+```
+
 ---
 
 ## Known Hard Problems

@@ -1,5 +1,5 @@
-import { execSync, spawn } from "child_process";
-import { existsSync, mkdirSync, unlinkSync, writeFileSync } from "fs";
+import { execSync, spawn, spawnSync } from "child_process";
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "fs";
 import { basename, dirname, extname, join, relative, resolve } from "path";
 import {
   demoReelConfigSchema,
@@ -7,6 +7,8 @@ import {
   type DemoReelConfig,
   type DemoReelConfigInput,
 } from "./schemas.js";
+import { getNarrationManifestPath } from "./narration-manifest.js";
+import { narrationManifestSchema, NARRATION_PROCESSING_VERSION } from "./narration-manifest.js";
 
 const DEFAULT_IMAGE = "ghcr.io/whit3st/demo-reel:latest";
 const LOCAL_IMAGE = "demo-reel:latest";
@@ -61,6 +63,14 @@ function getImage(): string {
   }
 }
 
+function getDockerUserArgs(): string[] {
+  if (typeof process.getuid !== "function" || typeof process.getgid !== "function") {
+    return [];
+  }
+
+  return ["--user", `${process.getuid()}:${process.getgid()}`];
+}
+
 function getBaseName(config: DemoReelConfig): string {
   if (config.name) {
     return config.name;
@@ -95,7 +105,20 @@ function getNarratedScenesInPlaybackOrder(config: DemoReelConfig) {
       const stepIndexDiff = left.scene.stepIndex - right.scene.stepIndex;
       return stepIndexDiff !== 0 ? stepIndexDiff : left.index - right.index;
     })
-    .map(({ scene }) => scene);
+    .map(({ scene, index }) => ({ scene, index }));
+}
+
+function shouldRegenerateNarrationArtifacts(audioPath: string, manifestPath: string): boolean {
+  if (!existsSync(audioPath) || !existsSync(manifestPath)) {
+    return true;
+  }
+
+  try {
+    const manifest = narrationManifestSchema.parse(JSON.parse(readFileSync(manifestPath, "utf-8")));
+    return manifest.processingVersion !== NARRATION_PROCESSING_VERSION;
+  } catch {
+    return true;
+  }
 }
 
 export async function generate(config: DemoConfig, options: GenerateOptions = {}): Promise<void> {
@@ -107,10 +130,14 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
   const hasNarration = narratedScenes.length > 0;
   const hasVoice = resolvedConfig.voice;
   const audioPath = getAudioPath(resolvedConfig);
+  const narrationManifestPath = getNarrationManifestPath(audioPath);
   const voiceScriptPath = `.${name}.voice.tmp.json`;
+  const shouldRegenerateNarration = hasNarration && hasVoice
+    ? shouldRegenerateNarrationArtifacts(audioPath, narrationManifestPath)
+    : false;
   mkdirSync(dirname(audioPath), { recursive: true });
 
-  if (hasNarration && hasVoice && !existsSync(audioPath)) {
+  if (hasNarration && hasVoice && shouldRegenerateNarration) {
     if (verbose) {
       console.log("Generating voiceover via Docker...");
     }
@@ -119,8 +146,10 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
       title: name,
       description: "auto-generated",
       url: "https://placeholder.local",
-      scenes: narratedScenes.map((scene) => ({
+      scenes: narratedScenes.map(({ scene, index }) => ({
         narration: scene.narration,
+        stepIndex: scene.stepIndex,
+        sourceSceneIndex: index,
         steps: [{ action: "wait" as const, ms: 0 }],
       })),
       voice: resolvedConfig.voice,
@@ -128,7 +157,15 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
     writeFileSync(voiceScriptPath, JSON.stringify(scriptJson, null, 2), "utf-8");
 
     const image = getImage();
-    const voiceArgs = ["run", "--rm", "-v", `${process.cwd()}:/work:z`, "-w", "/work"];
+    const voiceArgs = [
+      "run",
+      "--rm",
+      ...getDockerUserArgs(),
+      "-v",
+      `${process.cwd()}:/work:z`,
+      "-w",
+      "/work",
+    ];
 
     for (const envVar of ENV_PASSTHROUGH) {
       if (process.env[envVar]) {
@@ -145,7 +182,13 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
       "--output",
       relative(process.cwd(), audioPath),
     );
-    execSync(`docker ${voiceArgs.join(" ")}`, { stdio: "inherit" });
+    const voiceResult = spawnSync("docker", voiceArgs, { stdio: "inherit", env: process.env });
+    if (voiceResult.status !== 0) {
+      throw new Error(`Docker voice generation exited with code ${voiceResult.status}`);
+    }
+    if (voiceResult.error) {
+      throw voiceResult.error;
+    }
   }
 
   const configWithAudio: DemoConfig = hasNarration && existsSync(audioPath)
@@ -154,6 +197,7 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
         audio: {
           ...resolvedConfig.audio,
           narration: relative(process.cwd(), audioPath),
+          narrationManifest: relative(process.cwd(), narrationManifestPath),
           narrationDelay: resolvedConfig.audio?.narrationDelay ?? 300,
         },
         outputFormat: "mp4",
@@ -181,7 +225,15 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
         console.log(`Using Docker image: ${image}`);
       }
 
-      const dockerArgs = ["run", "--rm", "-v", `${process.cwd()}:/work:z`, "-w", "/work"];
+      const dockerArgs = [
+        "run",
+        "--rm",
+        ...getDockerUserArgs(),
+        "-v",
+        `${process.cwd()}:/work:z`,
+        "-w",
+        "/work",
+      ];
 
       for (const envVar of ENV_PASSTHROUGH) {
         if (process.env[envVar]) {

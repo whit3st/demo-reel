@@ -88,20 +88,25 @@ export function generateDemoConfig(
 
 	// Collect all steps from all scenes, with scene comments
 	const stepLines: string[] = [];
+	const sceneLines: string[] = [];
+	let stepIndex = 0;
 
 	for (let i = 0; i < script.scenes.length; i++) {
 		const scene = script.scenes[i];
 		const narrationPreview = scene.narration.slice(0, 80);
+		sceneLines.push(`    { narration: ${JSON.stringify(scene.narration)}, stepIndex: ${stepIndex} },`);
 
 		stepLines.push(`    // Scene ${i + 1}: "${narrationPreview}${scene.narration.length > 80 ? "..." : ""}"`);
 
 		for (const step of scene.steps) {
 			stepLines.push(`${serializeStep(step as Step, "    ")},`);
 		}
+		stepIndex += scene.steps.length;
 
 		// Add gap between scenes (except last)
 		if (i < script.scenes.length - 1 && scene.gapAfterMs > 0) {
 			stepLines.push(`    { action: "wait", ms: ${scene.gapAfterMs} },`);
+			stepIndex += 1;
 		}
 
 		stepLines.push("");
@@ -124,8 +129,13 @@ export default defineConfig({
 
   audio: {
     narration: "${script.audioPath}",
-    narrationDelay: 300,
+    ${script.narrationManifestPath ? `narrationManifest: "${script.narrationManifestPath}",
+    ` : ""}narrationDelay: 300,
   },
+
+  scenes: [
+${sceneLines.join("\n")}
+  ],
 
   steps: [
 ${stepLines.join("\n")}  ],
@@ -151,10 +161,16 @@ export async function writeDemoConfig(
 	// Make audio path relative to the output config file
 	const configDir = dirname(resolve(outputPath));
 	const relativeAudioPath = relative(configDir, resolve(script.audioPath));
+	const relativeManifestPath = script.narrationManifestPath
+		? relative(configDir, resolve(script.narrationManifestPath))
+		: undefined;
 
 	const scriptWithRelativePath: TimedScript = {
 		...script,
 		audioPath: relativeAudioPath.startsWith(".") ? relativeAudioPath : `./${relativeAudioPath}`,
+		narrationManifestPath: relativeManifestPath
+			? (relativeManifestPath.startsWith(".") ? relativeManifestPath : `./${relativeManifestPath}`)
+			: undefined,
 	};
 
 	const source = generateDemoConfig(scriptWithRelativePath, options);

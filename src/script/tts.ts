@@ -1,10 +1,19 @@
 import { mkdir, writeFile, readFile, stat, unlink } from "fs/promises";
-import { join, dirname } from "path";
+import { join, dirname, relative } from "path";
 import { createHash } from "crypto";
 import { spawn } from "child_process";
-import type { VoiceConfig, DemoScript, TimedScene } from "./types.js";
+import type { DemoScript, TimedScene } from "./types.js";
+import { getVoiceName, type VoiceConfig } from "../voice-config.js";
+import {
+	getNarrationClipDir,
+	getNarrationClipFileName,
+	getNarrationManifestPath,
+	NARRATION_PROCESSING_VERSION,
+	type NarrationManifest,
+} from "../narration-manifest.js";
 
 const CACHE_DIR = ".demo-reel-cache/voice";
+const VOICE_CACHE_VERSION = NARRATION_PROCESSING_VERSION;
 
 // --- Provider interface ---
 
@@ -108,7 +117,7 @@ async function wavToMp3(wavBuffer: Buffer): Promise<Buffer> {
 
 // --- Piper TTS Provider (local, free) ---
 
-const PIPER_DEFAULT_MODEL_DIR = join(
+const PIPER_DEFAULT_MODEL_DIR = process.env.PIPER_VOICE_DIR || join(
 	process.env.HOME || process.env.USERPROFILE || ".",
 	".local", "share", "piper-voices",
 );
@@ -139,12 +148,19 @@ function resolvePiperModel(voice: string): string {
 	return join(PIPER_DEFAULT_MODEL_DIR, `${voice}.onnx`);
 }
 
+function getPiperModelPath(options: VoiceConfig): string {
+  if ("voicePath" in options) {
+    return resolvePiperModel(options.voicePath);
+  }
+  return resolvePiperModel(options.voice);
+}
+
 async function generatePiper(
 	text: string,
-	options: VoiceConfig,
+	options: Extract<VoiceConfig, { provider: "piper" }>,
 ): Promise<{ audio: Buffer; durationMs: number }> {
 	const piperPath = await findPiperBinary();
-	const modelPath = resolvePiperModel(options.voice);
+	const modelPath = getPiperModelPath(options);
 
 	// Verify model exists
 	try {
@@ -192,7 +208,7 @@ async function generatePiper(
 
 async function generateOpenAI(
 	text: string,
-	options: VoiceConfig,
+	options: Extract<VoiceConfig, { provider: "openai" }>,
 ): Promise<{ audio: Buffer; durationMs: number }> {
 	// @ts-ignore — openai is an optional peer dependency
 	const openaiModule: any = await import("openai");
@@ -218,7 +234,7 @@ async function generateOpenAI(
 
 async function generateElevenLabs(
 	text: string,
-	options: VoiceConfig,
+	options: Extract<VoiceConfig, { provider: "elevenlabs" }>,
 ): Promise<{ audio: Buffer; durationMs: number }> {
 	const apiKey = process.env.ELEVENLABS_KEY || process.env.ELEVENLABS_API_KEY;
 	if (!apiKey) {
@@ -260,9 +276,9 @@ async function generateElevenLabs(
 // --- Provider registry ---
 
 const providers: Record<string, TTSProvider> = {
-	piper: { name: "piper", generate: generatePiper },
-	openai: { name: "openai", generate: generateOpenAI },
-	elevenlabs: { name: "elevenlabs", generate: generateElevenLabs },
+	piper: { name: "piper", generate: (text, options) => generatePiper(text, options as Extract<VoiceConfig, { provider: "piper" }>) },
+	openai: { name: "openai", generate: (text, options) => generateOpenAI(text, options as Extract<VoiceConfig, { provider: "openai" }>) },
+	elevenlabs: { name: "elevenlabs", generate: (text, options) => generateElevenLabs(text, options as Extract<VoiceConfig, { provider: "elevenlabs" }>) },
 };
 
 export function getTTSProvider(name: string): TTSProvider {
@@ -283,7 +299,7 @@ export function registerTTSProvider(provider: TTSProvider): void {
 
 function cacheKey(text: string, voice: VoiceConfig): string {
 	return createHash("sha256")
-		.update(`${text}|${voice.provider}|${voice.voice}|${voice.speed}`)
+		.update(`${VOICE_CACHE_VERSION}|${text}|${voice.provider}|${getVoiceName(voice)}|${voice.speed}`)
 		.digest("hex")
 		.slice(0, 16);
 }
@@ -358,6 +374,8 @@ async function concatenateAudio(segments: { audio: Buffer; gapAfterMs: number }[
 
 interface VoiceSegment {
 	sceneIndex: number;
+	stepIndex?: number;
+	sourceSceneIndex?: number;
 	narration: string;
 	audio: Buffer;
 	durationMs: number;
@@ -394,7 +412,14 @@ export async function generateVoiceSegments(
 			if (cached) {
 				const durationMs = await measureAudioDuration(cached);
 				if (options.verbose) console.log(`  Scene ${i + 1}: cached (${(durationMs / 1000).toFixed(1)}s)`);
-				segments.push({ sceneIndex: i, narration: scene.narration, audio: cached, durationMs });
+				segments.push({
+					sceneIndex: i,
+					stepIndex: scene.stepIndex,
+					sourceSceneIndex: scene.sourceSceneIndex ?? i,
+					narration: scene.narration,
+					audio: cached,
+					durationMs,
+				});
 				continue;
 			}
 		}
@@ -403,12 +428,20 @@ export async function generateVoiceSegments(
 
 		// Apply pronunciation map before TTS
 		const ttsText = applyPronunciation(scene.narration, voice.pronunciation);
-		const { audio, durationMs } = await provider.generate(ttsText, voice);
+		const generated = await provider.generate(ttsText, voice);
+		const { audio, durationMs } = generated;
 		await setCache(key, audio);
 		if (options.verbose) console.log(`  Scene ${i + 1}: ${(durationMs / 1000).toFixed(1)}s`);
 
 		// Store the original narration (for subtitles), not the pronunciation-adjusted text
-		segments.push({ sceneIndex: i, narration: scene.narration, audio, durationMs });
+		segments.push({
+			sceneIndex: i,
+			stepIndex: scene.stepIndex,
+			sourceSceneIndex: scene.sourceSceneIndex ?? i,
+			narration: scene.narration,
+			audio,
+			durationMs,
+		});
 	}
 
 	return segments;
@@ -418,11 +451,20 @@ export async function generateNarrationAudio(
 	segments: VoiceSegment[],
 	outputPath: string,
 	options: { gapMs?: number; verbose?: boolean } = {},
-): Promise<TimedScene[]> {
+): Promise<{ timedScenes: TimedScene[]; narrationManifestPath: string }> {
 	const gapMs = options.gapMs ?? 800;
 	await mkdir(dirname(outputPath), { recursive: true });
+	const clipDir = getNarrationClipDir(outputPath);
+	const narrationManifestPath = getNarrationManifestPath(outputPath);
+	await mkdir(clipDir, { recursive: true });
 
 	const timedScenes: TimedScene[] = [];
+	const manifest: NarrationManifest = {
+		version: 1,
+		processingVersion: NARRATION_PROCESSING_VERSION,
+		audioPath: relative(dirname(narrationManifestPath), outputPath),
+		clips: [],
+	};
 	let currentOffsetMs = 0;
 	const concatSegments: { audio: Buffer; gapAfterMs: number }[] = [];
 
@@ -430,10 +472,25 @@ export async function generateNarrationAudio(
 		const seg = segments[i];
 		const isLast = i === segments.length - 1;
 		const gap = isLast ? 0 : gapMs;
+		const sourceSceneIndex = seg.sourceSceneIndex ?? seg.sceneIndex;
+		const clipPath = join(clipDir, getNarrationClipFileName(sourceSceneIndex));
+		await writeFile(clipPath, seg.audio);
 
 		timedScenes.push({
 			narration: seg.narration,
 			steps: [],
+			stepIndex: seg.stepIndex,
+			sourceSceneIndex,
+			audioDurationMs: seg.durationMs,
+			audioOffsetMs: currentOffsetMs,
+			gapAfterMs: gap,
+		});
+
+		manifest.clips.push({
+			sceneIndex: sourceSceneIndex,
+			stepIndex: seg.stepIndex,
+			narration: seg.narration,
+			filePath: relative(dirname(narrationManifestPath), clipPath),
 			audioDurationMs: seg.durationMs,
 			audioOffsetMs: currentOffsetMs,
 			gapAfterMs: gap,
@@ -445,10 +502,12 @@ export async function generateNarrationAudio(
 
 	const concatenated = await concatenateAudio(concatSegments);
 	await writeFile(outputPath, concatenated);
+	await writeFile(narrationManifestPath, JSON.stringify(manifest, null, 2), "utf-8");
 
 	if (options.verbose) {
 		console.log(`Narration audio: ${outputPath} (${(currentOffsetMs / 1000).toFixed(1)}s)`);
+		console.log(`Narration manifest: ${narrationManifestPath}`);
 	}
 
-	return timedScenes;
+	return { timedScenes, narrationManifestPath };
 }

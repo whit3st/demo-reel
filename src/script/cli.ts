@@ -4,6 +4,21 @@ import { generateVoiceSegments, generateNarrationAudio } from "./tts.js";
 import { synchronizeTiming } from "./timing.js";
 import { writeDemoConfig, writeScriptJson } from "./assembler.js";
 import { demoScriptSchema, type VoiceConfig } from "./types.js";
+import { resolveVoiceConfig } from "../voice-config.js";
+
+function pickVoiceOverrides(source: Partial<VoiceConfig> | undefined) {
+	if (!source) {
+		return {};
+	}
+
+	return {
+		provider: source.provider,
+		voicePath: "voicePath" in source ? source.voicePath : undefined,
+		voice: "voice" in source ? source.voice : undefined,
+		speed: source.speed,
+		pronunciation: source.pronunciation,
+	};
+}
 
 export interface ScriptCliOptions {
 	verbose?: boolean;
@@ -61,11 +76,11 @@ export async function scriptVoice(
 	const segments = await generateVoiceSegments(script, voice, { noCache, verbose });
 
 	const audioPath = scriptPath.replace(/\.script\.json$/, "-narration.mp3");
-	const timedScenes = await generateNarrationAudio(segments, audioPath, { verbose });
+	const { timedScenes, narrationManifestPath } = await generateNarrationAudio(segments, audioPath, { verbose });
 
 	// Update script file with timing info
 	const timedScript = synchronizeTiming(script, timedScenes, audioPath);
-	await writeScriptJson(timedScript, scriptPath);
+	await writeScriptJson({ ...timedScript, narrationManifestPath }, scriptPath);
 
 	console.log(`✓ Voice generated → ${audioPath}`);
 	return audioPath;
@@ -196,11 +211,14 @@ export async function scriptFullPipeline(
 	} = {},
 ): Promise<string> {
 	const outputName = options.output || "demo";
-	const voice: VoiceConfig = {
-		provider: options.voice?.provider || "openai",
-		voice: options.voice?.voice || "alloy",
-		speed: options.voice?.speed || 1.0,
-	};
+	const voiceOverrides = pickVoiceOverrides(options.voice);
+	const voice = resolveVoiceConfig({
+		provider: voiceOverrides.provider || "openai",
+		voicePath: voiceOverrides.voicePath,
+		voice: voiceOverrides.voice,
+		speed: voiceOverrides.speed || 1.0,
+		pronunciation: voiceOverrides.pronunciation,
+	});
 
 	// Step 1: Generate script
 	console.log("\n▶ Generating script...");

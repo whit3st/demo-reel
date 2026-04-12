@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("child_process", () => ({
   execSync: vi.fn(),
   spawn: vi.fn(),
+  spawnSync: vi.fn(),
 }));
 
 vi.mock("fs", () => ({
@@ -20,7 +21,7 @@ vi.mock("../src/video-handler.js", () => ({
   runVideoScenario: vi.fn(),
 }));
 
-import { execSync, spawn } from "child_process";
+import { execSync, spawn, spawnSync } from "child_process";
 import { existsSync, mkdirSync, unlinkSync, writeFileSync } from "fs";
 import { loadConfig } from "../src/config-loader.js";
 import { runVideoScenario } from "../src/video-handler.js";
@@ -64,6 +65,7 @@ describe("index runtime", () => {
       return "ok";
     });
     vi.mocked(spawn).mockReturnValue(createSpawnProcess() as never);
+    vi.mocked(spawnSync).mockReturnValue({ status: 0, error: undefined } as never);
     vi.mocked(loadConfig).mockResolvedValue({
       config: createConfig(),
       outputPath: "/workspace/project/output/demo.webm",
@@ -145,9 +147,17 @@ describe("index runtime", () => {
     expect(voiceScriptCall?.[1]).toContain('"Third scene"');
     expect((voiceScriptCall?.[1] as string).indexOf('"First scene"')).toBeLessThan((voiceScriptCall?.[1] as string).indexOf('"Second scene"'));
     expect((voiceScriptCall?.[1] as string).indexOf('"Second scene"')).toBeLessThan((voiceScriptCall?.[1] as string).indexOf('"Third scene"'));
-    expect(execSync).toHaveBeenCalledWith(
-      expect.stringContaining("/app/dist/script/voice-cli.js .demo.voice.tmp.json --output output/demo-narration.mp3"),
-      { stdio: "inherit" },
+    expect(spawnSync).toHaveBeenCalledWith(
+      "docker",
+      expect.arrayContaining([
+        "--entrypoint",
+        "node",
+        "/app/dist/script/voice-cli.js",
+        ".demo.voice.tmp.json",
+        "--output",
+        "output/demo-narration.mp3",
+      ]),
+      expect.objectContaining({ stdio: "inherit", env: process.env }),
     );
     expect(writeFileSync).toHaveBeenCalledWith(
       ".demo.tmp.json",

@@ -12,6 +12,7 @@ import {
   scriptFix,
   scriptFullPipeline,
 } from "./script/cli.js";
+import { resolveVoiceConfig } from "./voice-config.js";
 
 interface CliOptions {
   verbose: boolean;
@@ -219,11 +220,11 @@ export async function handleScriptCommand(
   subcommandOrDescription: string | undefined,
   options: CliOptions,
 ): Promise<number> {
-  const voice = {
-    provider: "openai" as const,
+  const voice = resolveVoiceConfig({
+    provider: "openai",
     voice: options.scriptVoice || "alloy",
     speed: options.scriptSpeed || 1.0,
-  };
+  });
 
   const baseOpts = {
     verbose: options.verbose,

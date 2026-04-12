@@ -24,7 +24,7 @@ await generate({
 
   voice: {
     provider: "elevenlabs",  // or "piper" (local/free) or "openai"
-    voice: "your-voice-id",
+    voice: "5zhopMftSdRGaPYVcwKK",
   },
 
   auth: {
@@ -107,13 +107,29 @@ Claude crawls your app, builds the script with you scene by scene, and generates
 
 ```typescript
 voice: {
-  provider: "elevenlabs",           // "piper" (local/free) | "openai" | "elevenlabs"
-  voice: "voice-id-or-model-name",  // e.g. "nl_NL-mls-medium" for Piper
+  provider: "elevenlabs",           // "piper" | "openai" | "elevenlabs"
+  voice: "5zhopMftSdRGaPYVcwKK",     // provider-specific autocomplete
   speed: 1.0,
   pronunciation: {                  // word replacements before TTS
     "template": "template",         // prevent Dutch pronunciation of English words
   },
 },
+```
+
+Built-in voice values:
+
+- `piper`: `"nl_NL-mls-medium"`, `"en_US-amy-medium"`
+- `openai`: `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`
+- `elevenlabs`: `"21m00Tcm4TlvDq8ikWAM"`, `"5zhopMftSdRGaPYVcwKK"`, `CwhRBWXzGAHq8TQ4Fs17`
+
+For a custom Piper `.onnx` model, use `voicePath` instead of `voice`:
+
+```typescript
+voice: {
+  provider: "piper",
+  voicePath: "/models/custom-voice.onnx",
+  speed: 1.0,
+}
 ```
 
 Voiceover is auto-generated when `scenes` have `narration` text and `voice` is configured. Cached by content hash — only regenerates when narration changes.

@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { selectorSchema, stepSchema } from "../schemas.js";
+import { voiceConfigSchema } from "../voice-config.js";
+export type { VoiceConfig } from "../voice-config.js";
 
 // --- Crawled DOM types ---
 
@@ -33,29 +35,14 @@ export const crawledPageSchema = z.object({
 
 export type CrawledPage = z.infer<typeof crawledPageSchema>;
 
-// --- Voice config ---
-
-export const voiceConfigSchema = z.object({
-	provider: z
-		.enum(["piper", "openai", "elevenlabs"])
-		.default("piper")
-		.describe("TTS provider (piper = local/free, openai = cloud)"),
-	voice: z.string().default("nl_NL-mls-medium").describe("Voice name/ID or model path"),
-	speed: z.number().min(0.5).max(2.0).default(1.0).describe("Speech speed multiplier"),
-	pronunciation: z
-		.record(z.string())
-		.optional()
-		.describe("Word replacements for pronunciation (e.g. { 'template': 'templayt', 'editor': 'èditor' })"),
-});
-
-export type VoiceConfig = z.infer<typeof voiceConfigSchema>;
-
 // --- Script types ---
 
 export const scriptSceneSchema = z.object({
 	narration: z.string().describe("What the voiceover says during this scene"),
 	steps: z.array(stepSchema).min(1).describe("demo-reel steps to execute during this scene"),
 	emphasis: z.string().optional().describe("What to highlight or focus on visually"),
+	stepIndex: z.number().int().min(0).optional().describe("Step index where this scene starts when rendered"),
+	sourceSceneIndex: z.number().int().min(0).optional().describe("Stable source index for this scene across timing/audio artifacts"),
 });
 
 export type ScriptScene = z.infer<typeof scriptSceneSchema>;
@@ -83,6 +70,10 @@ export type TimedScene = z.infer<typeof timedSceneSchema>;
 export const timedScriptSchema = demoScriptSchema.extend({
 	scenes: z.array(timedSceneSchema).min(1),
 	audioPath: z.string().describe("Path to generated narration MP3"),
+	narrationManifestPath: z
+		.string()
+		.optional()
+		.describe("Path to per-scene narration manifest JSON for exact placement during rendering"),
 	totalDurationMs: z.number().int().min(0).describe("Total audio duration including gaps"),
 });
 

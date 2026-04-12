@@ -531,6 +531,61 @@ const buildTimeoutOption = (timeoutMs?: number) => {
   return {};
 };
 
+const isConfirmStep = (step: Step | undefined): step is Extract<Step, { action: "confirm" }> => {
+  return step?.action === "confirm";
+};
+
+const handleDialogForConfirmStep = async (
+  page: Page,
+  step: Extract<Step, { action: "confirm" }>,
+) => {
+  const dialog = await page.waitForEvent("dialog", buildTimeoutOption(step.timeoutMs));
+  if (step.accept) {
+    await dialog.accept();
+  } else {
+    await dialog.dismiss();
+  }
+};
+
+const runWithConfirmSimple = async (
+  page: Page,
+  step: Step,
+  confirmStep: Extract<Step, { action: "confirm" }>,
+): Promise<void> => {
+  await Promise.all([
+    handleDialogForConfirmStep(page, confirmStep),
+    runStepSimple(page, step),
+  ]);
+};
+
+const runWithConfirm = async (
+  page: Page,
+  step: Step,
+  confirmStep: Extract<Step, { action: "confirm" }>,
+  config: DemoReelConfig,
+  state: MouseState,
+  cursorStart: Point,
+  resolvedCursor: CursorConfig & { start: Point },
+  startDelayApplied: boolean,
+  rng?: RandomSource,
+): Promise<boolean> => {
+  const [, updatedStartDelayApplied] = await Promise.all([
+    handleDialogForConfirmStep(page, confirmStep),
+    runStep(
+      page,
+      step,
+      config,
+      state,
+      cursorStart,
+      resolvedCursor,
+      startDelayApplied,
+      rng,
+    ),
+  ]);
+
+  return updatedStartDelayApplied;
+};
+
 export const runStepSimple = async (page: Page, step: Step): Promise<void> => {
   if (step.action === "goto") {
     await page.goto(step.url, step.waitUntil ? { waitUntil: step.waitUntil } : undefined);
@@ -539,6 +594,11 @@ export const runStepSimple = async (page: Page, step: Step): Promise<void> => {
 
   if (step.action === "wait") {
     await page.waitForTimeout(step.ms);
+    return;
+  }
+
+  if (step.action === "confirm") {
+    await handleDialogForConfirmStep(page, step);
     return;
   }
 
@@ -667,6 +727,11 @@ const runStep = async (
 
   if (step.action === "wait") {
     await page.waitForTimeout(step.ms);
+    return startDelayApplied;
+  }
+
+  if (step.action === "confirm") {
+    await handleDialogForConfirmStep(page, step);
     return startDelayApplied;
   }
 
@@ -825,16 +890,64 @@ const runStep = async (
   return startDelayApplied;
 };
 
-export const runSteps = async (page: Page, preSteps: Step[], options?: { tolerant?: boolean }) => {
-  for (const step of preSteps) {
+const formatStepForLog = (step: Step): string => {
+  if (step.action === "goto") return `goto ${step.url}`;
+  if (step.action === "wait") return `wait ${step.ms}ms`;
+  if (step.action === "waitFor") return `waitFor ${step.kind}`;
+  if (step.action === "confirm") return `confirm ${step.accept ? "accept" : "dismiss"}`;
+  if (step.action === "click" || step.action === "hover" || step.action === "type" || step.action === "press" || step.action === "scroll" || step.action === "select" || step.action === "check" || step.action === "upload") {
+    return `${step.action} ${JSON.stringify(step.selector)}`;
+  }
+  if (step.action === "drag") {
+    return `drag ${JSON.stringify(step.source)} -> ${JSON.stringify(step.target)}`;
+  }
+  return "unknown-step";
+};
+
+export const runSteps = async (
+  page: Page,
+  preSteps: Step[],
+  options?: { tolerant?: boolean; verbose?: boolean; label?: string },
+) => {
+  for (let index = 0; index < preSteps.length; index++) {
+    const step = preSteps[index];
+    const nextStep = preSteps[index + 1];
+    const prefix = options?.label ? `${options.label} ` : "";
+
+    if (options?.verbose) {
+      console.log(`  ↳ ${prefix}step ${index + 1}/${preSteps.length}: ${formatStepForLog(step)}`);
+    }
+
     if (options?.tolerant) {
       try {
-        await runStepSimple(page, step);
-      } catch {
-        // Tolerant mode: skip failed steps (e.g. deleting a tenant that doesn't exist)
+        if (step.action === "confirm") {
+          await handleDialogForConfirmStep(page, step);
+        } else if (isConfirmStep(nextStep)) {
+          await runWithConfirmSimple(page, step, nextStep);
+          index += 1;
+          if (options?.verbose) {
+            console.log(`  ↳ ${prefix}step ${index + 1}/${preSteps.length}: ${formatStepForLog(nextStep)}`);
+          }
+        } else {
+          await runStepSimple(page, step);
+        }
+      } catch (error) {
+        if (options?.verbose) {
+          console.log(`  ↳ ${prefix}step ${index + 1} skipped: ${error instanceof Error ? error.message : String(error)}`);
+        }
       }
     } else {
-      await runStepSimple(page, step);
+      if (step.action === "confirm") {
+        await handleDialogForConfirmStep(page, step);
+      } else if (isConfirmStep(nextStep)) {
+        await runWithConfirmSimple(page, step, nextStep);
+        index += 1;
+        if (options?.verbose) {
+          console.log(`  ↳ ${prefix}step ${index + 1}/${preSteps.length}: ${formatStepForLog(nextStep)}`);
+        }
+      } else {
+        await runStepSimple(page, step);
+      }
     }
   }
 };
@@ -870,6 +983,7 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
 
   for (let stepIdx = 0; stepIdx < config.steps.length; stepIdx++) {
     const step = config.steps[stepIdx];
+    const nextStep = config.steps[stepIdx + 1];
 
     // Ensure cursor overlay exists before each step (SPA navigation may have destroyed it)
     await ensureCursorOverlay(page, resolvedCursor);
@@ -895,16 +1009,33 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
     }
 
     try {
-      startDelayApplied = await runStep(
-        page,
-        step,
-        config,
-        mouseState,
-        resolvedCursor.start,
-        resolvedCursor,
-        startDelayApplied,
-        rng,
-      );
+      if (step.action === "confirm") {
+        await handleDialogForConfirmStep(page, step);
+      } else if (isConfirmStep(nextStep)) {
+        startDelayApplied = await runWithConfirm(
+          page,
+          step,
+          nextStep,
+          config,
+          mouseState,
+          resolvedCursor.start,
+          resolvedCursor,
+          startDelayApplied,
+          rng,
+        );
+        stepIdx += 1;
+      } else {
+        startDelayApplied = await runStep(
+          page,
+          step,
+          config,
+          mouseState,
+          resolvedCursor.start,
+          resolvedCursor,
+          startDelayApplied,
+          rng,
+        );
+      }
     } catch (error) {
       // Screenshot on failure for debugging
       try {

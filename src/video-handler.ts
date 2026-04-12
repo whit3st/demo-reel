@@ -3,7 +3,8 @@ import { basename, dirname, join, resolve } from "path";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import type { DemoReelConfig, AuthConfig, AuthBehaviorConfig } from "./schemas.js";
 import { runDemo, runSteps, runStepSimple, type SceneTimestamp } from "./runner.js";
-import { mergeAudioVideo, type AudioConfig } from "./audio-processor.js";
+import { mergeAudioVideo, resolveAudioPaths, type AudioConfig, type NarrationPlacement } from "./audio-processor.js";
+import { narrationManifestSchema } from "./narration-manifest.js";
 import {
   loadSession,
   saveSession,
@@ -216,38 +217,76 @@ export async function processVideoWithAudio(
   outputPath: string,
   audio: AudioConfig | undefined,
   configPath: string,
-): Promise<string> {
+  sceneTimestamps: SceneTimestamp[],
+): Promise<{ finalPath: string; narrationPlacements: NarrationPlacement[]; warnings: string[] }> {
   // Ensure output directory exists
   await mkdir(dirname(outputPath), { recursive: true });
 
-  if (!audio || (!audio.narration && !audio.background)) {
+  if (!audio || (!audio.narration && !audio.narrationManifest && !audio.background)) {
     // No audio - just copy video
     const { copyFile } = await import("fs/promises");
     await copyFile(tempVideoPath, outputPath);
-    return outputPath;
+    return { finalPath: outputPath, narrationPlacements: [], warnings: [] };
   }
 
-  // Resolve audio paths relative to config file
-  const resolvedAudio: AudioConfig = {};
   const configDir = dirname(configPath);
+  const resolvedAudio = resolveAudioPaths(audio, configDir) ?? {};
+  const warnings: string[] = [];
+  let narrationPlacements: NarrationPlacement[] = [];
 
-  if (audio.narration) {
-    resolvedAudio.narration = resolve(configDir, audio.narration);
-    resolvedAudio.narrationDelay = audio.narrationDelay;
-  }
-  if (audio.background) {
-    resolvedAudio.background = resolve(configDir, audio.background);
-    resolvedAudio.backgroundVolume = audio.backgroundVolume ?? 0.3;
+  if (resolvedAudio.narrationManifest) {
+    try {
+      const rawManifest = await readFile(resolvedAudio.narrationManifest, "utf-8");
+      const manifest = narrationManifestSchema.parse(JSON.parse(rawManifest));
+      const timestampsByScene = new Map(sceneTimestamps.map((scene) => [scene.sceneIndex, scene]));
+
+      narrationPlacements = manifest.clips
+        .map((clip) => {
+          const scene = timestampsByScene.get(clip.sceneIndex);
+          if (!scene) {
+            warnings.push(
+              `No recorded scene timestamp for narration clip ${clip.sceneIndex} (${clip.narration.slice(0, 60)})`,
+            );
+            return null;
+          }
+
+          const startMs = scene.startMs;
+          return {
+            sceneIndex: clip.sceneIndex,
+            narration: clip.narration,
+            clipPath: resolve(dirname(resolvedAudio.narrationManifest!), clip.filePath),
+            startMs,
+            endMs: startMs + clip.audioDurationMs,
+          } satisfies NarrationPlacement;
+        })
+        .filter((placement): placement is NarrationPlacement => placement !== null)
+        .sort((left, right) => left.startMs - right.startMs || left.sceneIndex - right.sceneIndex);
+
+      for (let i = 1; i < narrationPlacements.length; i++) {
+        const previous = narrationPlacements[i - 1];
+        const current = narrationPlacements[i];
+        if (current.startMs < previous.endMs) {
+          warnings.push(
+            `Narration overlap: scene ${current.sceneIndex} starts at ${current.startMs}ms before scene ${previous.sceneIndex} narration ends at ${previous.endMs}ms`,
+          );
+        }
+      }
+    } catch (error) {
+      warnings.push(`Failed to load narration manifest: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   // Mix audio with video
-  await mergeAudioVideo({
+  const finalPath = await mergeAudioVideo({
     videoPath: tempVideoPath,
     outputPath,
-    audio: resolvedAudio,
+    audio: {
+      ...resolvedAudio,
+      narrationPlacements: narrationPlacements.length > 0 ? narrationPlacements : undefined,
+    },
   });
 
-  return outputPath;
+  return { finalPath, narrationPlacements, warnings };
 }
 
 // --- Subtitle and metadata generation ---
@@ -297,70 +336,36 @@ function buildSubtitleCues(
 }
 
 /**
- * Try to load audio timing from a timed .script.json file.
- * Returns audio offsets + durations per scene if available.
+ * Build subtitle cues from exact narration placement when available.
  */
-async function loadAudioTiming(
-  configPath: string,
-): Promise<{ audioOffsetMs: number; audioDurationMs: number; gapAfterMs: number }[] | null> {
-  const candidatePaths = [
-    configPath.replace(/\.demo\.ts$/, ".script.json"),
-    configPath.replace(/\.tmp\.json$/, ".voice.tmp.json"),
-  ];
-
-  for (const scriptPath of candidatePaths) {
-    if (scriptPath === configPath) {
-      continue;
-    }
-
-    try {
-      const raw = await readFile(scriptPath, "utf-8");
-      const script = JSON.parse(raw);
-      if (script.scenes && script.audioPath) {
-        return script.scenes.map((s: any) => ({
-          audioOffsetMs: s.audioOffsetMs ?? 0,
-          audioDurationMs: s.audioDurationMs ?? 0,
-          gapAfterMs: s.gapAfterMs ?? 0,
-        }));
-      }
-    } catch {
-      // No script file or invalid format, try the next candidate.
-    }
-  }
-
-  return null;
-}
-
-/**
- * Build subtitle cues from audio timing data (preferred) or recording timestamps (fallback).
- */
-async function buildSubtitleCuesWithAudioTiming(
+function buildSubtitleCuesWithNarrationPlacements(
   sceneTimestamps: SceneTimestamp[],
   config: DemoReelConfig,
-  configPath: string,
-): Promise<SubtitleCue[]> {
-  if (!config.audio?.narration) {
+  narrationPlacements: NarrationPlacement[],
+): SubtitleCue[] {
+  if (narrationPlacements.length === 0) {
     return buildSubtitleCues(sceneTimestamps, config);
   }
 
-  const narrationDelay = config.audio.narrationDelay ?? 0;
-  const audioTiming = await loadAudioTiming(configPath);
-
-  if (audioTiming && audioTiming.length === sceneTimestamps.length) {
-    // Use audio timing — these are the actual positions in the narration audio
-    return sceneTimestamps.map((scene, i) => {
-      const timing = audioTiming[i];
+  const placementByScene = new Map(narrationPlacements.map((placement) => [placement.sceneIndex, placement]));
+  return sceneTimestamps.map((scene) => {
+    const placement = placementByScene.get(scene.sceneIndex);
+    if (!placement) {
       return {
         narration: scene.narration,
-        startMs: narrationDelay + timing.audioOffsetMs,
-        endMs: narrationDelay + timing.audioOffsetMs + timing.audioDurationMs,
+        startMs: scene.startMs,
+        endMs: scene.endMs,
         isIntro: scene.isIntro,
       };
-    });
-  }
+    }
 
-  // Fallback to estimate-based approach
-  return buildSubtitleCues(sceneTimestamps, config);
+    return {
+      narration: scene.narration,
+      startMs: placement.startMs,
+      endMs: placement.endMs,
+      isIntro: scene.isIntro,
+    };
+  });
 }
 
 function formatTimecode(ms: number, separator: string): string {
@@ -458,7 +463,11 @@ export async function runVideoScenario(
         if (verbose) {
           console.log("Running pre-steps...");
         }
-        await runSteps(setupBrowser.page, config.preSteps, { tolerant: true });
+        await runSteps(setupBrowser.page, config.preSteps, {
+          tolerant: true,
+          verbose,
+          label: "setup",
+        });
       }
     } finally {
       await setupBrowser.context.close();
@@ -515,12 +524,14 @@ export async function runVideoScenario(
       }
     }
 
-    const finalPath = await processVideoWithAudio(
+    const processedVideo = await processVideoWithAudio(
       tempVideoPath,
       outputPath,
       config.audio,
       configPath,
+      sceneTimestamps,
     );
+    const { finalPath, narrationPlacements, warnings } = processedVideo;
 
     // Clean up temp video file and directory
     try {
@@ -530,12 +541,18 @@ export async function runVideoScenario(
       // Ignore cleanup errors
     }
 
+    for (const warning of warnings) {
+      console.warn(`Warning: ${warning}`);
+    }
+
     // Generate subtitles and metadata if scene timestamps are available
     if (sceneTimestamps.length > 0) {
       const basePath = finalPath.replace(/\.[^.]+$/, "");
 
-      const subtitleCues = await buildSubtitleCuesWithAudioTiming(
-        sceneTimestamps, config, configPath,
+      const subtitleCues = buildSubtitleCuesWithNarrationPlacements(
+        sceneTimestamps,
+        config,
+        narrationPlacements,
       );
 
       const srt = generateSRT(subtitleCues);
@@ -567,7 +584,11 @@ export async function runVideoScenario(
         if (config.auth) {
           await handleAuth(postBrowser.context, postBrowser.page, config.auth, configPath, verbose);
         }
-        await runSteps(postBrowser.page, config.postSteps, { tolerant: true });
+        await runSteps(postBrowser.page, config.postSteps, {
+          tolerant: true,
+          verbose,
+          label: "post",
+        });
         if (verbose) {
           console.log("✓ Post-steps complete");
         }
@@ -593,7 +614,11 @@ export async function runVideoScenario(
           if (config.auth) {
             await handleAuth(postBrowser.context, postBrowser.page, config.auth, configPath, verbose);
           }
-          await runSteps(postBrowser.page, config.postSteps, { tolerant: true });
+          await runSteps(postBrowser.page, config.postSteps, {
+            tolerant: true,
+            verbose,
+            label: "post",
+          });
         } finally {
           await postBrowser.context.close().catch(() => {});
           await postBrowser.browser.close().catch(() => {});
