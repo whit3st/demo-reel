@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Narration Manifest Pipeline**: Per-scene narration manifests and clip artifacts for exact scene-based audio placement during rendering
+- **Provider-Aware Voice Config**: Centralized voice config parsing with curated provider defaults and `voicePath` support for custom Piper models
+- **Confirm Dialog Step**: New `confirm` step to explicitly accept or dismiss browser dialogs as part of a demo flow
+- **Ordered CI Workflow**: GitHub Actions workflow that runs format, lint, test, and build in sequence with clear step-level failure reporting
+- **Coverage Badge Automation**: README coverage badge generated from Vitest coverage totals and refreshed automatically on `main`
 - **AI Script Generation**: New `demo-reel script` command for AI-powered demo video creation
   - `script generate` — Generate a demo script from a natural language description using Claude API
   - `script voice` — Generate voiceover narration audio via OpenAI TTS with caching
@@ -31,6 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Subtitle timing accuracy**: Narrated scenes now use exact per-scene narration placement instead of inferred offsets when manifests are available
+- **Narration artifact invalidation**: Voice assets are regenerated when narration processing logic changes, avoiding stale output reuse
+- **Docker runtime file ownership**: Containerized runs now preserve host user ownership more reliably by passing through UID/GID when available
 - **Video recording without auth**: Scenarios without `auth` config now correctly record video (was calling `startBrowser` instead of `startRecording`)
 - **preSteps execution**: `preSteps` are now actually executed before recording begins (were silently ignored)
 - **Temp file cleanup**: Temporary video files in `.demo-reel-temp/` are now deleted after processing
@@ -57,6 +65,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Voice configuration model**: Voice settings are now resolved through a shared provider-specific schema used by the main CLI and script tooling
+- **Narration/subtitle synchronization**: Video processing now aligns narration clips to recorded scene timestamps and surfaces overlap/missing-scene warnings
+- **Docker image layout**: Container build now uses stricter multi-stage packaging, verified Piper downloads, isolated Playwright browser installation, and non-root runtime defaults
+- **Docs and examples**: Voice examples now use provider-specific values and document custom Piper `voicePath` usage
+- **Demo assets**: Removed the old Epistola demo/config example from the repository
 - **`demo-reel` (no args)**: Now runs all `*.demo.ts` files instead of requiring `--all` flag
 - **Simplified CLI**: Removed default config file concept; scenarios are always `*.demo.ts` files
 - **Type Exports**: Added `DemoReelConfigInput` type for autocomplete with preset strings
@@ -64,6 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Technical
 
+- Added `narration-manifest.ts` and `voice-config.ts` modules to centralize narration artifact metadata and voice resolution
+- Added `coverage:badge`, `format:ci`, and `lint:ci` scripts for CI and badge generation workflows
 - New `presets.ts` module with preset definitions
 - Restructured schema to separate input types (for autocomplete) from output types (after transform)
 - `defineConfig()` accepts preset strings and transforms them at parse time
