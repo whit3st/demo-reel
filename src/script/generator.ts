@@ -32,26 +32,22 @@ CRITICAL RULES:
 - End with a brief conclusion/summary scene`;
 
 interface GenerateOptions {
-	description: string;
-	url: string;
-	hints?: string[];
-	headed?: boolean;
-	verbose?: boolean;
-	apiKey?: string;
+  description: string;
+  url: string;
+  hints?: string[];
+  headed?: boolean;
+  verbose?: boolean;
+  apiKey?: string;
 }
 
-function buildUserPrompt(
-	description: string,
-	pageContext: string,
-	hints?: string[],
-): string {
-	let prompt = `## Demo Description\n${description}\n\n## Current Page Context\n${pageContext}`;
+function buildUserPrompt(description: string, pageContext: string, hints?: string[]): string {
+  let prompt = `## Demo Description\n${description}\n\n## Current Page Context\n${pageContext}`;
 
-	if (hints && hints.length > 0) {
-		prompt += `\n\n## Hints\n${hints.map((h) => `- ${h}`).join("\n")}`;
-	}
+  if (hints && hints.length > 0) {
+    prompt += `\n\n## Hints\n${hints.map((h) => `- ${h}`).join("\n")}`;
+  }
 
-	prompt += `\n\n## Output Format
+  prompt += `\n\n## Output Format
 Return a JSON object with this exact structure:
 {
   "title": "Demo title",
@@ -69,23 +65,23 @@ Return a JSON object with this exact structure:
 
 Return ONLY the JSON object, no markdown fences or explanation.`;
 
-	return prompt;
+  return prompt;
 }
 
 function parseScriptResponse(text: string): { title: string; scenes: ScriptScene[] } {
-	// Strip markdown code fences if present
-	let cleaned = text.trim();
-	if (cleaned.startsWith("```")) {
-		cleaned = cleaned.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
-	}
+  // Strip markdown code fences if present
+  let cleaned = text.trim();
+  if (cleaned.startsWith("```")) {
+    cleaned = cleaned.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+  }
 
-	const parsed = JSON.parse(cleaned);
+  const parsed = JSON.parse(cleaned);
 
-	if (!parsed.title || !Array.isArray(parsed.scenes) || parsed.scenes.length === 0) {
-		throw new Error("Invalid script response: missing title or scenes");
-	}
+  if (!parsed.title || !Array.isArray(parsed.scenes) || parsed.scenes.length === 0) {
+    throw new Error("Invalid script response: missing title or scenes");
+  }
 
-	return parsed;
+  return parsed;
 }
 
 /**
@@ -94,62 +90,62 @@ function parseScriptResponse(text: string): { title: string; scenes: ScriptScene
  * Approach: Crawl key pages upfront, generate full script, then validate.
  */
 export async function generateScript(options: GenerateOptions): Promise<DemoScript> {
-	const { description, url, hints, headed, verbose, apiKey } = options;
+  const { description, url, hints, headed, verbose, apiKey } = options;
 
-	// Step 1: Crawl the starting page
-	if (verbose) {
-		console.log(`Crawling ${url}...`);
-	}
+  // Step 1: Crawl the starting page
+  if (verbose) {
+    console.log(`Crawling ${url}...`);
+  }
 
-	const startPage = await crawlUrl(url, { headed });
-	const pageContext = formatPageContext(startPage);
+  const startPage = await crawlUrl(url, { headed });
+  const pageContext = formatPageContext(startPage);
 
-	if (verbose) {
-		console.log(`Found ${startPage.elements.length} interactive elements`);
-	}
+  if (verbose) {
+    console.log(`Found ${startPage.elements.length} interactive elements`);
+  }
 
-	// Step 2: Call Claude API to generate the script
-	if (verbose) {
-		console.log("Generating script with Claude...");
-	}
+  // Step 2: Call Claude API to generate the script
+  if (verbose) {
+    console.log("Generating script with Claude...");
+  }
 
-	// @ts-ignore — @anthropic-ai/sdk is an optional peer dependency
-	const { default: Anthropic } = await import("@anthropic-ai/sdk");
-	const client = new Anthropic(apiKey ? { apiKey } : undefined);
+  // @ts-ignore — @anthropic-ai/sdk is an optional peer dependency
+  const { default: Anthropic } = await import("@anthropic-ai/sdk");
+  const client = new Anthropic(apiKey ? { apiKey } : undefined);
 
-	const message = await client.messages.create({
-		model: "claude-sonnet-4-20250514",
-		max_tokens: 4096,
-		system: SYSTEM_PROMPT,
-		messages: [
-			{
-				role: "user",
-				content: buildUserPrompt(description, pageContext, hints),
-			},
-		],
-	});
+  const message = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 4096,
+    system: SYSTEM_PROMPT,
+    messages: [
+      {
+        role: "user",
+        content: buildUserPrompt(description, pageContext, hints),
+      },
+    ],
+  });
 
-	const responseText = (message.content as any[])
-		.filter((block: any) => block.type === "text")
-		.map((block: any) => block.text)
-		.join("");
+  const responseText = (message.content as any[])
+    .filter((block: any) => block.type === "text")
+    .map((block: any) => block.text)
+    .join("");
 
-	if (!responseText) {
-		throw new Error("Empty response from Claude API");
-	}
+  if (!responseText) {
+    throw new Error("Empty response from Claude API");
+  }
 
-	const { title, scenes } = parseScriptResponse(responseText);
+  const { title, scenes } = parseScriptResponse(responseText);
 
-	if (verbose) {
-		console.log(`Generated ${scenes.length} scene(s): "${title}"`);
-	}
+  if (verbose) {
+    console.log(`Generated ${scenes.length} scene(s): "${title}"`);
+  }
 
-	return {
-		title,
-		description,
-		url,
-		scenes,
-	};
+  return {
+    title,
+    description,
+    url,
+    scenes,
+  };
 }
 
 /**
@@ -157,79 +153,79 @@ export async function generateScript(options: GenerateOptions): Promise<DemoScri
  * Returns a list of failed steps with error messages.
  */
 export async function validateScript(
-	script: DemoScript,
-	options: { headed?: boolean; verbose?: boolean } = {},
+  script: DemoScript,
+  options: { headed?: boolean; verbose?: boolean } = {},
 ): Promise<{ scene: number; step: number; error: string }[]> {
-	const failures: { scene: number; step: number; error: string }[] = [];
-	const browser = await chromium.launch({ headless: !options.headed });
-	const context = await browser.newContext();
-	const page = await context.newPage();
+  const failures: { scene: number; step: number; error: string }[] = [];
+  const browser = await chromium.launch({ headless: !options.headed });
+  const context = await browser.newContext();
+  const page = await context.newPage();
 
-	try {
-		for (let si = 0; si < script.scenes.length; si++) {
-			const scene = script.scenes[si];
-			for (let sti = 0; sti < scene.steps.length; sti++) {
-				const step = scene.steps[sti] as Step;
-				try {
-					await runStepSimple(page, step);
-					if (options.verbose) {
-						console.log(`  ✓ Scene ${si + 1}, Step ${sti + 1}: ${step.action}`);
-					}
-				} catch (err) {
-					const message = err instanceof Error ? err.message : String(err);
-					failures.push({ scene: si, step: sti, error: message });
-					if (options.verbose) {
-						console.log(`  ✗ Scene ${si + 1}, Step ${sti + 1}: ${step.action} — ${message}`);
-					}
-				}
-			}
-		}
-	} finally {
-		await context.close();
-		await browser.close();
-	}
+  try {
+    for (let si = 0; si < script.scenes.length; si++) {
+      const scene = script.scenes[si];
+      for (let sti = 0; sti < scene.steps.length; sti++) {
+        const step = scene.steps[sti] as Step;
+        try {
+          await runStepSimple(page, step);
+          if (options.verbose) {
+            console.log(`  ✓ Scene ${si + 1}, Step ${sti + 1}: ${step.action}`);
+          }
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          failures.push({ scene: si, step: sti, error: message });
+          if (options.verbose) {
+            console.log(`  ✗ Scene ${si + 1}, Step ${sti + 1}: ${step.action} — ${message}`);
+          }
+        }
+      }
+    }
+  } finally {
+    await context.close();
+    await browser.close();
+  }
 
-	return failures;
+  return failures;
 }
 
 /**
  * Fix broken steps by re-crawling and asking the LLM to generate replacements.
  */
 export async function fixBrokenSteps(
-	script: DemoScript,
-	failures: { scene: number; step: number; error: string }[],
-	options: { verbose?: boolean; apiKey?: string } = {},
+  script: DemoScript,
+  failures: { scene: number; step: number; error: string }[],
+  options: { verbose?: boolean; apiKey?: string } = {},
 ): Promise<DemoScript> {
-	if (failures.length === 0) return script;
+  if (failures.length === 0) return script;
 
-	// Re-crawl from the starting URL to get current DOM state
-	if (options.verbose) {
-		console.log(`Re-crawling ${script.url} to fix ${failures.length} broken step(s)...`);
-	}
+  // Re-crawl from the starting URL to get current DOM state
+  if (options.verbose) {
+    console.log(`Re-crawling ${script.url} to fix ${failures.length} broken step(s)...`);
+  }
 
-	const page = await crawlUrl(script.url);
-	const pageContext = formatPageContext(page);
+  const page = await crawlUrl(script.url);
+  const pageContext = formatPageContext(page);
 
-	const failureDescriptions = failures
-		.map((f) => {
-			const scene = script.scenes[f.scene];
-			const step = scene.steps[f.step];
-			return `Scene ${f.scene + 1} ("${scene.narration.slice(0, 50)}..."), Step ${f.step + 1} (${(step as Step).action}): ${f.error}`;
-		})
-		.join("\n");
+  const failureDescriptions = failures
+    .map((f) => {
+      const scene = script.scenes[f.scene];
+      const step = scene.steps[f.step];
+      return `Scene ${f.scene + 1} ("${scene.narration.slice(0, 50)}..."), Step ${f.step + 1} (${(step as Step).action}): ${f.error}`;
+    })
+    .join("\n");
 
-	// @ts-ignore — @anthropic-ai/sdk is an optional peer dependency
-	const { default: Anthropic } = await import("@anthropic-ai/sdk");
-	const client = new Anthropic(options.apiKey ? { apiKey: options.apiKey } : undefined);
+  // @ts-ignore — @anthropic-ai/sdk is an optional peer dependency
+  const { default: Anthropic } = await import("@anthropic-ai/sdk");
+  const client = new Anthropic(options.apiKey ? { apiKey: options.apiKey } : undefined);
 
-	const message = await client.messages.create({
-		model: "claude-sonnet-4-20250514",
-		max_tokens: 4096,
-		system: SYSTEM_PROMPT,
-		messages: [
-			{
-				role: "user",
-				content: `The following script has broken steps. Fix ONLY the broken steps using the current page context. Return the complete updated script.
+  const message = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 4096,
+    system: SYSTEM_PROMPT,
+    messages: [
+      {
+        role: "user",
+        content: `The following script has broken steps. Fix ONLY the broken steps using the current page context. Return the complete updated script.
 
 ## Current Page Context
 ${pageContext}
@@ -241,20 +237,20 @@ ${failureDescriptions}
 ${JSON.stringify(script, null, 2)}
 
 Return the full corrected JSON script (same format as before). Fix only the broken steps, keep everything else unchanged.`,
-			},
-		],
-	});
+      },
+    ],
+  });
 
-	const responseText = (message.content as any[])
-		.filter((block: any) => block.type === "text")
-		.map((block: any) => block.text)
-		.join("");
+  const responseText = (message.content as any[])
+    .filter((block: any) => block.type === "text")
+    .map((block: any) => block.text)
+    .join("");
 
-	const { title, scenes } = parseScriptResponse(responseText);
+  const { title, scenes } = parseScriptResponse(responseText);
 
-	return {
-		...script,
-		title,
-		scenes,
-	};
+  return {
+    ...script,
+    title,
+    scenes,
+  };
 }

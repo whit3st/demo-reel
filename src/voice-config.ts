@@ -11,7 +11,9 @@ export const ELEVENLABS_VOICES = [
 const pronunciationSchema = z
   .record(z.string())
   .optional()
-  .describe("Word replacements for pronunciation (e.g. { 'template': 'templayt', 'editor': 'èditor' })");
+  .describe(
+    "Word replacements for pronunciation (e.g. { 'template': 'templayt', 'editor': 'èditor' })",
+  );
 
 const speedSchema = z.number().min(0.5).max(2.0).default(1.0).describe("Speech speed multiplier");
 
@@ -19,13 +21,19 @@ export const piperVoiceConfigSchema = z
   .union([
     z.object({
       provider: z.literal("piper").default("piper").describe("TTS provider (piper = local/free)"),
-      voice: z.enum(PIPER_VOICES).default("nl_NL-mls-medium").describe("Built-in Piper voice model"),
+      voice: z
+        .enum(PIPER_VOICES)
+        .default("nl_NL-mls-medium")
+        .describe("Built-in Piper voice model"),
       speed: speedSchema,
       pronunciation: pronunciationSchema,
     }),
     z.object({
       provider: z.literal("piper").default("piper").describe("TTS provider (piper = local/free)"),
-      voicePath: z.string().min(1).describe("Absolute path or .onnx path to a custom Piper voice model"),
+      voicePath: z
+        .string()
+        .min(1)
+        .describe("Absolute path or .onnx path to a custom Piper voice model"),
       speed: speedSchema,
       pronunciation: pronunciationSchema,
     }),
@@ -44,18 +52,17 @@ export const openaiVoiceConfigSchema = z
 export const elevenLabsVoiceConfigSchema = z
   .object({
     provider: z.literal("elevenlabs").describe("TTS provider (ElevenLabs cloud voices)"),
-    voice: z.enum(ELEVENLABS_VOICES).default("21m00Tcm4TlvDq8ikWAM").describe("Curated ElevenLabs voice ID"),
+    voice: z
+      .enum(ELEVENLABS_VOICES)
+      .default("21m00Tcm4TlvDq8ikWAM")
+      .describe("Curated ElevenLabs voice ID"),
     speed: speedSchema,
     pronunciation: pronunciationSchema,
   })
   .describe("ElevenLabs voice configuration");
 
 export const voiceConfigSchema = z
-  .union([
-    piperVoiceConfigSchema,
-    openaiVoiceConfigSchema,
-    elevenLabsVoiceConfigSchema,
-  ])
+  .union([piperVoiceConfigSchema, openaiVoiceConfigSchema, elevenLabsVoiceConfigSchema])
   .default({ provider: "piper", voice: "nl_NL-mls-medium", speed: 1.0 });
 
 export type PiperVoiceName = (typeof PIPER_VOICES)[number];

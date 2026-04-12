@@ -112,12 +112,12 @@ Auto-generate SRT/VTT files from narration audio timestamps or from step annotat
 
 ## Priority Summary
 
-| Phase | Focus | Impact |
-|-------|-------|--------|
-| 1 | Config loading | Unblocks basic usage |
-| 2 | Visual polish | Makes videos look professional |
-| 3 | Step enhancements | Covers more demo scenarios |
-| 4 | Device emulation | Mobile product demos |
-| 5 | Scene composition | Multi-part narratives |
-| 6 | CI/CD & distribution | Automation and sharing |
-| 7 | Advanced features | Power users and scale |
+| Phase | Focus                | Impact                         |
+| ----- | -------------------- | ------------------------------ |
+| 1     | Config loading       | Unblocks basic usage           |
+| 2     | Visual polish        | Makes videos look professional |
+| 3     | Step enhancements    | Covers more demo scenarios     |
+| 4     | Device emulation     | Mobile product demos           |
+| 5     | Scene composition    | Multi-part narratives          |
+| 6     | CI/CD & distribution | Automation and sharing         |
+| 7     | Advanced features    | Power users and scale          |

@@ -12,60 +12,84 @@ pnpm add -D demo-reel@github:whit3st/demo-reel tsx
 // demos/signup.demo.ts
 import { generate } from "demo-reel";
 
-await generate({
-  name: "signup",
-  outputDir: "./output",
-  video: { resolution: "FHD" },
-  cursor: "dot",
-  motion: "smooth",
-  typing: "humanlike",
-  timing: "normal",
-  outputFormat: "mp4",
+await generate(
+  {
+    name: "signup",
+    outputDir: "./output",
+    video: { resolution: "FHD" },
+    cursor: "dot",
+    motion: "smooth",
+    typing: "humanlike",
+    timing: "normal",
+    outputFormat: "mp4",
 
-  voice: {
-    provider: "elevenlabs",  // or "piper" (local/free) or "openai"
-    voice: "5zhopMftSdRGaPYVcwKK",
-  },
-
-  auth: {
-    loginSteps: [
-      { action: "goto", url: "https://myapp.com/login" },
-      { action: "type", selector: { strategy: "id", value: "email" }, text: "demo@example.com" },
-      { action: "type", selector: { strategy: "id", value: "password" }, text: "password" },
-      { action: "click", selector: { strategy: "class", value: "btn-primary" } },
-    ],
-    validate: {
-      protectedUrl: "https://myapp.com/dashboard",
-      successIndicator: { strategy: "custom", value: "h1:has-text('Dashboard')" },
+    voice: {
+      provider: "elevenlabs", // or "piper" (local/free) or "openai"
+      voice: "5zhopMftSdRGaPYVcwKK",
     },
-    storage: { name: "demo-session", types: ["cookies"] },
+
+    auth: {
+      loginSteps: [
+        { action: "goto", url: "https://myapp.com/login" },
+        { action: "type", selector: { strategy: "id", value: "email" }, text: "demo@example.com" },
+        { action: "type", selector: { strategy: "id", value: "password" }, text: "password" },
+        { action: "click", selector: { strategy: "class", value: "btn-primary" } },
+      ],
+      validate: {
+        protectedUrl: "https://myapp.com/dashboard",
+        successIndicator: { strategy: "custom", value: "h1:has-text('Dashboard')" },
+      },
+      storage: { name: "demo-session", types: ["cookies"] },
+    },
+
+    setup: [
+      // Runs before recording (off-screen) — create test data, navigate
+      { action: "goto", url: "https://myapp.com/dashboard" },
+    ],
+
+    cleanup: [
+      // Runs after recording — delete test data
+    ],
+
+    scenes: [
+      { narration: "Welcome to our app. Let's create a new project.", stepIndex: 0, isIntro: true },
+      { narration: "Fill in the details and click Create.", stepIndex: 2 },
+    ],
+
+    steps: [
+      // Scene 1
+      {
+        action: "hover",
+        selector: { strategy: "testId", value: "new-project" },
+        delayAfterMs: 800,
+      },
+      {
+        action: "click",
+        selector: { strategy: "testId", value: "new-project" },
+        delayAfterMs: 1500,
+      },
+
+      // Scene 2
+      {
+        action: "type",
+        selector: { strategy: "id", value: "name" },
+        text: "My Project",
+        delayAfterMs: 500,
+      },
+      {
+        action: "hover",
+        selector: { strategy: "custom", value: "button[type='submit']" },
+        delayAfterMs: 600,
+      },
+      {
+        action: "click",
+        selector: { strategy: "custom", value: "button[type='submit']" },
+        delayAfterMs: 2000,
+      },
+    ],
   },
-
-  setup: [
-    // Runs before recording (off-screen) — create test data, navigate
-    { action: "goto", url: "https://myapp.com/dashboard" },
-  ],
-
-  cleanup: [
-    // Runs after recording — delete test data
-  ],
-
-  scenes: [
-    { narration: "Welcome to our app. Let's create a new project.", stepIndex: 0, isIntro: true },
-    { narration: "Fill in the details and click Create.", stepIndex: 2 },
-  ],
-
-  steps: [
-    // Scene 1
-    { action: "hover", selector: { strategy: "testId", value: "new-project" }, delayAfterMs: 800 },
-    { action: "click", selector: { strategy: "testId", value: "new-project" }, delayAfterMs: 1500 },
-
-    // Scene 2
-    { action: "type", selector: { strategy: "id", value: "name" }, text: "My Project", delayAfterMs: 500 },
-    { action: "hover", selector: { strategy: "custom", value: "button[type='submit']" }, delayAfterMs: 600 },
-    { action: "click", selector: { strategy: "custom", value: "button[type='submit']" }, delayAfterMs: 2000 },
-  ],
-}, { verbose: true });
+  { verbose: true },
+);
 ```
 
 ```bash
@@ -95,6 +119,7 @@ pnpm demo-reel setup   # shows how to install the /demo-script plugin
 ```
 
 Then use `/demo-script` in Claude Code:
+
 ```
 /demo-script https://myapp.com show the signup flow
 ```
@@ -169,19 +194,19 @@ Generates `.srt`, `.vtt` (subtitles) and `.meta.json` (scene timestamps for inte
 
 ### Steps
 
-| Action | Description |
-|--------|-------------|
-| `goto` | Navigate to URL |
-| `click` | Click an element |
-| `hover` | Hover over element |
-| `type` | Type text into input |
-| `press` | Press a key |
-| `scroll` | Scroll element |
-| `select` | Select dropdown option(s) |
-| `check` | Check/uncheck checkbox |
-| `upload` | Upload files |
-| `drag` | Drag and drop |
-| `wait` | Wait for duration |
+| Action    | Description                                                          |
+| --------- | -------------------------------------------------------------------- |
+| `goto`    | Navigate to URL                                                      |
+| `click`   | Click an element                                                     |
+| `hover`   | Hover over element                                                   |
+| `type`    | Type text into input                                                 |
+| `press`   | Press a key                                                          |
+| `scroll`  | Scroll element                                                       |
+| `select`  | Select dropdown option(s)                                            |
+| `check`   | Check/uncheck checkbox                                               |
+| `upload`  | Upload files                                                         |
+| `drag`    | Drag and drop                                                        |
+| `wait`    | Wait for duration                                                    |
 | `waitFor` | Wait for condition (selector, URL, load state, network, JS function) |
 
 ### Selectors
@@ -198,11 +223,13 @@ Generates `.srt`, `.vtt` (subtitles) and `.meta.json` (scene timestamps for inte
 ### Presets
 
 ```typescript
-cursor: "dot" | "arrow" | "none"
-motion: "smooth" | "snappy" | "instant"
-typing: "humanlike" | "fast" | "instant"
-timing: "normal" | "fast" | "instant"
-video: { resolution: "HD" | "FHD" | "2K" | "4K" }
+cursor: "dot" | "arrow" | "none";
+motion: "smooth" | "snappy" | "instant";
+typing: "humanlike" | "fast" | "instant";
+timing: "normal" | "fast" | "instant";
+video: {
+  resolution: "HD" | "FHD" | "2K" | "4K";
+}
 ```
 
 ## Modular Video Series

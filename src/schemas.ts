@@ -419,8 +419,14 @@ export const demoReelConfigInputSchema = z
       "Timing preset name or custom timing configuration",
     ),
     steps: z.array(stepSchema).min(1).describe("Demo scenario steps to execute"),
-    setup: z.array(stepSchema).optional().describe("Steps to run before recording (e.g., create tenant, navigate)"),
-    cleanup: z.array(stepSchema).optional().describe("Steps to run after recording (e.g., delete tenant)"),
+    setup: z
+      .array(stepSchema)
+      .optional()
+      .describe("Steps to run before recording (e.g., create tenant, navigate)"),
+    cleanup: z
+      .array(stepSchema)
+      .optional()
+      .describe("Steps to run after recording (e.g., delete tenant)"),
     // Aliases for backward compatibility
     preSteps: z.array(stepSchema).optional().describe("Alias for setup"),
     postSteps: z.array(stepSchema).optional().describe("Alias for cleanup"),
@@ -445,7 +451,9 @@ export const demoReelConfigInputSchema = z
     randomization: randomizationSchema.optional().describe("Randomization settings"),
     timestamp: z.boolean().optional().describe("Add timestamp to output filename"),
     auth: authConfigSchema.optional().describe("Authentication/session persistence settings"),
-    voice: voiceConfigSchema.optional().describe("Voice/TTS configuration for narration generation"),
+    voice: voiceConfigSchema
+      .optional()
+      .describe("Voice/TTS configuration for narration generation"),
     scenes: z
       .array(
         z.object({

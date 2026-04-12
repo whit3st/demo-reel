@@ -481,12 +481,7 @@ const humanMoveToLocator = async (
 const SCROLL_STEP_PX = 80;
 const SCROLL_STEP_DELAY_MS = 16;
 
-const humanScroll = async (
-  page: Page,
-  deltaX: number,
-  deltaY: number,
-  _motion: MotionConfig,
-) => {
+const humanScroll = async (page: Page, deltaX: number, deltaY: number, _motion: MotionConfig) => {
   const totalDistance = Math.max(Math.abs(deltaX), Math.abs(deltaY));
   if (totalDistance === 0) {
     return;
@@ -552,10 +547,7 @@ const runWithConfirmSimple = async (
   step: Step,
   confirmStep: Extract<Step, { action: "confirm" }>,
 ): Promise<void> => {
-  await Promise.all([
-    handleDialogForConfirmStep(page, confirmStep),
-    runStepSimple(page, step),
-  ]);
+  await Promise.all([handleDialogForConfirmStep(page, confirmStep), runStepSimple(page, step)]);
 };
 
 const runWithConfirm = async (
@@ -571,16 +563,7 @@ const runWithConfirm = async (
 ): Promise<boolean> => {
   const [, updatedStartDelayApplied] = await Promise.all([
     handleDialogForConfirmStep(page, confirmStep),
-    runStep(
-      page,
-      step,
-      config,
-      state,
-      cursorStart,
-      resolvedCursor,
-      startDelayApplied,
-      rng,
-    ),
+    runStep(page, step, config, state, cursorStart, resolvedCursor, startDelayApplied, rng),
   ]);
 
   return updatedStartDelayApplied;
@@ -895,7 +878,16 @@ const formatStepForLog = (step: Step): string => {
   if (step.action === "wait") return `wait ${step.ms}ms`;
   if (step.action === "waitFor") return `waitFor ${step.kind}`;
   if (step.action === "confirm") return `confirm ${step.accept ? "accept" : "dismiss"}`;
-  if (step.action === "click" || step.action === "hover" || step.action === "type" || step.action === "press" || step.action === "scroll" || step.action === "select" || step.action === "check" || step.action === "upload") {
+  if (
+    step.action === "click" ||
+    step.action === "hover" ||
+    step.action === "type" ||
+    step.action === "press" ||
+    step.action === "scroll" ||
+    step.action === "select" ||
+    step.action === "check" ||
+    step.action === "upload"
+  ) {
     return `${step.action} ${JSON.stringify(step.selector)}`;
   }
   if (step.action === "drag") {
@@ -926,14 +918,18 @@ export const runSteps = async (
           await runWithConfirmSimple(page, step, nextStep);
           index += 1;
           if (options?.verbose) {
-            console.log(`  ↳ ${prefix}step ${index + 1}/${preSteps.length}: ${formatStepForLog(nextStep)}`);
+            console.log(
+              `  ↳ ${prefix}step ${index + 1}/${preSteps.length}: ${formatStepForLog(nextStep)}`,
+            );
           }
         } else {
           await runStepSimple(page, step);
         }
       } catch (error) {
         if (options?.verbose) {
-          console.log(`  ↳ ${prefix}step ${index + 1} skipped: ${error instanceof Error ? error.message : String(error)}`);
+          console.log(
+            `  ↳ ${prefix}step ${index + 1} skipped: ${error instanceof Error ? error.message : String(error)}`,
+          );
         }
       }
     } else {
@@ -943,7 +939,9 @@ export const runSteps = async (
         await runWithConfirmSimple(page, step, nextStep);
         index += 1;
         if (options?.verbose) {
-          console.log(`  ↳ ${prefix}step ${index + 1}/${preSteps.length}: ${formatStepForLog(nextStep)}`);
+          console.log(
+            `  ↳ ${prefix}step ${index + 1}/${preSteps.length}: ${formatStepForLog(nextStep)}`,
+          );
         }
       } else {
         await runStepSimple(page, step);

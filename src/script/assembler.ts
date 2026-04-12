@@ -7,112 +7,116 @@ import type { Step } from "../schemas.js";
  * Serialize a step to TypeScript source code.
  */
 function serializeStep(step: Step, indent: string): string {
-	const parts: string[] = [];
+  const parts: string[] = [];
 
-	// Action
-	parts.push(`action: "${step.action}"`);
+  // Action
+  parts.push(`action: "${step.action}"`);
 
-	// Action-specific fields
-	if (step.action === "goto") {
-		parts.push(`url: "${step.url}"`);
-		if (step.waitUntil) parts.push(`waitUntil: "${step.waitUntil}"`);
-	} else if (step.action === "wait") {
-		parts.push(`ms: ${step.ms}`);
-	} else if (step.action === "waitFor") {
-		parts.push(`kind: "${step.kind}"`);
-		if (step.kind === "selector") {
-			parts.push(`selector: ${JSON.stringify(step.selector)}`);
-			if (step.state) parts.push(`state: "${step.state}"`);
-		} else if (step.kind === "url") {
-			parts.push(`url: "${step.url}"`);
-		} else if (step.kind === "loadState") {
-			if (step.state) parts.push(`state: "${step.state}"`);
-		} else if (step.kind === "request" || step.kind === "response") {
-			parts.push(`url: "${step.url}"`);
-		} else if (step.kind === "function") {
-			parts.push(`expression: ${JSON.stringify(step.expression)}`);
-		}
-		if ("timeoutMs" in step && step.timeoutMs !== undefined) {
-			parts.push(`timeoutMs: ${step.timeoutMs}`);
-		}
-	} else {
-		// Steps with selector
-		if ("selector" in step) {
-			parts.push(`selector: ${JSON.stringify(step.selector)}`);
-		}
+  // Action-specific fields
+  if (step.action === "goto") {
+    parts.push(`url: "${step.url}"`);
+    if (step.waitUntil) parts.push(`waitUntil: "${step.waitUntil}"`);
+  } else if (step.action === "wait") {
+    parts.push(`ms: ${step.ms}`);
+  } else if (step.action === "waitFor") {
+    parts.push(`kind: "${step.kind}"`);
+    if (step.kind === "selector") {
+      parts.push(`selector: ${JSON.stringify(step.selector)}`);
+      if (step.state) parts.push(`state: "${step.state}"`);
+    } else if (step.kind === "url") {
+      parts.push(`url: "${step.url}"`);
+    } else if (step.kind === "loadState") {
+      if (step.state) parts.push(`state: "${step.state}"`);
+    } else if (step.kind === "request" || step.kind === "response") {
+      parts.push(`url: "${step.url}"`);
+    } else if (step.kind === "function") {
+      parts.push(`expression: ${JSON.stringify(step.expression)}`);
+    }
+    if ("timeoutMs" in step && step.timeoutMs !== undefined) {
+      parts.push(`timeoutMs: ${step.timeoutMs}`);
+    }
+  } else {
+    // Steps with selector
+    if ("selector" in step) {
+      parts.push(`selector: ${JSON.stringify(step.selector)}`);
+    }
 
-		if (step.action === "type") {
-			parts.push(`text: ${JSON.stringify(step.text)}`);
-			if (step.clear) parts.push(`clear: true`);
-			if (step.delayMs !== undefined) parts.push(`delayMs: ${step.delayMs}`);
-		} else if (step.action === "press") {
-			parts.push(`key: "${step.key}"`);
-		} else if (step.action === "scroll") {
-			parts.push(`x: ${step.x}, y: ${step.y}`);
-		} else if (step.action === "select") {
-			parts.push(`value: ${JSON.stringify(step.value)}`);
-		} else if (step.action === "check") {
-			parts.push(`checked: ${step.checked}`);
-		} else if (step.action === "upload") {
-			parts.push(`filePath: ${JSON.stringify(step.filePath)}`);
-		} else if (step.action === "drag") {
-			parts.push(`source: ${JSON.stringify(step.source)}`);
-			parts.push(`target: ${JSON.stringify(step.target)}`);
-		}
-	}
+    if (step.action === "type") {
+      parts.push(`text: ${JSON.stringify(step.text)}`);
+      if (step.clear) parts.push(`clear: true`);
+      if (step.delayMs !== undefined) parts.push(`delayMs: ${step.delayMs}`);
+    } else if (step.action === "press") {
+      parts.push(`key: "${step.key}"`);
+    } else if (step.action === "scroll") {
+      parts.push(`x: ${step.x}, y: ${step.y}`);
+    } else if (step.action === "select") {
+      parts.push(`value: ${JSON.stringify(step.value)}`);
+    } else if (step.action === "check") {
+      parts.push(`checked: ${step.checked}`);
+    } else if (step.action === "upload") {
+      parts.push(`filePath: ${JSON.stringify(step.filePath)}`);
+    } else if (step.action === "drag") {
+      parts.push(`source: ${JSON.stringify(step.source)}`);
+      parts.push(`target: ${JSON.stringify(step.target)}`);
+    }
+  }
 
-	// Delay fields (present on most step types)
-	if ("delayBeforeMs" in step && step.delayBeforeMs !== undefined && step.delayBeforeMs > 0) {
-		parts.push(`delayBeforeMs: ${step.delayBeforeMs}`);
-	}
-	if ("delayAfterMs" in step && step.delayAfterMs !== undefined && step.delayAfterMs > 0) {
-		parts.push(`delayAfterMs: ${step.delayAfterMs}`);
-	}
+  // Delay fields (present on most step types)
+  if ("delayBeforeMs" in step && step.delayBeforeMs !== undefined && step.delayBeforeMs > 0) {
+    parts.push(`delayBeforeMs: ${step.delayBeforeMs}`);
+  }
+  if ("delayAfterMs" in step && step.delayAfterMs !== undefined && step.delayAfterMs > 0) {
+    parts.push(`delayAfterMs: ${step.delayAfterMs}`);
+  }
 
-	return `${indent}{ ${parts.join(", ")} }`;
+  return `${indent}{ ${parts.join(", ")} }`;
 }
 
 /**
  * Generate a complete .demo.ts file from a timed script.
  */
 export function generateDemoConfig(
-	script: TimedScript,
-	options: {
-		resolution?: string;
-		format?: string;
-		outputDir?: string;
-	} = {},
+  script: TimedScript,
+  options: {
+    resolution?: string;
+    format?: string;
+    outputDir?: string;
+  } = {},
 ): string {
-	const resolution = options.resolution || "FHD";
-	const format = options.format || "mp4";
+  const resolution = options.resolution || "FHD";
+  const format = options.format || "mp4";
 
-	// Collect all steps from all scenes, with scene comments
-	const stepLines: string[] = [];
-	const sceneLines: string[] = [];
-	let stepIndex = 0;
+  // Collect all steps from all scenes, with scene comments
+  const stepLines: string[] = [];
+  const sceneLines: string[] = [];
+  let stepIndex = 0;
 
-	for (let i = 0; i < script.scenes.length; i++) {
-		const scene = script.scenes[i];
-		const narrationPreview = scene.narration.slice(0, 80);
-		sceneLines.push(`    { narration: ${JSON.stringify(scene.narration)}, stepIndex: ${stepIndex} },`);
+  for (let i = 0; i < script.scenes.length; i++) {
+    const scene = script.scenes[i];
+    const narrationPreview = scene.narration.slice(0, 80);
+    sceneLines.push(
+      `    { narration: ${JSON.stringify(scene.narration)}, stepIndex: ${stepIndex} },`,
+    );
 
-		stepLines.push(`    // Scene ${i + 1}: "${narrationPreview}${scene.narration.length > 80 ? "..." : ""}"`);
+    stepLines.push(
+      `    // Scene ${i + 1}: "${narrationPreview}${scene.narration.length > 80 ? "..." : ""}"`,
+    );
 
-		for (const step of scene.steps) {
-			stepLines.push(`${serializeStep(step as Step, "    ")},`);
-		}
-		stepIndex += scene.steps.length;
+    for (const step of scene.steps) {
+      stepLines.push(`${serializeStep(step as Step, "    ")},`);
+    }
+    stepIndex += scene.steps.length;
 
-		// Add gap between scenes (except last)
-		if (i < script.scenes.length - 1 && scene.gapAfterMs > 0) {
-			stepLines.push(`    { action: "wait", ms: ${scene.gapAfterMs} },`);
-			stepIndex += 1;
-		}
+    // Add gap between scenes (except last)
+    if (i < script.scenes.length - 1 && scene.gapAfterMs > 0) {
+      stepLines.push(`    { action: "wait", ms: ${scene.gapAfterMs} },`);
+      stepIndex += 1;
+    }
 
-		stepLines.push("");
-	}
+    stepLines.push("");
+  }
 
-	const configSource = `// Generated by demo-reel script
+  const configSource = `// Generated by demo-reel script
 // ${script.title}
 import { defineConfig } from "demo-reel";
 
@@ -129,8 +133,12 @@ export default defineConfig({
 
   audio: {
     narration: "${script.audioPath}",
-    ${script.narrationManifestPath ? `narrationManifest: "${script.narrationManifestPath}",
-    ` : ""}narrationDelay: 300,
+    ${
+      script.narrationManifestPath
+        ? `narrationManifest: "${script.narrationManifestPath}",
+    `
+        : ""
+    }narrationDelay: 300,
   },
 
   scenes: [
@@ -142,48 +150,50 @@ ${stepLines.join("\n")}  ],
 });
 `;
 
-	return configSource;
+  return configSource;
 }
 
 /**
  * Write the generated .demo.ts file to disk.
  */
 export async function writeDemoConfig(
-	script: TimedScript,
-	outputPath: string,
-	options: {
-		resolution?: string;
-		format?: string;
-	} = {},
+  script: TimedScript,
+  outputPath: string,
+  options: {
+    resolution?: string;
+    format?: string;
+  } = {},
 ): Promise<void> {
-	await mkdir(dirname(outputPath), { recursive: true });
+  await mkdir(dirname(outputPath), { recursive: true });
 
-	// Make audio path relative to the output config file
-	const configDir = dirname(resolve(outputPath));
-	const relativeAudioPath = relative(configDir, resolve(script.audioPath));
-	const relativeManifestPath = script.narrationManifestPath
-		? relative(configDir, resolve(script.narrationManifestPath))
-		: undefined;
+  // Make audio path relative to the output config file
+  const configDir = dirname(resolve(outputPath));
+  const relativeAudioPath = relative(configDir, resolve(script.audioPath));
+  const relativeManifestPath = script.narrationManifestPath
+    ? relative(configDir, resolve(script.narrationManifestPath))
+    : undefined;
 
-	const scriptWithRelativePath: TimedScript = {
-		...script,
-		audioPath: relativeAudioPath.startsWith(".") ? relativeAudioPath : `./${relativeAudioPath}`,
-		narrationManifestPath: relativeManifestPath
-			? (relativeManifestPath.startsWith(".") ? relativeManifestPath : `./${relativeManifestPath}`)
-			: undefined,
-	};
+  const scriptWithRelativePath: TimedScript = {
+    ...script,
+    audioPath: relativeAudioPath.startsWith(".") ? relativeAudioPath : `./${relativeAudioPath}`,
+    narrationManifestPath: relativeManifestPath
+      ? relativeManifestPath.startsWith(".")
+        ? relativeManifestPath
+        : `./${relativeManifestPath}`
+      : undefined,
+  };
 
-	const source = generateDemoConfig(scriptWithRelativePath, options);
-	await writeFile(outputPath, source, "utf-8");
+  const source = generateDemoConfig(scriptWithRelativePath, options);
+  await writeFile(outputPath, source, "utf-8");
 }
 
 /**
  * Write the script JSON file for later editing/re-processing.
  */
 export async function writeScriptJson(
-	script: TimedScript | { title: string; description: string; url: string; scenes: unknown[] },
-	outputPath: string,
+  script: TimedScript | { title: string; description: string; url: string; scenes: unknown[] },
+  outputPath: string,
 ): Promise<void> {
-	await mkdir(dirname(outputPath), { recursive: true });
-	await writeFile(outputPath, JSON.stringify(script, null, 2), "utf-8");
+  await mkdir(dirname(outputPath), { recursive: true });
+  await writeFile(outputPath, JSON.stringify(script, null, 2), "utf-8");
 }

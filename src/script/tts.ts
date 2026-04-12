@@ -5,11 +5,11 @@ import { spawn } from "child_process";
 import type { DemoScript, TimedScene } from "./types.js";
 import { getVoiceName, type VoiceConfig } from "../voice-config.js";
 import {
-	getNarrationClipDir,
-	getNarrationClipFileName,
-	getNarrationManifestPath,
-	NARRATION_PROCESSING_VERSION,
-	type NarrationManifest,
+  getNarrationClipDir,
+  getNarrationClipFileName,
+  getNarrationManifestPath,
+  NARRATION_PROCESSING_VERSION,
+  type NarrationManifest,
 } from "../narration-manifest.js";
 
 const CACHE_DIR = ".demo-reel-cache/voice";
@@ -18,134 +18,164 @@ const VOICE_CACHE_VERSION = NARRATION_PROCESSING_VERSION;
 // --- Provider interface ---
 
 export interface TTSProvider {
-	name: string;
-	generate(text: string, options: VoiceConfig): Promise<{ audio: Buffer; durationMs: number }>;
+  name: string;
+  generate(text: string, options: VoiceConfig): Promise<{ audio: Buffer; durationMs: number }>;
 }
 
 // --- Audio utilities (shared by all providers) ---
 
 async function getFFmpegPath(): Promise<string> {
-	try {
-		const mod: any = await import("ffmpeg-static");
-		const ffmpegPath = mod.default || mod;
-		if (ffmpegPath && typeof ffmpegPath === "string") {
-			const { accessSync } = await import("fs");
-			accessSync(ffmpegPath);
-			return ffmpegPath;
-		}
-	} catch { /* ffmpeg-static not available or binary missing */ }
-	return "ffmpeg";
+  try {
+    const mod: any = await import("ffmpeg-static");
+    const ffmpegPath = mod.default || mod;
+    if (ffmpegPath && typeof ffmpegPath === "string") {
+      const { accessSync } = await import("fs");
+      accessSync(ffmpegPath);
+      return ffmpegPath;
+    }
+  } catch {
+    /* ffmpeg-static not available or binary missing */
+  }
+  return "ffmpeg";
 }
 
 async function getFFprobePath(ffmpegPath: string): Promise<string> {
-	// Try alongside ffmpeg-static first
-	const adjacent = ffmpegPath.replace(/ffmpeg([^/\\]*)$/, "ffprobe$1");
-	try {
-		await stat(adjacent);
-		return adjacent;
-	} catch {
-		// Fall back to system ffprobe
-		return "ffprobe";
-	}
+  // Try alongside ffmpeg-static first
+  const adjacent = ffmpegPath.replace(/ffmpeg([^/\\]*)$/, "ffprobe$1");
+  try {
+    await stat(adjacent);
+    return adjacent;
+  } catch {
+    // Fall back to system ffprobe
+    return "ffprobe";
+  }
 }
 
 export async function measureAudioDuration(audioBuffer: Buffer): Promise<number> {
-	const ffmpegPath = await getFFmpegPath();
-	const ffprobePath = await getFFprobePath(ffmpegPath);
+  const ffmpegPath = await getFFmpegPath();
+  const ffprobePath = await getFFprobePath(ffmpegPath);
 
-	// Write to temp file — ffprobe needs seeking which pipes don't support for MP3
-	const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
-	await mkdir(tempDir, { recursive: true });
-	const tempPath = join(tempDir, `probe-${Date.now()}.mp3`);
-	await writeFile(tempPath, audioBuffer);
+  // Write to temp file — ffprobe needs seeking which pipes don't support for MP3
+  const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
+  await mkdir(tempDir, { recursive: true });
+  const tempPath = join(tempDir, `probe-${Date.now()}.mp3`);
+  await writeFile(tempPath, audioBuffer);
 
-	try {
-		return await new Promise((resolve, reject) => {
-			const proc = spawn(ffprobePath, [
-				"-v", "quiet",
-				"-show_entries", "format=duration",
-				"-of", "default=noprint_wrappers=1:nokey=1",
-				tempPath,
-			]);
+  try {
+    return await new Promise((resolve, reject) => {
+      const proc = spawn(ffprobePath, [
+        "-v",
+        "quiet",
+        "-show_entries",
+        "format=duration",
+        "-of",
+        "default=noprint_wrappers=1:nokey=1",
+        tempPath,
+      ]);
 
-			let output = "";
-			proc.stdout.on("data", (data: Buffer) => { output += data.toString(); });
-			proc.stderr.on("data", () => {});
+      let output = "";
+      proc.stdout.on("data", (data: Buffer) => {
+        output += data.toString();
+      });
+      proc.stderr.on("data", () => {});
 
-			proc.on("close", (code) => {
-				if (code !== 0) { reject(new Error(`ffprobe exited with code ${code}`)); return; }
-				const seconds = parseFloat(output.trim());
-				if (isNaN(seconds)) { reject(new Error("Could not parse audio duration")); return; }
-				resolve(Math.round(seconds * 1000));
-			});
-		});
-	} finally {
-		await unlink(tempPath).catch(() => {});
-	}
+      proc.on("close", (code) => {
+        if (code !== 0) {
+          reject(new Error(`ffprobe exited with code ${code}`));
+          return;
+        }
+        const seconds = parseFloat(output.trim());
+        if (isNaN(seconds)) {
+          reject(new Error("Could not parse audio duration"));
+          return;
+        }
+        resolve(Math.round(seconds * 1000));
+      });
+    });
+  } finally {
+    await unlink(tempPath).catch(() => {});
+  }
 }
 
 function runFFmpeg(ffmpegPath: string, args: string[]): Promise<void> {
-	return new Promise((resolve, reject) => {
-		const proc = spawn(ffmpegPath, args);
-		let stderr = "";
-		proc.stderr.on("data", (data: Buffer) => { stderr += data.toString(); });
-		proc.on("close", (code) => {
-			if (code !== 0) { reject(new Error(`FFmpeg exited with code ${code}: ${stderr.slice(-200)}`)); return; }
-			resolve();
-		});
-		proc.on("error", reject);
-	});
+  return new Promise((resolve, reject) => {
+    const proc = spawn(ffmpegPath, args);
+    let stderr = "";
+    proc.stderr.on("data", (data: Buffer) => {
+      stderr += data.toString();
+    });
+    proc.on("close", (code) => {
+      if (code !== 0) {
+        reject(new Error(`FFmpeg exited with code ${code}: ${stderr.slice(-200)}`));
+        return;
+      }
+      resolve();
+    });
+    proc.on("error", reject);
+  });
 }
 
 /** Convert WAV buffer to MP3 buffer via FFmpeg. */
 async function wavToMp3(wavBuffer: Buffer): Promise<Buffer> {
-	const ffmpegPath = await getFFmpegPath();
-	const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
-	await mkdir(tempDir, { recursive: true });
+  const ffmpegPath = await getFFmpegPath();
+  const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
+  await mkdir(tempDir, { recursive: true });
 
-	const wavPath = join(tempDir, `convert-${Date.now()}.wav`);
-	const mp3Path = join(tempDir, `convert-${Date.now()}.mp3`);
+  const wavPath = join(tempDir, `convert-${Date.now()}.wav`);
+  const mp3Path = join(tempDir, `convert-${Date.now()}.mp3`);
 
-	await writeFile(wavPath, wavBuffer);
-	await runFFmpeg(ffmpegPath, ["-i", wavPath, "-codec:a", "libmp3lame", "-q:a", "2", "-y", mp3Path]);
+  await writeFile(wavPath, wavBuffer);
+  await runFFmpeg(ffmpegPath, [
+    "-i",
+    wavPath,
+    "-codec:a",
+    "libmp3lame",
+    "-q:a",
+    "2",
+    "-y",
+    mp3Path,
+  ]);
 
-	const mp3Buffer = await readFile(mp3Path);
-	await unlink(wavPath).catch(() => {});
-	await unlink(mp3Path).catch(() => {});
-	return mp3Buffer;
+  const mp3Buffer = await readFile(mp3Path);
+  await unlink(wavPath).catch(() => {});
+  await unlink(mp3Path).catch(() => {});
+  return mp3Buffer;
 }
 
 // --- Piper TTS Provider (local, free) ---
 
-const PIPER_DEFAULT_MODEL_DIR = process.env.PIPER_VOICE_DIR || join(
-	process.env.HOME || process.env.USERPROFILE || ".",
-	".local", "share", "piper-voices",
-);
+const PIPER_DEFAULT_MODEL_DIR =
+  process.env.PIPER_VOICE_DIR ||
+  join(process.env.HOME || process.env.USERPROFILE || ".", ".local", "share", "piper-voices");
 
 async function findPiperBinary(): Promise<string> {
-	// Check common locations
-	for (const name of ["piper", "piper-tts"]) {
-		try {
-			const result = await new Promise<string>((resolve, reject) => {
-				const proc = spawn("which", [name]);
-				let out = "";
-				proc.stdout.on("data", (d: Buffer) => { out += d.toString(); });
-				proc.on("close", (code) => code === 0 ? resolve(out.trim()) : reject());
-				proc.on("error", reject);
-			});
-			if (result) return result;
-		} catch { /* continue */ }
-	}
-	throw new Error("Piper not found. Install with: pip install piper-tts");
+  // Check common locations
+  for (const name of ["piper", "piper-tts"]) {
+    try {
+      const result = await new Promise<string>((resolve, reject) => {
+        const proc = spawn("which", [name]);
+        let out = "";
+        proc.stdout.on("data", (d: Buffer) => {
+          out += d.toString();
+        });
+        proc.on("close", (code) => (code === 0 ? resolve(out.trim()) : reject()));
+        proc.on("error", reject);
+      });
+      if (result) return result;
+    } catch {
+      /* continue */
+    }
+  }
+  throw new Error("Piper not found. Install with: pip install piper-tts");
 }
 
 function resolvePiperModel(voice: string): string {
-	// If it's an absolute path, use it directly
-	if (voice.startsWith("/") || voice.includes(".onnx")) {
-		return voice;
-	}
-	// Otherwise look in the default model directory
-	return join(PIPER_DEFAULT_MODEL_DIR, `${voice}.onnx`);
+  // If it's an absolute path, use it directly
+  if (voice.startsWith("/") || voice.includes(".onnx")) {
+    return voice;
+  }
+  // Otherwise look in the default model directory
+  return join(PIPER_DEFAULT_MODEL_DIR, `${voice}.onnx`);
 }
 
 function getPiperModelPath(options: VoiceConfig): string {
@@ -156,229 +186,263 @@ function getPiperModelPath(options: VoiceConfig): string {
 }
 
 async function generatePiper(
-	text: string,
-	options: Extract<VoiceConfig, { provider: "piper" }>,
+  text: string,
+  options: Extract<VoiceConfig, { provider: "piper" }>,
 ): Promise<{ audio: Buffer; durationMs: number }> {
-	const piperPath = await findPiperBinary();
-	const modelPath = getPiperModelPath(options);
+  const piperPath = await findPiperBinary();
+  const modelPath = getPiperModelPath(options);
 
-	// Verify model exists
-	try {
-		await stat(modelPath);
-	} catch {
-		throw new Error(
-			`Piper voice model not found: ${modelPath}\n` +
-			`Download Dutch voice: curl -sL https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_NL/mls/medium/nl_NL-mls-medium.onnx -o ${PIPER_DEFAULT_MODEL_DIR}/nl_NL-mls-medium.onnx`,
-		);
-	}
+  // Verify model exists
+  try {
+    await stat(modelPath);
+  } catch {
+    throw new Error(
+      `Piper voice model not found: ${modelPath}\n` +
+        `Download Dutch voice: curl -sL https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_NL/mls/medium/nl_NL-mls-medium.onnx -o ${PIPER_DEFAULT_MODEL_DIR}/nl_NL-mls-medium.onnx`,
+    );
+  }
 
-	const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
-	await mkdir(tempDir, { recursive: true });
-	const wavPath = join(tempDir, `piper-${Date.now()}.wav`);
+  const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
+  await mkdir(tempDir, { recursive: true });
+  const wavPath = join(tempDir, `piper-${Date.now()}.wav`);
 
-	// Run piper: echo text | piper --model <model> --output_file <wav>
-	await new Promise<void>((resolve, reject) => {
-		const args = ["--model", modelPath, "--output_file", wavPath];
-		if (options.speed !== 1.0) {
-			args.push("--length_scale", String(1.0 / options.speed));
-		}
-		const proc = spawn(piperPath, args);
-		let stderr = "";
-		proc.stderr.on("data", (d: Buffer) => { stderr += d.toString(); });
-		proc.on("close", (code) => {
-			if (code !== 0) { reject(new Error(`Piper exited with code ${code}: ${stderr}`)); return; }
-			resolve();
-		});
-		proc.on("error", reject);
-		proc.stdin.write(text);
-		proc.stdin.end();
-	});
+  // Run piper: echo text | piper --model <model> --output_file <wav>
+  await new Promise<void>((resolve, reject) => {
+    const args = ["--model", modelPath, "--output_file", wavPath];
+    if (options.speed !== 1.0) {
+      args.push("--length_scale", String(1.0 / options.speed));
+    }
+    const proc = spawn(piperPath, args);
+    let stderr = "";
+    proc.stderr.on("data", (d: Buffer) => {
+      stderr += d.toString();
+    });
+    proc.on("close", (code) => {
+      if (code !== 0) {
+        reject(new Error(`Piper exited with code ${code}: ${stderr}`));
+        return;
+      }
+      resolve();
+    });
+    proc.on("error", reject);
+    proc.stdin.write(text);
+    proc.stdin.end();
+  });
 
-	const wavBuffer = await readFile(wavPath);
-	await unlink(wavPath).catch(() => {});
+  const wavBuffer = await readFile(wavPath);
+  await unlink(wavPath).catch(() => {});
 
-	// Convert WAV to MP3
-	const audio = await wavToMp3(wavBuffer);
-	const durationMs = await measureAudioDuration(audio);
+  // Convert WAV to MP3
+  const audio = await wavToMp3(wavBuffer);
+  const durationMs = await measureAudioDuration(audio);
 
-	return { audio, durationMs };
+  return { audio, durationMs };
 }
 
 // --- OpenAI TTS Provider ---
 
 async function generateOpenAI(
-	text: string,
-	options: Extract<VoiceConfig, { provider: "openai" }>,
+  text: string,
+  options: Extract<VoiceConfig, { provider: "openai" }>,
 ): Promise<{ audio: Buffer; durationMs: number }> {
-	// @ts-ignore — openai is an optional peer dependency
-	const openaiModule: any = await import("openai");
-	const OpenAI = openaiModule.default;
-	const client = new OpenAI();
+  // @ts-ignore — openai is an optional peer dependency
+  const openaiModule: any = await import("openai");
+  const OpenAI = openaiModule.default;
+  const client = new OpenAI();
 
-	const response = await client.audio.speech.create({
-		model: "tts-1",
-		voice: options.voice as "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer",
-		input: text,
-		speed: options.speed,
-		response_format: "mp3",
-	});
+  const response = await client.audio.speech.create({
+    model: "tts-1",
+    voice: options.voice as "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer",
+    input: text,
+    speed: options.speed,
+    response_format: "mp3",
+  });
 
-	const arrayBuffer = await response.arrayBuffer();
-	const audio = Buffer.from(arrayBuffer);
-	const durationMs = await measureAudioDuration(audio);
+  const arrayBuffer = await response.arrayBuffer();
+  const audio = Buffer.from(arrayBuffer);
+  const durationMs = await measureAudioDuration(audio);
 
-	return { audio, durationMs };
+  return { audio, durationMs };
 }
 
 // --- ElevenLabs TTS Provider ---
 
 async function generateElevenLabs(
-	text: string,
-	options: Extract<VoiceConfig, { provider: "elevenlabs" }>,
+  text: string,
+  options: Extract<VoiceConfig, { provider: "elevenlabs" }>,
 ): Promise<{ audio: Buffer; durationMs: number }> {
-	const apiKey = process.env.ELEVENLABS_KEY || process.env.ELEVENLABS_API_KEY;
-	if (!apiKey) {
-		throw new Error("ElevenLabs API key not found. Set ELEVENLABS_KEY or ELEVENLABS_API_KEY env var.");
-	}
+  const apiKey = process.env.ELEVENLABS_KEY || process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      "ElevenLabs API key not found. Set ELEVENLABS_KEY or ELEVENLABS_API_KEY env var.",
+    );
+  }
 
-	// Default to a good multilingual voice
-	const voiceId = options.voice || "21m00Tcm4TlvDq8ikWAM"; // "Rachel" - good for multilingual
+  // Default to a good multilingual voice
+  const voiceId = options.voice || "21m00Tcm4TlvDq8ikWAM"; // "Rachel" - good for multilingual
 
-	const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-		method: "POST",
-		headers: {
-			"xi-api-key": apiKey,
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify({
-			text,
-			model_id: "eleven_multilingual_v2",
-			voice_settings: {
-				stability: 0.5,
-				similarity_boost: 0.75,
-				speed: options.speed,
-			},
-		}),
-	});
+  const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    method: "POST",
+    headers: {
+      "xi-api-key": apiKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      text,
+      model_id: "eleven_multilingual_v2",
+      voice_settings: {
+        stability: 0.5,
+        similarity_boost: 0.75,
+        speed: options.speed,
+      },
+    }),
+  });
 
-	if (!response.ok) {
-		const body = await response.text();
-		throw new Error(`ElevenLabs API error ${response.status}: ${body}`);
-	}
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`ElevenLabs API error ${response.status}: ${body}`);
+  }
 
-	const arrayBuffer = await response.arrayBuffer();
-	const audio = Buffer.from(arrayBuffer);
-	const durationMs = await measureAudioDuration(audio);
+  const arrayBuffer = await response.arrayBuffer();
+  const audio = Buffer.from(arrayBuffer);
+  const durationMs = await measureAudioDuration(audio);
 
-	return { audio, durationMs };
+  return { audio, durationMs };
 }
 
 // --- Provider registry ---
 
 const providers: Record<string, TTSProvider> = {
-	piper: { name: "piper", generate: (text, options) => generatePiper(text, options as Extract<VoiceConfig, { provider: "piper" }>) },
-	openai: { name: "openai", generate: (text, options) => generateOpenAI(text, options as Extract<VoiceConfig, { provider: "openai" }>) },
-	elevenlabs: { name: "elevenlabs", generate: (text, options) => generateElevenLabs(text, options as Extract<VoiceConfig, { provider: "elevenlabs" }>) },
+  piper: {
+    name: "piper",
+    generate: (text, options) =>
+      generatePiper(text, options as Extract<VoiceConfig, { provider: "piper" }>),
+  },
+  openai: {
+    name: "openai",
+    generate: (text, options) =>
+      generateOpenAI(text, options as Extract<VoiceConfig, { provider: "openai" }>),
+  },
+  elevenlabs: {
+    name: "elevenlabs",
+    generate: (text, options) =>
+      generateElevenLabs(text, options as Extract<VoiceConfig, { provider: "elevenlabs" }>),
+  },
 };
 
 export function getTTSProvider(name: string): TTSProvider {
-	const provider = providers[name];
-	if (!provider) {
-		throw new Error(
-			`Unknown TTS provider: "${name}". Available: ${Object.keys(providers).join(", ")}`,
-		);
-	}
-	return provider;
+  const provider = providers[name];
+  if (!provider) {
+    throw new Error(
+      `Unknown TTS provider: "${name}". Available: ${Object.keys(providers).join(", ")}`,
+    );
+  }
+  return provider;
 }
 
 export function registerTTSProvider(provider: TTSProvider): void {
-	providers[provider.name] = provider;
+  providers[provider.name] = provider;
 }
 
 // --- Caching ---
 
 function cacheKey(text: string, voice: VoiceConfig): string {
-	return createHash("sha256")
-		.update(`${VOICE_CACHE_VERSION}|${text}|${voice.provider}|${getVoiceName(voice)}|${voice.speed}`)
-		.digest("hex")
-		.slice(0, 16);
+  return createHash("sha256")
+    .update(
+      `${VOICE_CACHE_VERSION}|${text}|${voice.provider}|${getVoiceName(voice)}|${voice.speed}`,
+    )
+    .digest("hex")
+    .slice(0, 16);
 }
 
 async function getCached(key: string): Promise<Buffer | null> {
-	const path = join(process.cwd(), CACHE_DIR, `${key}.mp3`);
-	try {
-		await stat(path);
-		return await readFile(path);
-	} catch {
-		return null;
-	}
+  const path = join(process.cwd(), CACHE_DIR, `${key}.mp3`);
+  try {
+    await stat(path);
+    return await readFile(path);
+  } catch {
+    return null;
+  }
 }
 
 async function setCache(key: string, audio: Buffer): Promise<void> {
-	const dir = join(process.cwd(), CACHE_DIR);
-	await mkdir(dir, { recursive: true });
-	await writeFile(join(dir, `${key}.mp3`), audio);
+  const dir = join(process.cwd(), CACHE_DIR);
+  await mkdir(dir, { recursive: true });
+  await writeFile(join(dir, `${key}.mp3`), audio);
 }
 
 // --- Concatenation ---
 
-async function generateSilence(ffmpegPath: string, outputPath: string, durationMs: number): Promise<void> {
-	await runFFmpeg(ffmpegPath, [
-		"-f", "lavfi", "-i", `anullsrc=r=44100:cl=mono`,
-		"-t", (durationMs / 1000).toString(),
-		"-q:a", "9", "-y", outputPath,
-	]);
+async function generateSilence(
+  ffmpegPath: string,
+  outputPath: string,
+  durationMs: number,
+): Promise<void> {
+  await runFFmpeg(ffmpegPath, [
+    "-f",
+    "lavfi",
+    "-i",
+    `anullsrc=r=44100:cl=mono`,
+    "-t",
+    (durationMs / 1000).toString(),
+    "-q:a",
+    "9",
+    "-y",
+    outputPath,
+  ]);
 }
 
-async function concatenateAudio(segments: { audio: Buffer; gapAfterMs: number }[]): Promise<Buffer> {
-	const ffmpegPath = await getFFmpegPath();
-	const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
-	await mkdir(tempDir, { recursive: true });
+async function concatenateAudio(
+  segments: { audio: Buffer; gapAfterMs: number }[],
+): Promise<Buffer> {
+  const ffmpegPath = await getFFmpegPath();
+  const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
+  await mkdir(tempDir, { recursive: true });
 
-	const inputFiles: string[] = [];
-	const filterParts: string[] = [];
-	let inputIndex = 0;
+  const inputFiles: string[] = [];
+  const filterParts: string[] = [];
+  let inputIndex = 0;
 
-	for (let i = 0; i < segments.length; i++) {
-		const segPath = join(tempDir, `seg-${i}.mp3`);
-		await writeFile(segPath, segments[i].audio);
-		inputFiles.push(segPath);
-		filterParts.push(`[${inputIndex}:a]`);
-		inputIndex++;
+  for (let i = 0; i < segments.length; i++) {
+    const segPath = join(tempDir, `seg-${i}.mp3`);
+    await writeFile(segPath, segments[i].audio);
+    inputFiles.push(segPath);
+    filterParts.push(`[${inputIndex}:a]`);
+    inputIndex++;
 
-		if (segments[i].gapAfterMs > 0) {
-			const silencePath = join(tempDir, `silence-${i}.mp3`);
-			await generateSilence(ffmpegPath, silencePath, segments[i].gapAfterMs);
-			inputFiles.push(silencePath);
-			filterParts.push(`[${inputIndex}:a]`);
-			inputIndex++;
-		}
-	}
+    if (segments[i].gapAfterMs > 0) {
+      const silencePath = join(tempDir, `silence-${i}.mp3`);
+      await generateSilence(ffmpegPath, silencePath, segments[i].gapAfterMs);
+      inputFiles.push(silencePath);
+      filterParts.push(`[${inputIndex}:a]`);
+      inputIndex++;
+    }
+  }
 
-	const outputPath = join(tempDir, "concatenated.mp3");
-	const args: string[] = [];
-	for (const file of inputFiles) args.push("-i", file);
-	const concatFilter = `${filterParts.join("")}concat=n=${filterParts.length}:v=0:a=1[out]`;
-	args.push("-filter_complex", concatFilter, "-map", "[out]", "-y", outputPath);
+  const outputPath = join(tempDir, "concatenated.mp3");
+  const args: string[] = [];
+  for (const file of inputFiles) args.push("-i", file);
+  const concatFilter = `${filterParts.join("")}concat=n=${filterParts.length}:v=0:a=1[out]`;
+  args.push("-filter_complex", concatFilter, "-map", "[out]", "-y", outputPath);
 
-	await runFFmpeg(ffmpegPath, args);
-	const result = await readFile(outputPath);
+  await runFFmpeg(ffmpegPath, args);
+  const result = await readFile(outputPath);
 
-	for (const file of inputFiles) await unlink(file).catch(() => {});
-	await unlink(outputPath).catch(() => {});
+  for (const file of inputFiles) await unlink(file).catch(() => {});
+  await unlink(outputPath).catch(() => {});
 
-	return result;
+  return result;
 }
 
 // --- Main voice generation pipeline ---
 
 interface VoiceSegment {
-	sceneIndex: number;
-	stepIndex?: number;
-	sourceSceneIndex?: number;
-	narration: string;
-	audio: Buffer;
-	durationMs: number;
+  sceneIndex: number;
+  stepIndex?: number;
+  sourceSceneIndex?: number;
+  narration: string;
+  audio: Buffer;
+  durationMs: number;
 }
 
 /**
@@ -386,128 +450,129 @@ interface VoiceSegment {
  * Replacements are case-insensitive and match whole words.
  */
 function applyPronunciation(text: string, pronunciation?: Record<string, string>): string {
-	if (!pronunciation) return text;
-	let result = text;
-	for (const [word, replacement] of Object.entries(pronunciation)) {
-		const regex = new RegExp(`\\b${word}\\b`, "gi");
-		result = result.replace(regex, replacement);
-	}
-	return result;
+  if (!pronunciation) return text;
+  let result = text;
+  for (const [word, replacement] of Object.entries(pronunciation)) {
+    const regex = new RegExp(`\\b${word}\\b`, "gi");
+    result = result.replace(regex, replacement);
+  }
+  return result;
 }
 
 export async function generateVoiceSegments(
-	script: DemoScript,
-	voice: VoiceConfig,
-	options: { noCache?: boolean; verbose?: boolean } = {},
+  script: DemoScript,
+  voice: VoiceConfig,
+  options: { noCache?: boolean; verbose?: boolean } = {},
 ): Promise<VoiceSegment[]> {
-	const provider = getTTSProvider(voice.provider);
-	const segments: VoiceSegment[] = [];
+  const provider = getTTSProvider(voice.provider);
+  const segments: VoiceSegment[] = [];
 
-	for (let i = 0; i < script.scenes.length; i++) {
-		const scene = script.scenes[i];
-		const key = cacheKey(scene.narration, voice);
+  for (let i = 0; i < script.scenes.length; i++) {
+    const scene = script.scenes[i];
+    const key = cacheKey(scene.narration, voice);
 
-		if (!options.noCache) {
-			const cached = await getCached(key);
-			if (cached) {
-				const durationMs = await measureAudioDuration(cached);
-				if (options.verbose) console.log(`  Scene ${i + 1}: cached (${(durationMs / 1000).toFixed(1)}s)`);
-				segments.push({
-					sceneIndex: i,
-					stepIndex: scene.stepIndex,
-					sourceSceneIndex: scene.sourceSceneIndex ?? i,
-					narration: scene.narration,
-					audio: cached,
-					durationMs,
-				});
-				continue;
-			}
-		}
+    if (!options.noCache) {
+      const cached = await getCached(key);
+      if (cached) {
+        const durationMs = await measureAudioDuration(cached);
+        if (options.verbose)
+          console.log(`  Scene ${i + 1}: cached (${(durationMs / 1000).toFixed(1)}s)`);
+        segments.push({
+          sceneIndex: i,
+          stepIndex: scene.stepIndex,
+          sourceSceneIndex: scene.sourceSceneIndex ?? i,
+          narration: scene.narration,
+          audio: cached,
+          durationMs,
+        });
+        continue;
+      }
+    }
 
-		if (options.verbose) console.log(`  Scene ${i + 1}: generating voice...`);
+    if (options.verbose) console.log(`  Scene ${i + 1}: generating voice...`);
 
-		// Apply pronunciation map before TTS
-		const ttsText = applyPronunciation(scene.narration, voice.pronunciation);
-		const generated = await provider.generate(ttsText, voice);
-		const { audio, durationMs } = generated;
-		await setCache(key, audio);
-		if (options.verbose) console.log(`  Scene ${i + 1}: ${(durationMs / 1000).toFixed(1)}s`);
+    // Apply pronunciation map before TTS
+    const ttsText = applyPronunciation(scene.narration, voice.pronunciation);
+    const generated = await provider.generate(ttsText, voice);
+    const { audio, durationMs } = generated;
+    await setCache(key, audio);
+    if (options.verbose) console.log(`  Scene ${i + 1}: ${(durationMs / 1000).toFixed(1)}s`);
 
-		// Store the original narration (for subtitles), not the pronunciation-adjusted text
-		segments.push({
-			sceneIndex: i,
-			stepIndex: scene.stepIndex,
-			sourceSceneIndex: scene.sourceSceneIndex ?? i,
-			narration: scene.narration,
-			audio,
-			durationMs,
-		});
-	}
+    // Store the original narration (for subtitles), not the pronunciation-adjusted text
+    segments.push({
+      sceneIndex: i,
+      stepIndex: scene.stepIndex,
+      sourceSceneIndex: scene.sourceSceneIndex ?? i,
+      narration: scene.narration,
+      audio,
+      durationMs,
+    });
+  }
 
-	return segments;
+  return segments;
 }
 
 export async function generateNarrationAudio(
-	segments: VoiceSegment[],
-	outputPath: string,
-	options: { gapMs?: number; verbose?: boolean } = {},
+  segments: VoiceSegment[],
+  outputPath: string,
+  options: { gapMs?: number; verbose?: boolean } = {},
 ): Promise<{ timedScenes: TimedScene[]; narrationManifestPath: string }> {
-	const gapMs = options.gapMs ?? 800;
-	await mkdir(dirname(outputPath), { recursive: true });
-	const clipDir = getNarrationClipDir(outputPath);
-	const narrationManifestPath = getNarrationManifestPath(outputPath);
-	await mkdir(clipDir, { recursive: true });
+  const gapMs = options.gapMs ?? 800;
+  await mkdir(dirname(outputPath), { recursive: true });
+  const clipDir = getNarrationClipDir(outputPath);
+  const narrationManifestPath = getNarrationManifestPath(outputPath);
+  await mkdir(clipDir, { recursive: true });
 
-	const timedScenes: TimedScene[] = [];
-	const manifest: NarrationManifest = {
-		version: 1,
-		processingVersion: NARRATION_PROCESSING_VERSION,
-		audioPath: relative(dirname(narrationManifestPath), outputPath),
-		clips: [],
-	};
-	let currentOffsetMs = 0;
-	const concatSegments: { audio: Buffer; gapAfterMs: number }[] = [];
+  const timedScenes: TimedScene[] = [];
+  const manifest: NarrationManifest = {
+    version: 1,
+    processingVersion: NARRATION_PROCESSING_VERSION,
+    audioPath: relative(dirname(narrationManifestPath), outputPath),
+    clips: [],
+  };
+  let currentOffsetMs = 0;
+  const concatSegments: { audio: Buffer; gapAfterMs: number }[] = [];
 
-	for (let i = 0; i < segments.length; i++) {
-		const seg = segments[i];
-		const isLast = i === segments.length - 1;
-		const gap = isLast ? 0 : gapMs;
-		const sourceSceneIndex = seg.sourceSceneIndex ?? seg.sceneIndex;
-		const clipPath = join(clipDir, getNarrationClipFileName(sourceSceneIndex));
-		await writeFile(clipPath, seg.audio);
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
+    const isLast = i === segments.length - 1;
+    const gap = isLast ? 0 : gapMs;
+    const sourceSceneIndex = seg.sourceSceneIndex ?? seg.sceneIndex;
+    const clipPath = join(clipDir, getNarrationClipFileName(sourceSceneIndex));
+    await writeFile(clipPath, seg.audio);
 
-		timedScenes.push({
-			narration: seg.narration,
-			steps: [],
-			stepIndex: seg.stepIndex,
-			sourceSceneIndex,
-			audioDurationMs: seg.durationMs,
-			audioOffsetMs: currentOffsetMs,
-			gapAfterMs: gap,
-		});
+    timedScenes.push({
+      narration: seg.narration,
+      steps: [],
+      stepIndex: seg.stepIndex,
+      sourceSceneIndex,
+      audioDurationMs: seg.durationMs,
+      audioOffsetMs: currentOffsetMs,
+      gapAfterMs: gap,
+    });
 
-		manifest.clips.push({
-			sceneIndex: sourceSceneIndex,
-			stepIndex: seg.stepIndex,
-			narration: seg.narration,
-			filePath: relative(dirname(narrationManifestPath), clipPath),
-			audioDurationMs: seg.durationMs,
-			audioOffsetMs: currentOffsetMs,
-			gapAfterMs: gap,
-		});
+    manifest.clips.push({
+      sceneIndex: sourceSceneIndex,
+      stepIndex: seg.stepIndex,
+      narration: seg.narration,
+      filePath: relative(dirname(narrationManifestPath), clipPath),
+      audioDurationMs: seg.durationMs,
+      audioOffsetMs: currentOffsetMs,
+      gapAfterMs: gap,
+    });
 
-		concatSegments.push({ audio: seg.audio, gapAfterMs: gap });
-		currentOffsetMs += seg.durationMs + gap;
-	}
+    concatSegments.push({ audio: seg.audio, gapAfterMs: gap });
+    currentOffsetMs += seg.durationMs + gap;
+  }
 
-	const concatenated = await concatenateAudio(concatSegments);
-	await writeFile(outputPath, concatenated);
-	await writeFile(narrationManifestPath, JSON.stringify(manifest, null, 2), "utf-8");
+  const concatenated = await concatenateAudio(concatSegments);
+  await writeFile(outputPath, concatenated);
+  await writeFile(narrationManifestPath, JSON.stringify(manifest, null, 2), "utf-8");
 
-	if (options.verbose) {
-		console.log(`Narration audio: ${outputPath} (${(currentOffsetMs / 1000).toFixed(1)}s)`);
-		console.log(`Narration manifest: ${narrationManifestPath}`);
-	}
+  if (options.verbose) {
+    console.log(`Narration audio: ${outputPath} (${(currentOffsetMs / 1000).toFixed(1)}s)`);
+    console.log(`Narration manifest: ${narrationManifestPath}`);
+  }
 
-	return { timedScenes, narrationManifestPath };
+  return { timedScenes, narrationManifestPath };
 }

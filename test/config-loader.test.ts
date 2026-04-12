@@ -49,11 +49,14 @@ describe("config-loader", () => {
   it("prefers cli output dir and switches to mp4 when audio is configured", async () => {
     const dir = await createTempDir();
     const configPath = join(dir, "demo.demo.json");
-    await writeJson(configPath, createMinimalConfig({
-      name: "my-video",
-      outputDir: "ignored-output",
-      audio: { narration: "narration.mp3" },
-    }));
+    await writeJson(
+      configPath,
+      createMinimalConfig({
+        name: "my-video",
+        outputDir: "ignored-output",
+        audio: { narration: "narration.mp3" },
+      }),
+    );
 
     const loaded = await loadConfig(configPath, "cli-output");
 
@@ -104,10 +107,7 @@ describe("config-loader", () => {
 
     const files = await findScenarioFiles(dir);
 
-    expect(files).toEqual([
-      join(dir, "nested", "child.demo.ts"),
-      join(dir, "root.demo.ts"),
-    ]);
+    expect(files).toEqual([join(dir, "nested", "child.demo.ts"), join(dir, "root.demo.ts")]);
   });
 
   it("finds scenarios by supported extension order", async () => {

@@ -113,13 +113,15 @@ function buildFfmpegArgs(videoPath: string, outputPath: string, audio: AudioConf
       args.push("-i", audio.background);
     }
 
-    const narrationFilters = mixAudio.narrationPlacements.map((placement, index) =>
-      `[${index + 1}:a]adelay=${placement.startMs}|${placement.startMs},volume=1[n${index}]`,
+    const narrationFilters = mixAudio.narrationPlacements.map(
+      (placement, index) =>
+        `[${index + 1}:a]adelay=${placement.startMs}|${placement.startMs},volume=1[n${index}]`,
     );
     const narrationInputs = mixAudio.narrationPlacements.map((_, index) => `[n${index}]`).join("");
-    const narrationMix = mixAudio.narrationPlacements.length === 1
-      ? `${narrationInputs}anull[narr]`
-      : `${narrationInputs}amix=inputs=${mixAudio.narrationPlacements.length}:duration=longest:dropout_transition=0[narr]`;
+    const narrationMix =
+      mixAudio.narrationPlacements.length === 1
+        ? `${narrationInputs}anull[narr]`
+        : `${narrationInputs}amix=inputs=${mixAudio.narrationPlacements.length}:duration=longest:dropout_transition=0[narr]`;
 
     if (audio.background) {
       const backgroundInputIndex = mixAudio.narrationPlacements.length + 1;

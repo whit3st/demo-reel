@@ -16,11 +16,13 @@ vi.mock("../src/runner.js", () => ({
 }));
 
 const anthropicCreate = vi.fn();
-const anthropicConstructor = vi.fn(function AnthropicMock(this: { messages: { create: typeof anthropicCreate } }) {
-  this.messages = {
-    create: anthropicCreate,
-  };
-});
+const anthropicConstructor = vi.fn(
+  function AnthropicMock(this: { messages: { create: typeof anthropicCreate } }) {
+    this.messages = {
+      create: anthropicCreate,
+    };
+  },
+);
 
 vi.mock("@anthropic-ai/sdk", () => ({
   default: anthropicConstructor,
@@ -68,15 +70,21 @@ describe("script generator", () => {
 
     expect(crawlUrl).toHaveBeenCalledWith("https://example.com/templates", { headed: undefined });
     expect(anthropicConstructor).toHaveBeenCalledWith({ apiKey: "secret-key" });
-    expect(anthropicCreate).toHaveBeenCalledWith(expect.objectContaining({
-      system: expect.stringContaining("ONLY use selectors that appear in the crawled DOM context"),
-      messages: [
-        expect.objectContaining({
-          role: "user",
-          content: expect.stringContaining("## Hints\n- Start from the templates page\n- Keep it short"),
-        }),
-      ],
-    }));
+    expect(anthropicCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        system: expect.stringContaining(
+          "ONLY use selectors that appear in the crawled DOM context",
+        ),
+        messages: [
+          expect.objectContaining({
+            role: "user",
+            content: expect.stringContaining(
+              "## Hints\n- Start from the templates page\n- Keep it short",
+            ),
+          }),
+        ],
+      }),
+    );
     expect(result).toEqual({
       title: "Create Template",
       description: "Show how to create a template",
@@ -92,7 +100,9 @@ describe("script generator", () => {
 
   it("parses Claude responses wrapped in markdown fences", async () => {
     anthropicCreate.mockResolvedValue(
-      createScriptResponse("```json\n{\n  \"title\": \"Wrapped\",\n  \"scenes\": [{ \"narration\": \"Hi\", \"steps\": [{ \"action\": \"wait\", \"ms\": 500 }] }]\n}\n```"),
+      createScriptResponse(
+        '```json\n{\n  "title": "Wrapped",\n  "scenes": [{ "narration": "Hi", "steps": [{ "action": "wait", "ms": 500 }] }]\n}\n```',
+      ),
     );
 
     const { generateScript } = await import("../src/script/generator.js");
@@ -110,10 +120,12 @@ describe("script generator", () => {
 
     const { generateScript } = await import("../src/script/generator.js");
 
-    await expect(generateScript({
-      description: "No text",
-      url: "https://example.com",
-    })).rejects.toThrow("Empty response from Claude API");
+    await expect(
+      generateScript({
+        description: "No text",
+        url: "https://example.com",
+      }),
+    ).rejects.toThrow("Empty response from Claude API");
   });
 
   it("throws when Claude returns an invalid script shape", async () => {
@@ -121,10 +133,12 @@ describe("script generator", () => {
 
     const { generateScript } = await import("../src/script/generator.js");
 
-    await expect(generateScript({
-      description: "Broken",
-      url: "https://example.com",
-    })).rejects.toThrow("Invalid script response: missing title or scenes");
+    await expect(
+      generateScript({
+        description: "Broken",
+        url: "https://example.com",
+      }),
+    ).rejects.toThrow("Invalid script response: missing title or scenes");
   });
 
   it("validates a script and reports failing steps while closing browser resources", async () => {
@@ -165,7 +179,8 @@ describe("script generator", () => {
 
   it("fixes only broken steps by re-crawling and reusing the rest of the script", async () => {
     vi.mocked(crawlUrl).mockResolvedValue({ elements: [{ id: 1 }] } as never);
-    anthropicCreate.mockResolvedValue(createScriptResponse(`
+    anthropicCreate.mockResolvedValue(
+      createScriptResponse(`
       {
         "title": "Create Template",
         "scenes": [
@@ -175,7 +190,8 @@ describe("script generator", () => {
           }
         ]
       }
-    `));
+    `),
+    );
 
     const { fixBrokenSteps } = await import("../src/script/generator.js");
     const originalScript = {
@@ -198,13 +214,17 @@ describe("script generator", () => {
 
     expect(crawlUrl).toHaveBeenCalledWith("https://example.com");
     expect(anthropicConstructor).toHaveBeenCalledWith({ apiKey: "fix-key" });
-    expect(anthropicCreate).toHaveBeenCalledWith(expect.objectContaining({
-      messages: [
-        expect.objectContaining({
-          content: expect.stringContaining('Scene 1 ("Broken scene narration..."), Step 1 (click): selector not found'),
-        }),
-      ],
-    }));
+    expect(anthropicCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        messages: [
+          expect.objectContaining({
+            content: expect.stringContaining(
+              'Scene 1 ("Broken scene narration..."), Step 1 (click): selector not found',
+            ),
+          }),
+        ],
+      }),
+    );
     expect(fixed).toEqual({
       ...originalScript,
       title: "Create Template",

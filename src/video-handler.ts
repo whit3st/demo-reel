@@ -3,7 +3,12 @@ import { basename, dirname, join, resolve } from "path";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import type { DemoReelConfig, AuthConfig, AuthBehaviorConfig } from "./schemas.js";
 import { runDemo, runSteps, runStepSimple, type SceneTimestamp } from "./runner.js";
-import { mergeAudioVideo, resolveAudioPaths, type AudioConfig, type NarrationPlacement } from "./audio-processor.js";
+import {
+  mergeAudioVideo,
+  resolveAudioPaths,
+  type AudioConfig,
+  type NarrationPlacement,
+} from "./audio-processor.js";
 import { narrationManifestSchema } from "./narration-manifest.js";
 import {
   loadSession,
@@ -272,7 +277,9 @@ export async function processVideoWithAudio(
         }
       }
     } catch (error) {
-      warnings.push(`Failed to load narration manifest: ${error instanceof Error ? error.message : String(error)}`);
+      warnings.push(
+        `Failed to load narration manifest: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -347,7 +354,9 @@ function buildSubtitleCuesWithNarrationPlacements(
     return buildSubtitleCues(sceneTimestamps, config);
   }
 
-  const placementByScene = new Map(narrationPlacements.map((placement) => [placement.sceneIndex, placement]));
+  const placementByScene = new Map(
+    narrationPlacements.map((placement) => [placement.sceneIndex, placement]),
+  );
   return sceneTimestamps.map((scene) => {
     const placement = placementByScene.get(scene.sceneIndex);
     if (!placement) {
@@ -612,7 +621,13 @@ export async function runVideoScenario(
         const postBrowser = await startBrowser(config, headed);
         try {
           if (config.auth) {
-            await handleAuth(postBrowser.context, postBrowser.page, config.auth, configPath, verbose);
+            await handleAuth(
+              postBrowser.context,
+              postBrowser.page,
+              config.auth,
+              configPath,
+              verbose,
+            );
           }
           await runSteps(postBrowser.page, config.postSteps, {
             tolerant: true,

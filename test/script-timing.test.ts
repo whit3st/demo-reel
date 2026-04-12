@@ -42,7 +42,9 @@ function createTimedScene(overrides: Partial<TimedScene> = {}): TimedScene {
 describe("script timing", () => {
   it("adds delays to goto, click, and type steps to fit the narration duration", () => {
     const script = createScript();
-    const timedScenes = [createTimedScene({ audioDurationMs: 5000, audioOffsetMs: 0, gapAfterMs: 400 })];
+    const timedScenes = [
+      createTimedScene({ audioDurationMs: 5000, audioOffsetMs: 0, gapAfterMs: 400 }),
+    ];
 
     const result = synchronizeTiming(script, timedScenes, "./narration.mp3");
     const [gotoStep, clickStep, typeStep] = result.scenes[0].steps;
@@ -75,7 +77,9 @@ describe("script timing", () => {
         },
       ],
     });
-    const timedScenes = [createTimedScene({ audioDurationMs: 3000, audioOffsetMs: 0, gapAfterMs: 0 })];
+    const timedScenes = [
+      createTimedScene({ audioDurationMs: 3000, audioOffsetMs: 0, gapAfterMs: 0 }),
+    ];
 
     const result = synchronizeTiming(script, timedScenes, "./narration.mp3");
 
@@ -112,7 +116,9 @@ describe("script timing", () => {
         },
       ],
     });
-    const timedScenes = [createTimedScene({ audioDurationMs: 1000, audioOffsetMs: 250, gapAfterMs: 50 })];
+    const timedScenes = [
+      createTimedScene({ audioDurationMs: 1000, audioOffsetMs: 250, gapAfterMs: 50 }),
+    ];
 
     const result = synchronizeTiming(script, timedScenes, "./narration.mp3");
 
@@ -130,12 +136,14 @@ describe("script timing", () => {
         },
       ],
     });
-    const timedScenes = [createTimedScene({
-      narration: "Focus on the success state.",
-      audioDurationMs: 1200,
-      audioOffsetMs: 600,
-      gapAfterMs: 200,
-    })];
+    const timedScenes = [
+      createTimedScene({
+        narration: "Focus on the success state.",
+        audioDurationMs: 1200,
+        audioOffsetMs: 600,
+        gapAfterMs: 200,
+      }),
+    ];
 
     const result = synchronizeTiming(script, timedScenes, "./narration.mp3");
 

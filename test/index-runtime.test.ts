@@ -126,27 +126,36 @@ describe("index runtime", () => {
 
     const { generate } = await import("../src/index.js");
 
-    await generate(createConfig({
-      outputDir: "./output",
-      scenes: [
-        { narration: "Third scene", stepIndex: 11 },
-        { narration: "First scene", stepIndex: 1 },
-        { narration: "Second scene", stepIndex: 7 },
-      ],
-      voice: { provider: "piper", voice: "en_US-amy-medium", speed: 1 },
-    }), { noDocker: true });
+    await generate(
+      createConfig({
+        outputDir: "./output",
+        scenes: [
+          { narration: "Third scene", stepIndex: 11 },
+          { narration: "First scene", stepIndex: 1 },
+          { narration: "Second scene", stepIndex: 7 },
+        ],
+        voice: { provider: "piper", voice: "en_US-amy-medium", speed: 1 },
+      }),
+      { noDocker: true },
+    );
 
     expect(writeFileSync).toHaveBeenCalledWith(
       ".demo.voice.tmp.json",
       expect.stringContaining('"First scene"'),
       "utf-8",
     );
-    const voiceScriptCall = vi.mocked(writeFileSync).mock.calls.find(([path]) => path === ".demo.voice.tmp.json");
+    const voiceScriptCall = vi
+      .mocked(writeFileSync)
+      .mock.calls.find(([path]) => path === ".demo.voice.tmp.json");
     expect(voiceScriptCall?.[1]).toContain('"First scene"');
     expect(voiceScriptCall?.[1]).toContain('"Second scene"');
     expect(voiceScriptCall?.[1]).toContain('"Third scene"');
-    expect((voiceScriptCall?.[1] as string).indexOf('"First scene"')).toBeLessThan((voiceScriptCall?.[1] as string).indexOf('"Second scene"'));
-    expect((voiceScriptCall?.[1] as string).indexOf('"Second scene"')).toBeLessThan((voiceScriptCall?.[1] as string).indexOf('"Third scene"'));
+    expect((voiceScriptCall?.[1] as string).indexOf('"First scene"')).toBeLessThan(
+      (voiceScriptCall?.[1] as string).indexOf('"Second scene"'),
+    );
+    expect((voiceScriptCall?.[1] as string).indexOf('"Second scene"')).toBeLessThan(
+      (voiceScriptCall?.[1] as string).indexOf('"Third scene"'),
+    );
     expect(spawnSync).toHaveBeenCalledWith(
       "docker",
       expect.arrayContaining([
@@ -187,11 +196,13 @@ describe("index runtime", () => {
 
     const { generate } = await import("../src/index.js");
 
-    await generate(createConfig({
-      outputPath: "videos/custom-name.webm",
-      scenes: [{ narration: "Hello world", stepIndex: 0 }],
-      voice: { provider: "piper", voice: "en_US-amy-medium", speed: 1 },
-    }));
+    await generate(
+      createConfig({
+        outputPath: "videos/custom-name.webm",
+        scenes: [{ narration: "Hello world", stepIndex: 0 }],
+        voice: { provider: "piper", voice: "en_US-amy-medium", speed: 1 },
+      }),
+    );
 
     expect(mkdirSync).toHaveBeenCalledWith("/workspace/project/videos", { recursive: true });
     expect(writeFileSync).toHaveBeenCalledWith(
@@ -215,7 +226,9 @@ describe("index runtime", () => {
 
     const { generate } = await import("../src/index.js");
 
-    await expect(generate(createConfig(), { noDocker: true })).rejects.toThrow("Failed to write config: disk full");
+    await expect(generate(createConfig(), { noDocker: true })).rejects.toThrow(
+      "Failed to write config: disk full",
+    );
     expect(unlinkSync).not.toHaveBeenCalled();
   });
 });

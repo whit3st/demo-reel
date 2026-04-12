@@ -132,9 +132,10 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
   const audioPath = getAudioPath(resolvedConfig);
   const narrationManifestPath = getNarrationManifestPath(audioPath);
   const voiceScriptPath = `.${name}.voice.tmp.json`;
-  const shouldRegenerateNarration = hasNarration && hasVoice
-    ? shouldRegenerateNarrationArtifacts(audioPath, narrationManifestPath)
-    : false;
+  const shouldRegenerateNarration =
+    hasNarration && hasVoice
+      ? shouldRegenerateNarrationArtifacts(audioPath, narrationManifestPath)
+      : false;
   mkdirSync(dirname(audioPath), { recursive: true });
 
   if (hasNarration && hasVoice && shouldRegenerateNarration) {
@@ -191,18 +192,19 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
     }
   }
 
-  const configWithAudio: DemoConfig = hasNarration && existsSync(audioPath)
-    ? {
-        ...resolvedConfig,
-        audio: {
-          ...resolvedConfig.audio,
-          narration: relative(process.cwd(), audioPath),
-          narrationManifest: relative(process.cwd(), narrationManifestPath),
-          narrationDelay: resolvedConfig.audio?.narrationDelay ?? 300,
-        },
-        outputFormat: "mp4",
-      }
-    : resolvedConfig;
+  const configWithAudio: DemoConfig =
+    hasNarration && existsSync(audioPath)
+      ? {
+          ...resolvedConfig,
+          audio: {
+            ...resolvedConfig.audio,
+            narration: relative(process.cwd(), audioPath),
+            narrationManifest: relative(process.cwd(), narrationManifestPath),
+            narrationDelay: resolvedConfig.audio?.narrationDelay ?? 300,
+          },
+          outputFormat: "mp4",
+        }
+      : resolvedConfig;
 
   const jsonPath = `.${name}.tmp.json`;
 

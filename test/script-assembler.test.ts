@@ -2,11 +2,7 @@ import { mkdtemp, readFile, rm } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { afterEach, describe, expect, it } from "vitest";
-import {
-  generateDemoConfig,
-  writeDemoConfig,
-  writeScriptJson,
-} from "../src/script/assembler.js";
+import { generateDemoConfig, writeDemoConfig, writeScriptJson } from "../src/script/assembler.js";
 import type { TimedScript } from "../src/script/types.js";
 
 const TEMP_DIRS: string[] = [];
@@ -82,22 +78,34 @@ describe("script assembler", () => {
     expect(source).toContain('outputFormat: "webm"');
     expect(source).toContain('narration: "/tmp/audio/final-narration.mp3"');
     expect(source).toContain('// Scene 1: "Open the template page and click the create button."');
-    expect(source).toContain('{ action: "goto", url: "https://example.com/templates", waitUntil: "networkidle" },');
-    expect(source).toContain('{ action: "click", selector: {"strategy":"testId","value":"create-template"}, delayAfterMs: 250 },');
+    expect(source).toContain(
+      '{ action: "goto", url: "https://example.com/templates", waitUntil: "networkidle" },',
+    );
+    expect(source).toContain(
+      '{ action: "click", selector: {"strategy":"testId","value":"create-template"}, delayAfterMs: 250 },',
+    );
     expect(source).toContain('{ action: "wait", ms: 400 },');
-    expect(source).toContain('{ action: "type", selector: {"strategy":"id","value":"name"}, text: "Invoice", clear: true, delayMs: 50 },');
-    expect(source).toContain('{ action: "waitFor", kind: "selector", selector: {"strategy":"class","value":"success-banner"}, state: "visible", timeoutMs: 3000 },');
+    expect(source).toContain(
+      '{ action: "type", selector: {"strategy":"id","value":"name"}, text: "Invoice", clear: true, delayMs: 50 },',
+    );
+    expect(source).toContain(
+      '{ action: "waitFor", kind: "selector", selector: {"strategy":"class","value":"success-banner"}, state: "visible", timeoutMs: 3000 },',
+    );
   });
 
   it("truncates long narration previews in scene comments", () => {
     const longNarration = "A".repeat(100);
-    const source = generateDemoConfig(createTimedScript({
-      scenes: [{
-        ...createTimedScript().scenes[0],
-        narration: longNarration,
-        gapAfterMs: 0,
-      }],
-    }));
+    const source = generateDemoConfig(
+      createTimedScript({
+        scenes: [
+          {
+            ...createTimedScript().scenes[0],
+            narration: longNarration,
+            gapAfterMs: 0,
+          },
+        ],
+      }),
+    );
 
     expect(source).toContain(`// Scene 1: "${"A".repeat(80)}..."`);
   });

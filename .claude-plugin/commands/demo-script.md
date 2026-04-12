@@ -28,6 +28,7 @@ Demo videos are designed as **modular, standalone segments** that also work toge
 ## Step 1: Understand the Goal
 
 Ask clarifying questions to understand:
+
 - **Who is the audience?** New users? Existing customers? Potential buyers?
 - **What's the starting point?** Where in the app does this flow begin?
 - **What's the end state?** What should the viewer see at the end?
@@ -56,6 +57,7 @@ Some steps need to happen before recording starts. These are **setup** and **aut
 Ask the user: "Is there anything we need to do before the recording starts?"
 
 Common setup steps:
+
 - Login flow → use the `auth` block with `loginSteps`, `validate`, `storage`
 - Create a fresh tenant/workspace → keeps demos reproducible and independent
 - Create prerequisite data (templates, users, etc.) that this video builds upon
@@ -135,6 +137,7 @@ export default demo({
 ```
 
 Key points:
+
 - Use `demo()` (or `defineConfig()`) from `'demo-reel'`
 - `setup` = steps before recording (off-screen), `cleanup` = steps after recording
 - `voice` config inline — voiceover is auto-generated during recording
@@ -157,6 +160,7 @@ pnpm demo-reel <name> --verbose
 This compiles the .demo.ts, generates voiceover (if voice config + narration present), runs the recording in Docker, and outputs video + subtitles + metadata.
 
 For local debugging with a visible browser:
+
 ```bash
 pnpm demo-reel-local <name> --headed --verbose
 ```
@@ -168,6 +172,7 @@ If it fails, check `output/debug/step-N-failure.png` for a screenshot of the pag
 ## Writing Guidelines
 
 **Narration:**
+
 - Goal-oriented — explain what we're trying to accomplish, not just what we're clicking
 - Concise — 1-3 sentences per scene, 30-90 seconds total
 - Conversational — "Let's", "Notice how", "Here's where we" (or Dutch equivalents)
@@ -176,6 +181,7 @@ If it fails, check `output/debug/step-N-failure.png` for a screenshot of the pag
 - For series: open with brief context so standalone viewers aren't lost
 
 **Pacing:**
+
 - `delayAfterMs: 500-1500` after visual changes
 - `wait: 1500-2500` after page navigations
 - `waitFor` after clicks that trigger loading
@@ -188,6 +194,7 @@ If it fails, check `output/debug/step-N-failure.png` for a screenshot of the pag
 **Navigation:** Always click elements in the UI. Never use `goto` for internal SPA pages — only for the initial page load after setup.
 
 **Scene structure:**
+
 - Each scene = one logical beat, not one page
 - First scene: brief context intro for standalone viewers
 - Last scene: linger on the result
