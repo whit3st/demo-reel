@@ -41,7 +41,9 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "lint": "oxlint .",
+    "lint:ci": "oxlint .",
     "format": "oxfmt . --write",
+    "format:ci": "oxfmt . --check",
     "demo": "node --import tsx/esm src/cli.ts",
     "demo:voice": "node --import tsx/esm src/script/voice-cli.ts",
     "prepublishOnly": "pnpm run build && pnpm test"
