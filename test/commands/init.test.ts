@@ -43,9 +43,7 @@ describe("InitCommand", () => {
       expect.stringContaining("export default defineConfig"),
       "utf-8",
     );
-    expect(ctx.console.log).toHaveBeenCalledWith(
-      "Created /workspace/project/example.demo.ts",
-    );
+    expect(ctx.console.log).toHaveBeenCalledWith("Created /workspace/project/example.demo.ts");
   });
 
   it("creates a valid demo-reel config", async () => {
@@ -56,7 +54,7 @@ describe("InitCommand", () => {
     await cmd.execute([], options, ctx);
 
     const writtenContent = vi.mocked(ctx.fs.writeFile).mock.calls[0]?.[1] as string;
-    
+
     expect(writtenContent).toContain("import { defineConfig } from 'demo-reel'");
     expect(writtenContent).toContain('resolution: "FHD"');
     expect(writtenContent).toContain("cursor: 'dot'");

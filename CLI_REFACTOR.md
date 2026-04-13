@@ -34,19 +34,26 @@ The CLI code in `src/cli.ts` has grown to ~485 lines with multiple responsibilit
 ```typescript
 // Big switch statement - hard to test each case independently
 switch (subcommandOrDescription) {
-  case "generate": { /* 20 lines */ }
-  case "voice": { /* 15 lines */ }
-  case "build": { /* 15 lines */ }
+  case "generate": {
+    /* 20 lines */
+  }
+  case "voice": {
+    /* 15 lines */
+  }
+  case "build": {
+    /* 15 lines */
+  }
   // ... more cases
 }
 
 // Deep nesting in runCli()
-if (options.help) { }
-else if (options.init) { }
-else if (options.script) { }
-else if (options.all) { }
-else if (scenario) { }
-else { }
+if (options.help) {
+} else if (options.init) {
+} else if (options.script) {
+} else if (options.all) {
+} else if (scenario) {
+} else {
+}
 ```
 
 ---
@@ -123,6 +130,7 @@ interface CommandContext {
 - [x] Write tests for `InitCommand` (achieved 100% coverage)
 
 **Files Created**:
+
 - `src/commands/types.ts`
 - `src/commands/registry.ts`
 - `src/commands/init.ts`
@@ -140,20 +148,15 @@ interface CommandContext {
   - Move logic from `handleScriptCommand` case "generate"
   - Extract argument parsing (description, url, hints)
   - Write tests (12 tests, 100% coverage)
-  
 - [ ] Create `ScriptVoiceCommand`
   - Handle voice generation logic
   - Test with mocked TTS service
-  
 - [ ] Create `ScriptBuildCommand`
   - Handle script building logic
-  
 - [ ] Create `ScriptValidateCommand`
   - Handle validation logic
-  
 - [ ] Create `ScriptFixCommand`
   - Handle fix logic
-  
 - [ ] Create `ScriptPipelineCommand`
   - Handle full pipeline (default case)
   - May delegate to other commands
@@ -168,11 +171,9 @@ interface CommandContext {
   - Handle finding all scenario files
   - Tag filtering logic
   - Loop through files
-  
 - [ ] Create `RunSingleCommand` (specific scenario)
   - Handle file path resolution
   - Tag validation
-  
 - [ ] Create `RunDefaultCommand` (no args)
   - Find and run all scenarios
   - Error if none found
@@ -190,7 +191,8 @@ interface CommandContext {
 - [ ] Update documentation
 - [ ] Achieve 90%+ coverage on `cli.ts`
 
-**Expected Result**: 
+**Expected Result**:
+
 - `cli.ts`: ~100 lines (down from ~485)
 - All commands in `src/commands/`
 - Each command has dedicated test file
@@ -215,9 +217,9 @@ describe("ScriptGenerateCommand", () => {
   it("calls script service with correct params", async () => {
     const ctx = createMockContext();
     const cmd = new ScriptGenerateCommand();
-    
+
     await cmd.execute(["desc"], { scriptUrl: "url" }, ctx);
-    
+
     expect(ctx.scriptCommands.generate).toHaveBeenCalledWith("desc", "url", expect.any(Object));
   });
 });
@@ -233,9 +235,9 @@ describe("CLI Routing", () => {
   it("routes 'init' to InitCommand", async () => {
     const registry = new CommandRegistry();
     registry.register(new InitCommand());
-    
+
     const result = await routeCommand(registry, ["init"], {});
-    
+
     expect(result).toBe(0);
   });
 });
@@ -253,7 +255,7 @@ const createMockContext = () => ({
     generate: vi.fn(),
     voice: vi.fn(),
     // ...
-  }
+  },
 });
 ```
 
@@ -269,25 +271,25 @@ const createMockContext = () => ({
 
 ### Commands To Migrate
 
-| Command | Current Location | Complexity | Priority | Status |
-|---------|-----------------|------------|----------|--------|
-| init | ✅ Migrated | Low | Done | **100% coverage** |
-| script generate | ✅ Migrated | Medium | High | **100% coverage** |
-| script voice | `handleScriptCommand` | Medium | High | Pending |
-| script build | `handleScriptCommand` | Medium | Medium |
-| script validate | `handleScriptCommand` | Medium | Medium |
-| script fix | `handleScriptCommand` | Medium | Low |
-| script pipeline | `handleScriptCommand` | High | Medium |
-| run all | `runCli` | High | High |
-| run single | `runCli` | Medium | High |
+| Command         | Current Location      | Complexity | Priority | Status            |
+| --------------- | --------------------- | ---------- | -------- | ----------------- |
+| init            | ✅ Migrated           | Low        | Done     | **100% coverage** |
+| script generate | ✅ Migrated           | Medium     | High     | **100% coverage** |
+| script voice    | `handleScriptCommand` | Medium     | High     | Pending           |
+| script build    | `handleScriptCommand` | Medium     | Medium   |
+| script validate | `handleScriptCommand` | Medium     | Medium   |
+| script fix      | `handleScriptCommand` | Medium     | Low      |
+| script pipeline | `handleScriptCommand` | High       | Medium   |
+| run all         | `runCli`              | High       | High     |
+| run single      | `runCli`              | Medium     | High     |
 
 ### Coverage Targets
 
-| File | Current | Target |
-|------|---------|--------|
-| cli.ts | 60% | 90%+ |
-| commands/init.ts | 100% ✅ | 100% |
-| commands/*.ts | N/A | 90%+ |
+| File             | Current | Target |
+| ---------------- | ------- | ------ |
+| cli.ts           | 60%     | 90%+   |
+| commands/init.ts | 100% ✅ | 100%   |
+| commands/\*.ts   | N/A     | 90%+   |
 
 ---
 
@@ -341,6 +343,7 @@ const createMockContext = () => ({
 ### Code Examples
 
 See:
+
 - `src/commands/init.ts` - Reference implementation
 - `test/commands/init.test.ts` - Testing example
 - `src/cli.ts` lines 387-398 - Integration example
@@ -353,17 +356,42 @@ See:
 
 ---
 
-## 8. Next Steps
+## 8. Development Workflow
+
+### Pre-commit Checklist
+
+Before committing any changes to the CLI or commands:
+
+```bash
+# 1. Run formatter
+pnpm format
+
+# 2. Run linter
+pnpm lint
+
+# 3. Run tests
+pnpm test
+
+# 4. Only then commit
+git add -A
+git commit -m "..."
+```
+
+**Note**: CI will fail if formatting or linting issues exist. Running these locally prevents broken builds.
+
+---
+
+## 9. Next Steps
 
 ### Immediate (Next Session)
 
-1. Extract `ScriptGenerateCommand` from `handleScriptCommand`
-2. Write tests for `ScriptGenerateCommand`
-3. Update `cli.ts` to route script generate through Command Pattern
+1. ~~Extract `ScriptGenerateCommand` from `handleScriptCommand`~~ ✅ Done
+2. ~~Write tests for `ScriptGenerateCommand`~~ ✅ Done
+3. ~~Update `cli.ts` to route script generate through Command Pattern~~ ✅ Done
 
 ### Short Term (This Week)
 
-1. Extract remaining script subcommands
+1. Extract remaining script subcommands (voice, build, validate, fix)
 2. Achieve 90%+ coverage on all script commands
 3. Simplify `handleScriptCommand` to a router
 
@@ -411,14 +439,14 @@ test/
 export async function runCli(): Promise<number> {
   const { scenario, options } = parseArgs();
   // ... 100+ lines of routing logic
-  
+
   if (options.init) {
     const demoPath = join(process.cwd(), "example.demo.ts");
     await writeFile(demoPath, EXAMPLE_SCENARIO, "utf-8");
     console.log(`Created ${demoPath}`);
     return 0;
   }
-  
+
   if (options.script) {
     return await handleScriptCommand(scenario, options);
   }
@@ -434,12 +462,12 @@ export async function runCli(): Promise<number> {
   const { args, options } = parseArgs();
   const registry = createCommandRegistry();
   const command = registry.find(args);
-  
+
   if (!command || !command.validate(args, options)) {
     showHelp();
     return 1;
   }
-  
+
   const ctx = createCommandContext();
   return await command.execute(args, options, ctx);
 }

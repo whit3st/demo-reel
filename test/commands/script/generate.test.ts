@@ -175,7 +175,7 @@ describe("ScriptGenerateCommand", () => {
       const cmd = new ScriptGenerateCommand();
       const ctx = createMockContext();
       const options = createGlobalOptions({ scriptUrl: "https://example.com" });
-      const description = 'Test "quotes" and \'apostrophes\'';
+      const description = "Test \"quotes\" and 'apostrophes'";
 
       const exitCode = await cmd.execute([description], options, ctx);
 

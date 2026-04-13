@@ -30,11 +30,7 @@ export class InitCommand implements Command {
     return args.length === 0;
   }
 
-  async execute(
-    _args: string[],
-    _options: GlobalOptions,
-    ctx: CommandContext,
-  ): Promise<number> {
+  async execute(_args: string[], _options: GlobalOptions, ctx: CommandContext): Promise<number> {
     const demoPath = join(ctx.cwd(), "example.demo.ts");
     await ctx.fs.writeFile(demoPath, EXAMPLE_SCENARIO, "utf-8");
     ctx.console.log(`Created ${demoPath}`);

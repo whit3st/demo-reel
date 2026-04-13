@@ -14,7 +14,14 @@ import {
   scriptFullPipeline,
 } from "./script/cli.js";
 import { resolveVoiceConfig } from "./voice-config.js";
-import { InitCommand, ScriptGenerateCommand, CommandRegistry, type GlobalOptions, type CommandContext, type ScriptGenerateCommandContext } from "./commands/index.js";
+import {
+  InitCommand,
+  ScriptGenerateCommand,
+  CommandRegistry,
+  type GlobalOptions,
+  type CommandContext,
+  type ScriptGenerateCommandContext,
+} from "./commands/index.js";
 
 interface CliOptions {
   verbose: boolean;
@@ -401,7 +408,7 @@ export async function runCli(): Promise<number> {
     if (options.init) {
       const registry = new CommandRegistry();
       registry.register(new InitCommand());
-      
+
       const command = registry.find(["init"]);
       if (command && command.validate([], toGlobalOptions(options))) {
         return await command.execute([], toGlobalOptions(options), createCommandContext());
