@@ -3,15 +3,28 @@ import { resolve } from "path";
 
 export interface AudioConfig {
   narration?: string; // Path to MP3 file
+  narrationManifest?: string; // Path to per-scene narration manifest JSON file
   narrationDelay?: number; // Delay in milliseconds before narration starts
   background?: string; // Path to MP3 file
   backgroundVolume?: number; // 0.0 to 1.0, default 0.3
 }
 
+export interface NarrationPlacement {
+  sceneIndex: number;
+  narration: string;
+  clipPath: string;
+  startMs: number;
+  endMs: number;
+}
+
+interface MixAudioConfig extends AudioConfig {
+  narrationPlacements?: NarrationPlacement[];
+}
+
 export interface MergeOptions {
   videoPath: string;
   outputPath: string;
-  audio?: AudioConfig;
+  audio?: MixAudioConfig;
 }
 
 // Import ffmpeg-static dynamically, fall back to system ffmpeg
@@ -37,8 +50,9 @@ async function getFfmpegPath(): Promise<string | null> {
  */
 export async function mergeAudioVideo(options: MergeOptions): Promise<string> {
   const { videoPath, outputPath, audio } = options;
+  const mixAudio = audio as MixAudioConfig | undefined;
 
-  if (!audio || (!audio.narration && !audio.background)) {
+  if (!audio || (!audio.narration && !audio.background && !mixAudio?.narrationPlacements?.length)) {
     // No audio to process, just copy video
     return videoPath;
   }
@@ -80,6 +94,7 @@ export async function mergeAudioVideo(options: MergeOptions): Promise<string> {
 }
 
 function buildFfmpegArgs(videoPath: string, outputPath: string, audio: AudioConfig): string[] {
+  const mixAudio = audio as MixAudioConfig;
   const args: string[] = [
     "-y", // Overwrite output file
     "-i",
@@ -88,6 +103,54 @@ function buildFfmpegArgs(videoPath: string, outputPath: string, audio: AudioConf
 
   let filterComplex = "";
   const narrationDelay = audio.narrationDelay ?? 0;
+
+  if (mixAudio.narrationPlacements && mixAudio.narrationPlacements.length > 0) {
+    for (const placement of mixAudio.narrationPlacements) {
+      args.push("-i", placement.clipPath);
+    }
+
+    if (audio.background) {
+      args.push("-i", audio.background);
+    }
+
+    const narrationFilters = mixAudio.narrationPlacements.map(
+      (placement, index) =>
+        `[${index + 1}:a]adelay=${placement.startMs}|${placement.startMs},volume=1[n${index}]`,
+    );
+    const narrationInputs = mixAudio.narrationPlacements.map((_, index) => `[n${index}]`).join("");
+    const narrationMix =
+      mixAudio.narrationPlacements.length === 1
+        ? `${narrationInputs}anull[narr]`
+        : `${narrationInputs}amix=inputs=${mixAudio.narrationPlacements.length}:duration=longest:dropout_transition=0[narr]`;
+
+    if (audio.background) {
+      const backgroundInputIndex = mixAudio.narrationPlacements.length + 1;
+      const bgVolume = audio.backgroundVolume ?? 0.3;
+      filterComplex = `${narrationFilters.join(";")};${narrationMix};[${backgroundInputIndex}:a]volume=${bgVolume}[bg];[narr][bg]amix=inputs=2:duration=longest:dropout_transition=0[out]`;
+      args.push("-filter_complex", filterComplex, "-map", "0:v", "-map", "[out]");
+    } else {
+      filterComplex = `${narrationFilters.join(";")};${narrationMix}`;
+      args.push("-filter_complex", filterComplex, "-map", "0:v", "-map", "[narr]");
+    }
+
+    args.push(
+      "-c:v",
+      "libx264",
+      "-preset",
+      "fast",
+      "-crf",
+      "23",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "192k",
+      "-movflags",
+      "+faststart",
+      outputPath,
+    );
+
+    return args;
+  }
 
   // Add narration if provided
   if (audio.narration) {
@@ -181,6 +244,12 @@ export function resolveAudioPaths(
 
   if (audio.narration) {
     resolved.narration = resolve(configDir, audio.narration);
+  }
+  if (audio.narrationManifest) {
+    resolved.narrationManifest = resolve(configDir, audio.narrationManifest);
+  }
+  if (audio.narrationDelay !== undefined) {
+    resolved.narrationDelay = audio.narrationDelay;
   }
   if (audio.background) {
     resolved.background = resolve(configDir, audio.background);

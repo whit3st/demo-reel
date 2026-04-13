@@ -1,11 +1,10 @@
 node_modules
 dist
-!dist/index.js
-!dist/index.d.ts
 test-videos
 .demo-reel-temp
 .demo-reel-cache
 .demo-reel-sessions
+coverage
 
 # Demo output (generated artifacts)
 **/output/

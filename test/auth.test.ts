@@ -44,8 +44,8 @@ describe("Auth Persistence", () => {
   });
 
   afterEach(async () => {
-    await context.close();
-    await browser.close();
+    await context?.close();
+    await browser?.close();
     await rm(TEST_DIR, { recursive: true, force: true });
   });
 

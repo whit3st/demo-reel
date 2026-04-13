@@ -88,9 +88,9 @@ interface DemoScript {
 }
 
 interface ScriptScene {
-  narration: string;             // What the voiceover says
-  steps: Step[];                 // demo-reel steps with real selectors
-  emphasis?: string;             // What to highlight visually
+  narration: string; // What the voiceover says
+  steps: Step[]; // demo-reel steps with real selectors
+  emphasis?: string; // What to highlight visually
 }
 ```
 
@@ -128,11 +128,11 @@ Launch Playwright, visit the URL, extract all interactive elements:
 
 ```typescript
 interface CrawledElement {
-  tag: string;                    // button, input, a, select, etc.
-  text: string;                   // visible text / aria-label / placeholder
-  selector: SelectorConfig;       // best stable selector found
+  tag: string; // button, input, a, select, etc.
+  text: string; // visible text / aria-label / placeholder
+  selector: SelectorConfig; // best stable selector found
   attributes: Record<string, string>;
-  boundingBox: { x, y, w, h };
+  boundingBox: { x; y; w; h };
 }
 ```
 
@@ -210,12 +210,12 @@ interface TTSOptions {
 }
 ```
 
-| Provider | Quality | Cost | Notes |
-|----------|---------|------|-------|
-| OpenAI TTS | Good | $0.015/1K chars | Good default, many voices |
-| ElevenLabs | Excellent | ~$0.30/1K chars | Best quality, expensive |
-| Google Cloud TTS | Good | $0.016/1K chars | Many languages |
-| Local (Piper) | Decent | Free | Offline, no API key needed |
+| Provider         | Quality   | Cost            | Notes                      |
+| ---------------- | --------- | --------------- | -------------------------- |
+| OpenAI TTS       | Good      | $0.015/1K chars | Good default, many voices  |
+| ElevenLabs       | Excellent | ~$0.30/1K chars | Best quality, expensive    |
+| Google Cloud TTS | Good      | $0.016/1K chars | Many languages             |
+| Local (Piper)    | Decent    | Free            | Offline, no API key needed |
 
 Default to OpenAI TTS for cost/quality balance. Support others via plugin interface.
 
@@ -275,6 +275,22 @@ export default defineScript({
     resolution: "FHD",
   },
 });
+```
+
+Provider-specific built-in voice values:
+
+- `piper`: `"nl_NL-mls-medium"`, `"en_US-amy-medium"`
+- `openai`: `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`
+- `elevenlabs`: `"21m00Tcm4TlvDq8ikWAM"`, `"5zhopMftSdRGaPYVcwKK"`, `CwhRBWXzGAHq8TQ4Fs17`
+
+For a custom Piper model, use `voicePath`:
+
+```typescript
+voice: {
+  provider: "piper",
+  voicePath: "/models/custom-voice.onnx",
+  speed: 1.0,
+}
 ```
 
 ---

@@ -3,6 +3,7 @@ import { loadConfig, loadScenario, findScenarioFiles } from "./config-loader.js"
 import { runVideoScenario, setOnBrowserCreated } from "./video-handler.js";
 import { writeFile } from "fs/promises";
 import { join } from "path";
+import { pathToFileURL } from "url";
 import {
   scriptGenerate,
   scriptVoice,
@@ -11,11 +12,13 @@ import {
   scriptFix,
   scriptFullPipeline,
 } from "./script/cli.js";
+import { resolveVoiceConfig } from "./voice-config.js";
 
 interface CliOptions {
   verbose: boolean;
   dryRun: boolean;
   all: boolean;
+  help?: boolean;
   init?: boolean;
   script?: boolean;
   outputDir?: string;
@@ -102,7 +105,7 @@ const addTags = (existing: string[] | undefined, value: string | undefined) => {
   return [...(existing ?? []), ...tags];
 };
 
-function parseArgs(): { scenario?: string; options: CliOptions } {
+export function parseArgs(): { scenario?: string; options: CliOptions } {
   const args = process.argv.slice(2);
   const options: CliOptions = {
     verbose: false,
@@ -148,13 +151,12 @@ function parseArgs(): { scenario?: string; options: CliOptions } {
     } else if (arg === "--format") {
       options.format = args[++i];
     } else if (arg === "--help" || arg === "-h") {
-      showHelp();
-      process.exit(0);
+      options.help = true;
     } else if (arg === "init") {
       options.init = true;
     } else if (arg === "script") {
       options.script = true;
-    } else if (!arg.startsWith("-")) {
+    } else if (!arg.startsWith("-") && scenario === undefined) {
       scenario = arg;
     }
   }
@@ -162,7 +164,7 @@ function parseArgs(): { scenario?: string; options: CliOptions } {
   return { scenario, options };
 }
 
-function showHelp(): void {
+export function showHelp(): void {
   console.log(`
 demo-reel - Create demo videos from web apps
 
@@ -214,15 +216,15 @@ Examples:
 `);
 }
 
-async function handleScriptCommand(
+export async function handleScriptCommand(
   subcommandOrDescription: string | undefined,
   options: CliOptions,
-): Promise<void> {
-  const voice = {
-    provider: "openai" as const,
+): Promise<number> {
+  const voice = resolveVoiceConfig({
+    provider: "openai",
     voice: options.scriptVoice || "alloy",
     speed: options.scriptSpeed || 1.0,
-  };
+  });
 
   const baseOpts = {
     verbose: options.verbose,
@@ -233,7 +235,7 @@ async function handleScriptCommand(
   if (!subcommandOrDescription) {
     console.error("Usage: demo-reel script <subcommand|description> [options]");
     console.error('Run "demo-reel --help" for details.');
-    process.exit(1);
+    return 1;
   }
 
   // Check if it's a known subcommand
@@ -245,13 +247,13 @@ async function handleScriptCommand(
       const description = process.argv[descIndex];
       if (!description || !options.scriptUrl) {
         console.error("Usage: demo-reel script generate <description> --url <url>");
-        process.exit(1);
+        return 1;
       }
       await scriptGenerate(description, options.scriptUrl, options.scriptOutput || "demo", {
         ...baseOpts,
         hints: options.scriptHints,
       });
-      return;
+      return 0;
     }
 
     case "voice": {
@@ -259,10 +261,10 @@ async function handleScriptCommand(
       const scriptPath = process.argv[descIndex];
       if (!scriptPath) {
         console.error("Usage: demo-reel script voice <script.json>");
-        process.exit(1);
+        return 1;
       }
       await scriptVoice(scriptPath, voice, baseOpts);
-      return;
+      return 0;
     }
 
     case "build": {
@@ -270,14 +272,14 @@ async function handleScriptCommand(
       const scriptPath = process.argv[descIndex];
       if (!scriptPath) {
         console.error("Usage: demo-reel script build <script.json>");
-        process.exit(1);
+        return 1;
       }
       await scriptBuild(scriptPath, {
         ...baseOpts,
         resolution: options.resolution,
         format: options.format,
       });
-      return;
+      return 0;
     }
 
     case "validate": {
@@ -285,11 +287,10 @@ async function handleScriptCommand(
       const scriptPath = process.argv[descIndex];
       if (!scriptPath) {
         console.error("Usage: demo-reel script validate <script.json>");
-        process.exit(1);
+        return 1;
       }
       const valid = await scriptValidate(scriptPath, baseOpts);
-      if (!valid) process.exit(1);
-      return;
+      return valid ? 0 : 1;
     }
 
     case "fix": {
@@ -297,10 +298,10 @@ async function handleScriptCommand(
       const scriptPath = process.argv[descIndex];
       if (!scriptPath) {
         console.error("Usage: demo-reel script fix <script.json>");
-        process.exit(1);
+        return 1;
       }
       await scriptFix(scriptPath, baseOpts);
-      return;
+      return 0;
     }
 
     default: {
@@ -308,7 +309,7 @@ async function handleScriptCommand(
       if (!options.scriptUrl) {
         console.error("Usage: demo-reel script <description> --url <url>");
         console.error("Or use a subcommand: generate, voice, build, validate, fix");
-        process.exit(1);
+        return 1;
       }
       await scriptFullPipeline(subcommandOrDescription, options.scriptUrl, {
         ...baseOpts,
@@ -318,12 +319,12 @@ async function handleScriptCommand(
         resolution: options.resolution,
         format: options.format,
       });
-      return;
+      return 0;
     }
   }
 }
 
-async function main(): Promise<void> {
+export async function runCli(): Promise<number> {
   const { scenario, options } = parseArgs();
   const tagFilter = options.tags && options.tags.length > 0 ? new Set(options.tags) : null;
   const matchesTags = (tags: string[] | undefined) => {
@@ -342,16 +343,20 @@ async function main(): Promise<void> {
   });
 
   try {
+    if (options.help) {
+      showHelp();
+      return 0;
+    }
+
     if (options.init) {
       const demoPath = join(process.cwd(), "example.demo.ts");
       await writeFile(demoPath, EXAMPLE_SCENARIO, "utf-8");
       console.log(`Created ${demoPath}`);
-      process.exit(0);
+      return 0;
     }
 
     if (options.script) {
-      await handleScriptCommand(scenario, options);
-      process.exit(0);
+      return await handleScriptCommand(scenario, options);
     }
 
     if (options.all) {
@@ -360,7 +365,7 @@ async function main(): Promise<void> {
 
       if (files.length === 0) {
         console.error("No *.demo.ts files found");
-        process.exit(1);
+        return 1;
       }
 
       console.log(`Found ${files.length} scenario(s)`);
@@ -385,7 +390,7 @@ async function main(): Promise<void> {
 
       if (tagFilter && matchedCount === 0) {
         console.error(`No scenarios match tags: ${options.tags?.join(", ")}`);
-        process.exit(1);
+        return 1;
       }
     } else if (scenario) {
       // Run specific scenario — accept full file path or scenario name
@@ -415,13 +420,13 @@ async function main(): Promise<void> {
         console.error("Looked for:");
         console.error(`  - ${scenario}.demo.ts`);
         console.error(`  - ${scenario}.config.ts`);
-        process.exit(1);
+        return 1;
       }
 
       const loaded = await loadConfig(configPath, options.outputDir);
       if (!matchesTags(loaded.config.tags)) {
         console.error(`Scenario does not match tags: ${options.tags?.join(", ")}`);
-        process.exit(1);
+        return 1;
       }
       await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
     } else {
@@ -431,7 +436,7 @@ async function main(): Promise<void> {
       if (files.length === 0) {
         console.error("No *.demo.ts files found");
         console.error('Run "demo-reel init" to create an example scenario');
-        process.exit(1);
+        return 1;
       }
 
       console.log(`Found ${files.length} scenario(s)`);
@@ -456,19 +461,25 @@ async function main(): Promise<void> {
 
       if (tagFilter && matchedCount === 0) {
         console.error(`No scenarios match tags: ${options.tags?.join(", ")}`);
-        process.exit(1);
+        return 1;
       }
     }
 
-    process.exit(0);
+    return 0;
   } catch (error) {
     if (options.verbose) {
       console.error(error);
     } else {
       console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
     }
-    process.exit(1);
+    return 1;
   }
 }
 
-main();
+export async function main(): Promise<void> {
+  process.exit(await runCli());
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  void main();
+}
