@@ -171,4 +171,99 @@ describe("script timing", () => {
       "Missing timed scene data for scene 2",
     );
   });
+
+  it("estimates duration for all step types including press, scroll, drag, select, upload, hover", () => {
+    const script = createScript({
+      scenes: [
+        {
+          narration: "Perform various actions.",
+          steps: [
+            { action: "goto", url: "https://example.com" },
+            { action: "hover", selector: { strategy: "id", value: "menu" } },
+            { action: "press", selector: { strategy: "id", value: "input" }, key: "Enter" },
+            { action: "scroll", selector: { strategy: "window", value: "" }, x: 0, y: 100 },
+            { action: "select", selector: { strategy: "id", value: "dropdown" }, value: "option1" },
+            {
+              action: "upload",
+              selector: { strategy: "id", value: "file" },
+              filePath: "/tmp/file.txt",
+            },
+            {
+              action: "drag",
+              source: { strategy: "id", value: "item1" },
+              target: { strategy: "id", value: "zone" },
+            },
+            { action: "wait", ms: 500 },
+          ],
+        },
+      ],
+    });
+    const timedScenes = [
+      createTimedScene({ audioDurationMs: 10000, audioOffsetMs: 0, gapAfterMs: 500 }),
+    ];
+
+    const result = synchronizeTiming(script, timedScenes, "./narration.mp3");
+
+    expect(result.scenes[0].steps.length).toBe(8);
+    expect(result.totalDurationMs).toBe(10500);
+  });
+
+  it("estimates duration for unknown step actions using default", () => {
+    const script = createScript({
+      scenes: [
+        {
+          narration: "Unknown action.",
+          steps: [{ action: "unknown" } as unknown as { action: "goto"; url: string }],
+        },
+      ],
+    });
+    const timedScenes = [
+      createTimedScene({ audioDurationMs: 3000, audioOffsetMs: 0, gapAfterMs: 0 }),
+    ];
+
+    const result = synchronizeTiming(script, timedScenes, "./narration.mp3");
+
+    expect(result.scenes[0].steps.length).toBe(1);
+  });
+
+  it("handles empty steps array without errors", () => {
+    const script = createScript({
+      scenes: [
+        {
+          narration: "No steps.",
+          steps: [],
+        },
+      ],
+    });
+    const timedScenes = [
+      createTimedScene({ audioDurationMs: 2000, audioOffsetMs: 0, gapAfterMs: 300 }),
+    ];
+
+    const result = synchronizeTiming(script, timedScenes, "./narration.mp3");
+
+    expect(result.scenes[0].steps).toEqual([]);
+    expect(result.totalDurationMs).toBe(2300);
+  });
+
+  it("handles steps with explicit zero delays", () => {
+    const script = createScript({
+      scenes: [
+        {
+          narration: "Zero delay.",
+          steps: [{ action: "wait", ms: 100, delayBeforeMs: 0, delayAfterMs: 0 }],
+        },
+      ],
+    });
+    const timedScenes = [
+      createTimedScene({ audioDurationMs: 1000, audioOffsetMs: 0, gapAfterMs: 0 }),
+    ];
+
+    const result = synchronizeTiming(script, timedScenes, "./narration.mp3");
+
+    expect(result.scenes[0].steps[0]).toMatchObject({
+      action: "wait",
+      delayBeforeMs: 0,
+      delayAfterMs: 1200,
+    });
+  });
 });

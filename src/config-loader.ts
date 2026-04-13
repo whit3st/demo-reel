@@ -22,15 +22,6 @@ async function loadConfigFile(configPath: string): Promise<DemoReelConfig> {
   const ext = extname(configPath);
 
   if (ext === ".ts") {
-    // For TypeScript files, we'll try to use dynamic import with tsx
-    // In a real implementation, we'd need to handle this better
-    // For now, we'll throw an error suggesting the build process
-    const module = await import(pathToFileURL(configPath).href);
-    const config = module.default || module;
-    return demoReelConfigSchema.parse(config);
-  }
-
-  if (ext === ".js" || ext === ".mjs") {
     const module = await import(pathToFileURL(configPath).href);
     const config = module.default || module;
     return demoReelConfigSchema.parse(config);
@@ -105,12 +96,7 @@ export async function loadConfig(configPath: string, cliOutputDir?: string): Pro
 }
 
 export async function findConfig(cwd: string = process.cwd()): Promise<string | null> {
-  const candidates = [
-    "demo-reel.config.ts",
-    "demo-reel.config.js",
-    "demo-reel.config.mjs",
-    "demo-reel.config.json",
-  ];
+  const candidates = ["demo-reel.config.ts", "demo-reel.config.json"];
 
   for (const candidate of candidates) {
     const fullPath = join(cwd, candidate);
@@ -139,14 +125,7 @@ export async function loadScenario(
   name: string,
   cwd: string = process.cwd(),
 ): Promise<string | null> {
-  const candidates = [
-    `${name}.demo.ts`,
-    `${name}.demo.js`,
-    `${name}.demo.mjs`,
-    `${name}.config.ts`,
-    `${name}.config.js`,
-    `${name}.config.mjs`,
-  ];
+  const candidates = [`${name}.demo.ts`, `${name}.config.ts`];
 
   for (const candidate of candidates) {
     const fullPath = join(cwd, candidate);
