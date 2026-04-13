@@ -494,7 +494,9 @@ describe("Auth Persistence", () => {
 
       const isValid = await validateSession(page, validateConfig, true);
       expect(isValid).toBe(false);
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Element not visible (timeout):"));
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Element not visible (timeout):"),
+      );
 
       consoleSpy.mockRestore();
     });

@@ -96,10 +96,7 @@ export async function loadConfig(configPath: string, cliOutputDir?: string): Pro
 }
 
 export async function findConfig(cwd: string = process.cwd()): Promise<string | null> {
-  const candidates = [
-    "demo-reel.config.ts",
-    "demo-reel.config.json",
-  ];
+  const candidates = ["demo-reel.config.ts", "demo-reel.config.json"];
 
   for (const candidate of candidates) {
     const fullPath = join(cwd, candidate);
@@ -128,10 +125,7 @@ export async function loadScenario(
   name: string,
   cwd: string = process.cwd(),
 ): Promise<string | null> {
-  const candidates = [
-    `${name}.demo.ts`,
-    `${name}.config.ts`,
-  ];
+  const candidates = [`${name}.demo.ts`, `${name}.config.ts`];
 
   for (const candidate of candidates) {
     const fullPath = join(cwd, candidate);

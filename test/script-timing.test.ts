@@ -183,8 +183,16 @@ describe("script timing", () => {
             { action: "press", selector: { strategy: "id", value: "input" }, key: "Enter" },
             { action: "scroll", selector: { strategy: "window", value: "" }, x: 0, y: 100 },
             { action: "select", selector: { strategy: "id", value: "dropdown" }, value: "option1" },
-            { action: "upload", selector: { strategy: "id", value: "file" }, filePath: "/tmp/file.txt" },
-            { action: "drag", source: { strategy: "id", value: "item1" }, target: { strategy: "id", value: "zone" } },
+            {
+              action: "upload",
+              selector: { strategy: "id", value: "file" },
+              filePath: "/tmp/file.txt",
+            },
+            {
+              action: "drag",
+              source: { strategy: "id", value: "item1" },
+              target: { strategy: "id", value: "zone" },
+            },
             { action: "wait", ms: 500 },
           ],
         },
@@ -205,9 +213,7 @@ describe("script timing", () => {
       scenes: [
         {
           narration: "Unknown action.",
-          steps: [
-            { action: "unknown" } as unknown as { action: "goto"; url: string },
-          ],
+          steps: [{ action: "unknown" } as unknown as { action: "goto"; url: string }],
         },
       ],
     });
@@ -244,9 +250,7 @@ describe("script timing", () => {
       scenes: [
         {
           narration: "Zero delay.",
-          steps: [
-            { action: "wait", ms: 100, delayBeforeMs: 0, delayAfterMs: 0 },
-          ],
+          steps: [{ action: "wait", ms: 100, delayBeforeMs: 0, delayAfterMs: 0 }],
         },
       ],
     });

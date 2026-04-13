@@ -9,12 +9,16 @@ import {
 
 describe("narration-manifest", () => {
   it("builds manifest and clip paths from audio files", () => {
-    expect(getNarrationManifestPath("/tmp/demo-narration.mp3")).toBe("/tmp/demo-narration.manifest.json");
+    expect(getNarrationManifestPath("/tmp/demo-narration.mp3")).toBe(
+      "/tmp/demo-narration.manifest.json",
+    );
     expect(getNarrationClipDir("/tmp/demo-narration.mp3")).toBe("/tmp/demo-narration-clips");
   });
 
   it("handles audio paths without file extensions", () => {
-    expect(getNarrationManifestPath("/tmp/demo-narration")).toBe("/tmp/demo-narration.manifest.json");
+    expect(getNarrationManifestPath("/tmp/demo-narration")).toBe(
+      "/tmp/demo-narration.manifest.json",
+    );
     expect(getNarrationClipDir("/tmp/demo-narration")).toBe("/tmp/demo-narration-clips");
   });
 
