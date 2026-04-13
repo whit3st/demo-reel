@@ -24,8 +24,8 @@ importers:
         specifier: ^1.58.0
         version: 1.58.2
       zod:
-        specifier: ^3.22.0
-        version: 3.25.76
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@types/node':
         specifier: ^25.6.0
@@ -1235,6 +1235,9 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
+  zod@4.3.6:
+    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
+
 snapshots:
 
   '@anthropic-ai/sdk@0.80.0(zod@3.25.76)':
@@ -2124,4 +2127,7 @@ snapshots:
       siginfo: 2.0.0
       stackback: 0.0.2
 
-  zod@3.25.76: {}
+  zod@3.25.76:
+    optional: true
+
+  zod@4.3.6: {}

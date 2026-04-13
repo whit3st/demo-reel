@@ -9,7 +9,7 @@ export const ELEVENLABS_VOICES = [
 ] as const;
 
 const pronunciationSchema = z
-  .record(z.string())
+  .record(z.string(), z.string())
   .optional()
   .describe(
     "Word replacements for pronunciation (e.g. { 'template': 'templayt', 'editor': 'èditor' })",

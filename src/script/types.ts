@@ -12,7 +12,7 @@ export const crawledElementSchema = z.object({
   role: z
     .enum(["link", "button", "input", "select", "checkbox", "radio", "textarea", "other"])
     .describe("Semantic role of the element"),
-  attributes: z.record(z.string()).describe("Relevant HTML attributes"),
+  attributes: z.record(z.string(), z.string()).describe("Relevant HTML attributes"),
   boundingBox: z
     .object({
       x: z.number(),
