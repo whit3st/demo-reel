@@ -3,7 +3,6 @@ import { loadConfig, loadScenario, findScenarioFiles } from "./config-loader.js"
 import { runVideoScenario, setOnBrowserCreated } from "./video-handler.js";
 import { generate } from "./index.js";
 import { writeFile } from "fs/promises";
-import { join } from "path";
 import { pathToFileURL } from "url";
 import type { DemoReelConfig } from "./schemas.js";
 import {
@@ -15,6 +14,7 @@ import {
   scriptFullPipeline,
 } from "./script/cli.js";
 import { resolveVoiceConfig } from "./voice-config.js";
+import { InitCommand, CommandRegistry, type GlobalOptions, type CommandContext } from "./commands/index.js";
 
 interface CliOptions {
   verbose: boolean;
@@ -35,6 +35,31 @@ interface CliOptions {
   noCache?: boolean;
   resolution?: string;
   format?: string;
+}
+
+function toGlobalOptions(options: CliOptions): GlobalOptions {
+  return {
+    verbose: options.verbose,
+    dryRun: options.dryRun,
+    headed: options.headed,
+    outputDir: options.outputDir,
+    tags: options.tags,
+  };
+}
+
+function createCommandContext(): CommandContext {
+  return {
+    fs: {
+      writeFile: async (path: string, content: string, encoding: string) => {
+        await writeFile(path, content, encoding as BufferEncoding);
+      },
+    },
+    cwd: () => process.cwd(),
+    console: {
+      log: (msg: string) => console.log(msg),
+      error: (msg: string) => console.error(msg),
+    },
+  };
 }
 
 let currentBrowser: { browser: any; context: any } | null = null;
@@ -73,27 +98,6 @@ function setupSignalHandlers(): void {
   process.once("SIGINT", () => cleanup("SIGINT"));
   process.once("SIGTERM", () => cleanup("SIGTERM"));
 }
-
-const EXAMPLE_SCENARIO = `import { defineConfig } from 'demo-reel';
-
-export default defineConfig({
-  video: {
-    resolution: "FHD",
-  },
-
-  name: 'example',
-
-  cursor: 'dot',
-  motion: 'smooth',
-  typing: 'humanlike',
-  timing: 'normal',
-
-  steps: [
-    { action: 'goto', url: 'https://example.com' },
-    { action: 'wait', ms: 1000 },
-  ],
-});
-`;
 
 const addTags = (existing: string[] | undefined, value: string | undefined) => {
   if (!value) {
@@ -377,11 +381,16 @@ export async function runCli(): Promise<number> {
       return 0;
     }
 
+    // Use Command Pattern for init command
     if (options.init) {
-      const demoPath = join(process.cwd(), "example.demo.ts");
-      await writeFile(demoPath, EXAMPLE_SCENARIO, "utf-8");
-      console.log(`Created ${demoPath}`);
-      return 0;
+      const registry = new CommandRegistry();
+      registry.register(new InitCommand());
+      
+      const command = registry.find(["init"]);
+      if (command && command.validate([], toGlobalOptions(options))) {
+        return await command.execute([], toGlobalOptions(options), createCommandContext());
+      }
+      return 1;
     }
 
     if (options.script) {
