@@ -49,10 +49,6 @@ Then use /demo-script in Claude Code to create demo videos collaboratively.`);
   });
   forwardSignals(proc);
   proc.on("close", (code) => process.exit(code ?? 1));
-} else if (args.length > 0) {
-  const cliPath = resolve(dirname(fileURLToPath(import.meta.url)), "../dist/cli.js");
-  const proc = spawn(process.execPath, [cliPath, ...args], { stdio: "inherit" });
-  proc.on("close", (code) => process.exit(code ?? 1));
 } else {
   console.log(`demo-reel — Create demo videos from web apps
 
