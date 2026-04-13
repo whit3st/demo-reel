@@ -1,7 +1,7 @@
 # Stage 1: Install production dependencies
 FROM node:25-slim AS deps
 
-RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
+RUN npm install -g pnpm@10.32.1
 
 WORKDIR /build
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -10,7 +10,7 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 # Stage 2: Build TypeScript
 FROM node:25-slim AS builder
 
-RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
+RUN npm install -g pnpm@10.32.1
 
 WORKDIR /build
 COPY --from=deps /build/node_modules node_modules/
