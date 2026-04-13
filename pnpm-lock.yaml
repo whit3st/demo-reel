@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@anthropic-ai/sdk':
         specifier: ^0.80.0
-        version: 0.80.0(zod@3.25.76)
+        version: 0.80.0(zod@4.3.6)
       ffmpeg-static:
         specifier: ^5.2.0
         version: 5.3.0
@@ -19,13 +19,13 @@ importers:
         version: 13.0.6
       openai:
         specifier: ^4.0.0 || ^5.0.0
-        version: 5.23.2(zod@3.25.76)
+        version: 5.23.2(zod@4.3.6)
       playwright:
         specifier: ^1.58.0
         version: 1.58.2
       zod:
-        specifier: ^3.22.0
-        version: 3.25.76
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@types/node':
         specifier: ^25.6.0
@@ -1232,16 +1232,16 @@ packages:
     engines: {node: '>=8'}
     hasBin: true
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+  zod@4.3.6:
+    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
 snapshots:
 
-  '@anthropic-ai/sdk@0.80.0(zod@3.25.76)':
+  '@anthropic-ai/sdk@0.80.0(zod@4.3.6)':
     dependencies:
       json-schema-to-ts: 3.1.1
     optionalDependencies:
-      zod: 3.25.76
+      zod: 4.3.6
 
   '@babel/helper-string-parser@7.27.1': {}
 
@@ -1897,9 +1897,9 @@ snapshots:
 
   obug@2.1.1: {}
 
-  openai@5.23.2(zod@3.25.76):
+  openai@5.23.2(zod@4.3.6):
     optionalDependencies:
-      zod: 3.25.76
+      zod: 4.3.6
 
   oxfmt@0.45.0:
     dependencies:
@@ -2124,4 +2124,4 @@ snapshots:
       siginfo: 2.0.0
       stackback: 0.0.2
 
-  zod@3.25.76: {}
+  zod@4.3.6: {}
