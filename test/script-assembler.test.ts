@@ -262,9 +262,13 @@ describe("script assembler", () => {
     // wait
     expect(source).toContain('{ action: "wait", ms: 1000 }');
     // waitFor kinds
-    expect(source).toContain('{ action: "waitFor", kind: "url", url: "https://example.com/dashboard" }');
+    expect(source).toContain(
+      '{ action: "waitFor", kind: "url", url: "https://example.com/dashboard" }',
+    );
     expect(source).toContain('{ action: "waitFor", kind: "loadState", state: "networkidle" }');
-    expect(source).toContain('{ action: "waitFor", kind: "request", url: "https://api.example.com/data" }');
+    expect(source).toContain(
+      '{ action: "waitFor", kind: "request", url: "https://api.example.com/data" }',
+    );
     expect(source).toContain(
       '{ action: "waitFor", kind: "response", url: "https://api.example.com/data", timeoutMs: 5000 }',
     );
