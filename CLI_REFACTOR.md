@@ -136,10 +136,10 @@ interface CommandContext {
 
 **Goal**: Extract all script subcommands
 
-- [ ] Create `ScriptGenerateCommand`
+- [x] Create `ScriptGenerateCommand` ✅ **COMPLETE**
   - Move logic from `handleScriptCommand` case "generate"
   - Extract argument parsing (description, url, hints)
-  - Write tests
+  - Write tests (12 tests, 100% coverage)
   
 - [ ] Create `ScriptVoiceCommand`
   - Handle voice generation logic
@@ -269,11 +269,11 @@ const createMockContext = () => ({
 
 ### Commands To Migrate
 
-| Command | Current Location | Complexity | Priority |
-|---------|-----------------|------------|----------|
-| init | ✅ Migrated | Low | Done |
-| script generate | `handleScriptCommand` | Medium | High |
-| script voice | `handleScriptCommand` | Medium | High |
+| Command | Current Location | Complexity | Priority | Status |
+|---------|-----------------|------------|----------|--------|
+| init | ✅ Migrated | Low | Done | **100% coverage** |
+| script generate | ✅ Migrated | Medium | High | **100% coverage** |
+| script voice | `handleScriptCommand` | Medium | High | Pending |
 | script build | `handleScriptCommand` | Medium | Medium |
 | script validate | `handleScriptCommand` | Medium | Medium |
 | script fix | `handleScriptCommand` | Medium | Low |

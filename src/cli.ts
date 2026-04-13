@@ -14,7 +14,7 @@ import {
   scriptFullPipeline,
 } from "./script/cli.js";
 import { resolveVoiceConfig } from "./voice-config.js";
-import { InitCommand, CommandRegistry, type GlobalOptions, type CommandContext } from "./commands/index.js";
+import { InitCommand, ScriptGenerateCommand, CommandRegistry, type GlobalOptions, type CommandContext, type ScriptGenerateCommandContext } from "./commands/index.js";
 
 interface CliOptions {
   verbose: boolean;
@@ -44,6 +44,14 @@ function toGlobalOptions(options: CliOptions): GlobalOptions {
     headed: options.headed,
     outputDir: options.outputDir,
     tags: options.tags,
+    scriptUrl: options.scriptUrl,
+    scriptOutput: options.scriptOutput,
+    scriptVoice: options.scriptVoice,
+    scriptSpeed: options.scriptSpeed,
+    scriptHints: options.scriptHints,
+    noCache: options.noCache,
+    resolution: options.resolution,
+    format: options.format,
   };
 }
 
@@ -278,15 +286,23 @@ export async function handleScriptCommand(
       // The actual description is the next positional arg — we need to re-parse
       const descIndex = process.argv.indexOf("generate") + 1;
       const description = process.argv[descIndex];
-      if (!description || !options.scriptUrl) {
+      const generateArgs = description ? [description] : [];
+
+      const cmd = new ScriptGenerateCommand();
+      if (!cmd.validate(generateArgs, toGlobalOptions(options))) {
         console.error("Usage: demo-reel script generate <description> --url <url>");
         return 1;
       }
-      await scriptGenerate(description, options.scriptUrl, options.scriptOutput || "demo", {
-        ...baseOpts,
-        hints: options.scriptHints,
-      });
-      return 0;
+
+      const generateCtx: ScriptGenerateCommandContext = {
+        ...createCommandContext(),
+        scriptCommands: {
+          generate: scriptGenerate,
+        },
+        getArgs: () => process.argv,
+      };
+
+      return await cmd.execute(generateArgs, toGlobalOptions(options), generateCtx);
     }
 
     case "voice": {

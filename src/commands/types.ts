@@ -6,6 +6,15 @@ export interface GlobalOptions {
   headed?: boolean;
   outputDir?: string;
   tags?: string[];
+  // Script-specific options
+  scriptUrl?: string;
+  scriptOutput?: string;
+  scriptVoice?: string;
+  scriptSpeed?: number;
+  scriptHints?: string[];
+  noCache?: boolean;
+  resolution?: string;
+  format?: string;
 }
 
 export interface CommandContext {
