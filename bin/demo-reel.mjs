@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import { execSync, spawn } from "child_process";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
 
 const SKILL_URL =
   "https://raw.githubusercontent.com/whit3st/demo-reel/main/.claude-plugin/commands/demo-script.md";
@@ -38,6 +40,10 @@ Then use /demo-script in Claude Code to create demo videos collaboratively.`);
     ...args.slice(1),
   ];
   const proc = spawn("docker", dockerArgs, { stdio: "inherit" });
+  proc.on("close", (code) => process.exit(code ?? 1));
+} else if (args.length > 0) {
+  const cliPath = resolve(dirname(fileURLToPath(import.meta.url)), "../dist/cli.js");
+  const proc = spawn(process.execPath, [cliPath, ...args], { stdio: "inherit" });
   proc.on("close", (code) => process.exit(code ?? 1));
 } else {
   console.log(`demo-reel — Create demo videos from web apps

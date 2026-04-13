@@ -19,21 +19,23 @@ const speedSchema = z.number().min(0.5).max(2.0).default(1.0).describe("Speech s
 
 export const piperVoiceConfigSchema = z
   .union([
-    z.object({
-      provider: z.literal("piper").default("piper").describe("TTS provider (piper = local/free)"),
-      voice: z
-        .enum(PIPER_VOICES)
-        .default("nl_NL-mls-medium")
-        .describe("Built-in Piper voice model"),
-      speed: speedSchema,
-      pronunciation: pronunciationSchema,
-    }),
+    // voicePath schema must come first - it has no defaults, so Zod will try it first
     z.object({
       provider: z.literal("piper").default("piper").describe("TTS provider (piper = local/free)"),
       voicePath: z
         .string()
         .min(1)
         .describe("Absolute path or .onnx path to a custom Piper voice model"),
+      speed: speedSchema,
+      pronunciation: pronunciationSchema,
+    }),
+    // voice schema has defaults, so it will match if voicePath is not present
+    z.object({
+      provider: z.literal("piper").default("piper").describe("TTS provider (piper = local/free)"),
+      voice: z
+        .enum(PIPER_VOICES)
+        .default("nl_NL-mls-medium")
+        .describe("Built-in Piper voice model"),
       speed: speedSchema,
       pronunciation: pronunciationSchema,
     }),
