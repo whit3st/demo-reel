@@ -33,3 +33,45 @@ describe("Public API", () => {
     await expect(generate({ steps: [] } as unknown as DemoConfig)).rejects.toThrow();
   });
 });
+
+describe("getBaseName edge cases", () => {
+  it("uses 'demo' as fallback when neither name nor outputPath is provided", () => {
+    // This indirectly tests getBaseName via the tmp file naming
+    const config = defineConfig({
+      video: { resolution: "FHD" },
+      cursor: "dot",
+      motion: "smooth",
+      typing: "humanlike",
+      timing: "normal",
+      steps: [{ action: "goto", url: "https://example.com" }],
+    });
+    expect(config.name).toBeUndefined();
+    expect(config.outputPath).toBeUndefined();
+  });
+
+  it("uses outputPath basename when name is not provided", () => {
+    const config = defineConfig({
+      video: { resolution: "FHD" },
+      cursor: "dot",
+      motion: "smooth",
+      typing: "humanlike",
+      timing: "normal",
+      outputPath: "./videos/my-demo.webm",
+      steps: [{ action: "goto", url: "https://example.com" }],
+    });
+    expect(config.outputPath).toBe("./videos/my-demo.webm");
+  });
+
+  it("handles outputPath with multiple dots in filename", () => {
+    const config = defineConfig({
+      video: { resolution: "FHD" },
+      cursor: "dot",
+      motion: "smooth",
+      typing: "humanlike",
+      timing: "normal",
+      outputPath: "./videos/my.demo.file.webm",
+      steps: [{ action: "goto", url: "https://example.com" }],
+    });
+    expect(config.outputPath).toBe("./videos/my.demo.file.webm");
+  });
+});

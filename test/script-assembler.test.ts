@@ -62,6 +62,107 @@ function createTimedScript(overrides: Partial<TimedScript> = {}): TimedScript {
   };
 }
 
+function createTimedScriptWithAllStepTypes(): TimedScript {
+  return {
+    title: "All Steps Test",
+    description: "Test all step types",
+    url: "https://example.com",
+    audioPath: "/tmp/audio/test.mp3",
+    totalDurationMs: 5000,
+    scenes: [
+      {
+        narration: "Test all step types",
+        steps: [
+          // goto without waitUntil
+          { action: "goto", url: "https://example.com" },
+          // wait
+          { action: "wait", ms: 1000 },
+          // waitFor with different kinds
+          {
+            action: "waitFor",
+            kind: "url",
+            url: "https://example.com/dashboard",
+          },
+          {
+            action: "waitFor",
+            kind: "loadState",
+            state: "networkidle",
+          },
+          {
+            action: "waitFor",
+            kind: "request",
+            url: "https://api.example.com/data",
+          },
+          {
+            action: "waitFor",
+            kind: "response",
+            url: "https://api.example.com/data",
+            timeoutMs: 5000,
+          },
+          {
+            action: "waitFor",
+            kind: "function",
+            expression: "() => document.readyState === 'complete'",
+          },
+          // click
+          {
+            action: "click",
+            selector: { strategy: "testId", value: "btn" },
+            delayBeforeMs: 100,
+          },
+          // type with all options
+          {
+            action: "type",
+            selector: { strategy: "id", value: "input" },
+            text: "hello",
+            clear: true,
+            delayMs: 30,
+          },
+          // press
+          {
+            action: "press",
+            key: "Enter",
+          },
+          // scroll
+          {
+            action: "scroll",
+            x: 100,
+            y: 200,
+          },
+          // select
+          {
+            action: "select",
+            selector: { strategy: "id", value: "dropdown" },
+            value: "option1",
+          },
+          // check
+          {
+            action: "check",
+            selector: { strategy: "id", value: "checkbox" },
+            checked: true,
+          },
+          // upload
+          {
+            action: "upload",
+            selector: { strategy: "testId", value: "file-input" },
+            filePath: "/path/to/file.pdf",
+          },
+          // drag
+          {
+            action: "drag",
+            source: { strategy: "id", value: "drag-source" },
+            target: { strategy: "id", value: "drag-target" },
+            delayAfterMs: 500,
+          },
+        ],
+        audioDurationMs: 5000,
+        audioOffsetMs: 0,
+        gapAfterMs: 0,
+      },
+    ],
+  };
+}
+
 afterEach(async () => {
   await Promise.all(TEMP_DIRS.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
 });
@@ -151,5 +252,79 @@ describe("script assembler", () => {
     expect(written.title).toBe("Create Template");
     expect(written.scenes).toHaveLength(2);
     expect(written.audioPath).toBe("/tmp/audio/final-narration.mp3");
+  });
+
+  it("serializes all step types correctly", () => {
+    const source = generateDemoConfig(createTimedScriptWithAllStepTypes());
+
+    // goto without waitUntil
+    expect(source).toContain('{ action: "goto", url: "https://example.com" }');
+    // wait
+    expect(source).toContain('{ action: "wait", ms: 1000 }');
+    // waitFor kinds
+    expect(source).toContain('{ action: "waitFor", kind: "url", url: "https://example.com/dashboard" }');
+    expect(source).toContain('{ action: "waitFor", kind: "loadState", state: "networkidle" }');
+    expect(source).toContain('{ action: "waitFor", kind: "request", url: "https://api.example.com/data" }');
+    expect(source).toContain(
+      '{ action: "waitFor", kind: "response", url: "https://api.example.com/data", timeoutMs: 5000 }',
+    );
+    expect(source).toContain(
+      '{ action: "waitFor", kind: "function", expression: "() => document.readyState === \'complete\'" }',
+    );
+    // click with delayBeforeMs
+    expect(source).toContain(
+      '{ action: "click", selector: {"strategy":"testId","value":"btn"}, delayBeforeMs: 100 }',
+    );
+    // type
+    expect(source).toContain(
+      '{ action: "type", selector: {"strategy":"id","value":"input"}, text: "hello", clear: true, delayMs: 30 }',
+    );
+    // press
+    expect(source).toContain('{ action: "press", key: "Enter" }');
+    // scroll
+    expect(source).toContain('{ action: "scroll", x: 100, y: 200 }');
+    // select
+    expect(source).toContain(
+      '{ action: "select", selector: {"strategy":"id","value":"dropdown"}, value: "option1" }',
+    );
+    // check
+    expect(source).toContain(
+      '{ action: "check", selector: {"strategy":"id","value":"checkbox"}, checked: true }',
+    );
+    // upload
+    expect(source).toContain(
+      '{ action: "upload", selector: {"strategy":"testId","value":"file-input"}, filePath: "/path/to/file.pdf" }',
+    );
+    // drag with delayAfterMs
+    expect(source).toContain(
+      '{ action: "drag", source: {"strategy":"id","value":"drag-source"}, target: {"strategy":"id","value":"drag-target"}, delayAfterMs: 500 }',
+    );
+  });
+
+  it("includes narrationManifestPath when provided", () => {
+    const script = createTimedScript({
+      narrationManifestPath: "/tmp/audio/final-narration.manifest.json",
+    });
+    const source = generateDemoConfig(script);
+
+    expect(source).toContain('narrationManifest: "/tmp/audio/final-narration.manifest.json"');
+  });
+
+  it("writes demo config with narration manifest path relative to output", async () => {
+    const dir = await createTempDir();
+    const outputPath = join(dir, "config", "demo.demo.ts");
+    const audioPath = join(dir, "audio", "narration.mp3");
+    const manifestPath = join(dir, "audio", "narration.manifest.json");
+
+    await writeDemoConfig(
+      createTimedScript({
+        audioPath,
+        narrationManifestPath: manifestPath,
+      }),
+      outputPath,
+    );
+
+    const source = await readFile(outputPath, "utf-8");
+    expect(source).toContain('narrationManifest: "../audio/narration.manifest.json"');
   });
 });

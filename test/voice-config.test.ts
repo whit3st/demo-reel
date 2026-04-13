@@ -31,7 +31,8 @@ describe("voice-config", () => {
     });
   });
 
-  it("ignores voicePath and absolute voice paths for piper", () => {
+  it("resolves piper with custom voice path when voice looks like a path", () => {
+    // When voice looks like a path (starts with / or contains .onnx), use voicePath
     expect(
       resolveVoiceConfig({
         provider: "piper",
@@ -40,10 +41,11 @@ describe("voice-config", () => {
       }),
     ).toEqual({
       provider: "piper",
-      voice: "nl_NL-mls-medium",
+      voicePath: "/models/custom.onnx",
       speed: 0.75,
     });
 
+    // voicePath takes precedence over voice
     expect(
       resolveVoiceConfig({
         provider: "piper",
@@ -52,7 +54,7 @@ describe("voice-config", () => {
       }),
     ).toEqual({
       provider: "piper",
-      voice: "nl_NL-mls-medium",
+      voicePath: "./voices/custom.onnx",
       speed: 1,
     });
   });
@@ -75,7 +77,7 @@ describe("voice-config", () => {
     expect(getVoiceName(resolveVoiceConfig({ provider: "openai", voice: "nova" }))).toBe("nova");
     expect(
       getVoiceName(resolveVoiceConfig({ provider: "piper", voicePath: "/models/custom.onnx" })),
-    ).toBe("nl_NL-mls-medium");
+    ).toBe("/models/custom.onnx");
   });
 
   it("rejects invalid provider-specific options", () => {

@@ -15,6 +15,13 @@ describe("narration-manifest", () => {
     expect(getNarrationClipDir("/tmp/demo-narration.mp3")).toBe("/tmp/demo-narration-clips");
   });
 
+  it("handles files with multiple dots in the name", () => {
+    expect(getNarrationManifestPath("/tmp/demo.v1.narration.mp3")).toBe(
+      "/tmp/demo.v1.narration.manifest.json",
+    );
+    expect(getNarrationClipDir("/tmp/demo.v1.narration.mp3")).toBe("/tmp/demo.v1.narration-clips");
+  });
+
   it("handles audio paths without file extensions", () => {
     expect(getNarrationManifestPath("/tmp/demo-narration")).toBe(
       "/tmp/demo-narration.manifest.json",
