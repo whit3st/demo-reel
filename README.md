@@ -7,7 +7,7 @@ Create professional demo videos from web apps. Code your demos in TypeScript, re
 ## Quick Start
 
 ```bash
-pnpm add -D demo-reel@github:whit3st/demo-reel tsx
+pnpm add -D demo-reel
 ```
 
 ```typescript

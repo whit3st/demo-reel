@@ -40,10 +40,14 @@ Then use /demo-script in Claude Code to create demo videos collaboratively.`);
     ...args.slice(1),
   ];
   const proc = spawn("docker", dockerArgs, { stdio: "inherit" });
+  forwardSignals(proc);
   proc.on("close", (code) => process.exit(code ?? 1));
 } else if (args.length > 0) {
   const cliPath = resolve(dirname(fileURLToPath(import.meta.url)), "../dist/cli.js");
-  const proc = spawn(process.execPath, [cliPath, ...args], { stdio: "inherit" });
+  const proc = spawn(process.execPath, ["--import", "tsx/esm", cliPath, ...args], {
+    stdio: "inherit",
+  });
+  forwardSignals(proc);
   proc.on("close", (code) => process.exit(code ?? 1));
 } else {
   console.log(`demo-reel — Create demo videos from web apps
@@ -72,4 +76,23 @@ function getImage() {
     execSync(`docker pull ${DEFAULT_IMAGE}`, { stdio: "inherit" });
     return DEFAULT_IMAGE;
   }
+}
+
+function forwardSignals(child) {
+  const signals = ["SIGINT", "SIGTERM"];
+  const forward = (signal) => {
+    if (!child.killed) {
+      child.kill(signal);
+    }
+  };
+
+  for (const signal of signals) {
+    process.on(signal, () => forward(signal));
+  }
+
+  process.on("exit", () => {
+    if (!child.killed) {
+      child.kill("SIGTERM");
+    }
+  });
 }

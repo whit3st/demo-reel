@@ -58,13 +58,18 @@ async function cleanupBrowser(): Promise<void> {
 }
 
 function setupSignalHandlers(): void {
-  const cleanup = () => {
+  const cleanup = (signal: "SIGINT" | "SIGTERM") => {
+    const exitCode = signal === "SIGINT" ? 130 : 0;
+    const timeout = setTimeout(() => process.exit(exitCode), 2000);
     cleanupBrowser()
-      .then(() => process.exit(0))
-      .catch(() => process.exit(0));
+      .catch(() => {})
+      .finally(() => {
+        clearTimeout(timeout);
+        process.exit(exitCode);
+      });
   };
-  process.on("SIGINT", cleanup);
-  process.on("SIGTERM", cleanup);
+  process.once("SIGINT", () => cleanup("SIGINT"));
+  process.once("SIGTERM", () => cleanup("SIGTERM"));
 }
 
 const EXAMPLE_SCENARIO = `import { defineConfig } from 'demo-reel';
