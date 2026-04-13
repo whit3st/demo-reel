@@ -17,6 +17,11 @@ async function writeJson(filePath: string, value: unknown): Promise<void> {
   await writeFile(filePath, JSON.stringify(value, null, 2), "utf-8");
 }
 
+async function writeTsConfig(filePath: string, value: unknown): Promise<void> {
+  await mkdir(dirname(filePath), { recursive: true });
+  await writeFile(filePath, `export default ${JSON.stringify(value, null, 2)};`, "utf-8");
+}
+
 function createMinimalConfig(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     video: { resolution: "FHD" },
@@ -90,11 +95,11 @@ describe("config-loader", () => {
   it("finds the first supported root config file by extension priority", async () => {
     const dir = await createTempDir();
     await writeJson(join(dir, "demo-reel.config.json"), createMinimalConfig());
-    await writeFile(join(dir, "demo-reel.config.mjs"), "export default {}", "utf-8");
+    await writeTsConfig(join(dir, "demo-reel.config.ts"), createMinimalConfig());
 
     const found = await findConfig(dir);
 
-    expect(found).toBe(join(dir, "demo-reel.config.mjs"));
+    expect(found).toBe(join(dir, "demo-reel.config.ts"));
   });
 
   it("finds scenario files and ignores dist output", async () => {
@@ -112,11 +117,75 @@ describe("config-loader", () => {
 
   it("finds scenarios by supported extension order", async () => {
     const dir = await createTempDir();
-    await writeFile(join(dir, "example.demo.js"), "export default {}", "utf-8");
+    await writeFile(join(dir, "example.demo.ts"), "export default {}", "utf-8");
     await writeFile(join(dir, "example.config.ts"), "export default {}", "utf-8");
 
     const found = await loadScenario("example", dir);
 
-    expect(found).toBe(join(dir, "example.demo.js"));
+    expect(found).toBe(join(dir, "example.demo.ts"));
+  });
+
+  it("loads ts config files", async () => {
+    const dir = await createTempDir();
+    const configPath = join(dir, "demo-reel.config.ts");
+    await writeTsConfig(configPath, createMinimalConfig({ name: "ts-demo" }));
+
+    const loaded = await loadConfig(configPath);
+
+    expect(loaded.config.name).toBe("ts-demo");
+  });
+
+  it("throws when config file is missing", async () => {
+    const dir = await createTempDir();
+    const missingPath = join(dir, "missing.demo.json");
+
+    await expect(loadConfig(missingPath)).rejects.toThrow(`Config file not found: ${missingPath}`);
+  });
+
+  it("throws when config file extension is unsupported", async () => {
+    const dir = await createTempDir();
+    const configPath = join(dir, "demo-reel.config.txt");
+    await writeFile(configPath, "noop", "utf-8");
+
+    await expect(loadConfig(configPath)).rejects.toThrow("Unsupported config file extension: .txt");
+  });
+
+  it("keeps absolute outputPath as-is", async () => {
+    const dir = await createTempDir();
+    const configPath = join(dir, "demo.config.json");
+    await writeJson(configPath, createMinimalConfig({ outputPath: "/tmp/demo-output.webm" }));
+
+    const loaded = await loadConfig(configPath);
+
+    expect(loaded.outputPath).toBe("/tmp/demo-output.webm");
+  });
+
+  it("uses absolute outputDir when provided", async () => {
+    const dir = await createTempDir();
+    const configPath = join(dir, "demo.config.json");
+    await writeJson(
+      configPath,
+      createMinimalConfig({ name: "abs-demo", outputDir: "/tmp/demo-output" }),
+    );
+
+    const loaded = await loadConfig(configPath);
+
+    expect(loaded.outputPath).toBe("/tmp/demo-output/abs-demo.webm");
+  });
+
+  it("returns null when no root config exists", async () => {
+    const dir = await createTempDir();
+
+    const found = await findConfig(dir);
+
+    expect(found).toBeNull();
+  });
+
+  it("returns null when scenario does not exist", async () => {
+    const dir = await createTempDir();
+
+    const found = await loadScenario("missing", dir);
+
+    expect(found).toBeNull();
   });
 });
