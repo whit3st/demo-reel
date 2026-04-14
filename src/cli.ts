@@ -19,6 +19,7 @@ import {
   ScriptGenerateCommand,
   ScriptBuildCommand,
   ScriptValidateCommand,
+  ScriptVoiceCommand,
   ScriptFixCommand,
   CommandRegistry,
   type GlobalOptions,
@@ -26,6 +27,7 @@ import {
   type ScriptBuildCommandContext,
   type ScriptGenerateCommandContext,
   type ScriptValidateCommandContext,
+  type ScriptVoiceCommandContext,
   type ScriptFixCommandContext,
 } from "./commands/index.js";
 
@@ -321,12 +323,23 @@ export async function handleScriptCommand(
     case "voice": {
       const descIndex = process.argv.indexOf("voice") + 1;
       const scriptPath = process.argv[descIndex];
-      if (!scriptPath) {
+      const voiceArgs = scriptPath ? [scriptPath] : [];
+
+      const cmd = new ScriptVoiceCommand();
+      if (!cmd.validate(voiceArgs, toGlobalOptions(options))) {
         console.error("Usage: demo-reel script voice <script.json>");
         return 1;
       }
-      await scriptVoice(scriptPath, voice, baseOpts);
-      return 0;
+
+      const voiceCtx: ScriptVoiceCommandContext = {
+        ...createCommandContext(),
+        resolveVoiceConfig,
+        scriptCommands: {
+          voice: scriptVoice,
+        },
+      };
+
+      return await cmd.execute(voiceArgs, toGlobalOptions(options), voiceCtx);
     }
 
     case "build": {
