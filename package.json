@@ -64,7 +64,7 @@
     "node": "link:@@types/node",
     "oxfmt": "^0.45.0",
     "oxlint": "^1.58.0",
-    "typescript": "^5.0.0",
+    "typescript": "^6.0.2",
     "vitest": "^4.1.4"
   },
   "peerDependencies": {

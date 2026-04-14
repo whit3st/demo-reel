@@ -6,7 +6,6 @@ const TENANT_SLUG = requireEnv("TENANT_SLUG");
 const TENANT_EMAIL = requireEnv("TENANT_EMAIL");
 const TENANT_PASSWORD = requireEnv("TENANT_PASSWORD");
 const TEMPLATE_SLUG = "vergunning-brief";
-const TARGET_BLOCK_ID = "DfShcJqgXUGZ2Fth2whJ9";
 
 export default defineConfig({
   video: {
