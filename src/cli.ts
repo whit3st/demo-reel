@@ -17,10 +17,12 @@ import { resolveVoiceConfig } from "./voice-config.js";
 import {
   InitCommand,
   ScriptGenerateCommand,
+  ScriptFixCommand,
   CommandRegistry,
   type GlobalOptions,
   type CommandContext,
   type ScriptGenerateCommandContext,
+  type ScriptFixCommandContext,
 } from "./commands/index.js";
 
 interface CliOptions {
@@ -352,12 +354,22 @@ export async function handleScriptCommand(
     case "fix": {
       const descIndex = process.argv.indexOf("fix") + 1;
       const scriptPath = process.argv[descIndex];
-      if (!scriptPath) {
+      const fixArgs = scriptPath ? [scriptPath] : [];
+
+      const cmd = new ScriptFixCommand();
+      if (!cmd.validate(fixArgs, toGlobalOptions(options))) {
         console.error("Usage: demo-reel script fix <script.json>");
         return 1;
       }
-      await scriptFix(scriptPath, baseOpts);
-      return 0;
+
+      const fixCtx: ScriptFixCommandContext = {
+        ...createCommandContext(),
+        scriptCommands: {
+          fix: scriptFix,
+        },
+      };
+
+      return await cmd.execute(fixArgs, toGlobalOptions(options), fixCtx);
     }
 
     default: {
