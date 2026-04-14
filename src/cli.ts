@@ -22,9 +22,11 @@ import {
   ScriptVoiceCommand,
   ScriptFixCommand,
   ScriptPipelineCommand,
+  RunAllCommand,
   CommandRegistry,
   type GlobalOptions,
   type CommandContext,
+  type RunAllCommandContext,
   type ScriptBuildCommandContext,
   type ScriptGenerateCommandContext,
   type ScriptPipelineCommandContext,
@@ -459,38 +461,21 @@ export async function runCli(): Promise<number> {
     }
 
     if (options.all) {
-      // Run all demo scenarios
-      const files = await findScenarioFiles();
-
-      if (files.length === 0) {
-        console.error("No *.demo.ts files found");
+      type LoadedConfigType = Awaited<ReturnType<typeof loadConfig>>;
+      const cmd = new RunAllCommand<LoadedConfigType>();
+      const globalOptions = toGlobalOptions(options);
+      if (!cmd.validate([], globalOptions)) {
         return 1;
       }
 
-      console.log(`Found ${files.length} scenario(s)`);
-      if (tagFilter) {
-        console.log(`Filtering by tags: ${options.tags?.join(", ")}`);
-      }
+      const runAllCtx: RunAllCommandContext<LoadedConfigType> = {
+        ...createCommandContext(),
+        findScenarioFiles,
+        loadConfig,
+        runScenario: async (loaded) => runScenario(loaded, options),
+      };
 
-      let matchedCount = 0;
-
-      for (const file of files) {
-        console.log(`\n▶ ${file}`);
-        const loaded = await loadConfig(file, options.outputDir);
-        if (!matchesTags(loaded.config.tags)) {
-          if (options.verbose) {
-            console.log("  ↳ Skipped (tags)");
-          }
-          continue;
-        }
-        matchedCount += 1;
-        await runScenario(loaded, options);
-      }
-
-      if (tagFilter && matchedCount === 0) {
-        console.error(`No scenarios match tags: ${options.tags?.join(", ")}`);
-        return 1;
-      }
+      return await cmd.execute([], globalOptions, runAllCtx);
     } else if (scenario) {
       // Run specific scenario — accept full file path or scenario name
       let configPath: string | null = null;

@@ -167,7 +167,7 @@ interface CommandContext {
 
 **Goal**: Extract scenario execution logic
 
-- [ ] Create `RunAllCommand` (`--all` flag)
+- [x] Create `RunAllCommand` (`--all` flag) ✅ **COMPLETE**
   - Handle finding all scenario files
   - Tag filtering logic
   - Loop through files
@@ -280,7 +280,7 @@ const createMockContext = () => ({
 | script validate | ✅ Migrated      | Medium     | Medium   | **100% coverage** |
 | script fix      | ✅ Migrated      | Medium     | Low      | **100% coverage** |
 | script pipeline | ✅ Migrated      | High       | Medium   | **100% coverage** |
-| run all         | `runCli`         | High       | High     |
+| run all         | ✅ Migrated      | High       | High     | **100% coverage** |
 | run single      | `runCli`         | Medium     | High     |
 
 ### Coverage Targets
