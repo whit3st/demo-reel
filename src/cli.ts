@@ -18,12 +18,14 @@ import {
   InitCommand,
   ScriptGenerateCommand,
   ScriptBuildCommand,
+  ScriptValidateCommand,
   ScriptFixCommand,
   CommandRegistry,
   type GlobalOptions,
   type CommandContext,
   type ScriptBuildCommandContext,
   type ScriptGenerateCommandContext,
+  type ScriptValidateCommandContext,
   type ScriptFixCommandContext,
 } from "./commands/index.js";
 
@@ -351,12 +353,22 @@ export async function handleScriptCommand(
     case "validate": {
       const descIndex = process.argv.indexOf("validate") + 1;
       const scriptPath = process.argv[descIndex];
-      if (!scriptPath) {
+      const validateArgs = scriptPath ? [scriptPath] : [];
+
+      const cmd = new ScriptValidateCommand();
+      if (!cmd.validate(validateArgs, toGlobalOptions(options))) {
         console.error("Usage: demo-reel script validate <script.json>");
         return 1;
       }
-      const valid = await scriptValidate(scriptPath, baseOpts);
-      return valid ? 0 : 1;
+
+      const validateCtx: ScriptValidateCommandContext = {
+        ...createCommandContext(),
+        scriptCommands: {
+          validate: scriptValidate,
+        },
+      };
+
+      return await cmd.execute(validateArgs, toGlobalOptions(options), validateCtx);
     }
 
     case "fix": {
