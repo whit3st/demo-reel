@@ -174,7 +174,7 @@ interface CommandContext {
 - [x] Create `RunSingleCommand` (specific scenario) ✅ **COMPLETE**
   - Handle file path resolution
   - Tag validation
-- [ ] Create `RunDefaultCommand` (no args)
+- [x] Create `RunDefaultCommand` (no args) ✅ **COMPLETE**
   - Find and run all scenarios
   - Error if none found
 
