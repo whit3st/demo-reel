@@ -1,29 +1,15 @@
-import { resolveVoiceConfig, type VoiceConfig, type VoiceConfigOverrides } from "../../voice-config.js";
+import {
+  resolveVoiceConfig,
+  type VoiceConfig,
+  type VoiceConfigOverrides,
+} from "../../voice-config.js";
 import type { Command, CommandContext, GlobalOptions } from "../types.js";
-import {
-  ScriptBuildCommand,
-  type ScriptBuildCommandContext,
-} from "./build.js";
-import {
-  ScriptFixCommand,
-  type ScriptFixCommandContext,
-} from "./fix.js";
-import {
-  ScriptGenerateCommand,
-  type ScriptGenerateCommandContext,
-} from "./generate.js";
-import {
-  ScriptPipelineCommand,
-  type ScriptPipelineCommandContext,
-} from "./pipeline.js";
-import {
-  ScriptValidateCommand,
-  type ScriptValidateCommandContext,
-} from "./validate.js";
-import {
-  ScriptVoiceCommand,
-  type ScriptVoiceCommandContext,
-} from "./voice.js";
+import { ScriptBuildCommand, type ScriptBuildCommandContext } from "./build.js";
+import { ScriptFixCommand, type ScriptFixCommandContext } from "./fix.js";
+import { ScriptGenerateCommand, type ScriptGenerateCommandContext } from "./generate.js";
+import { ScriptPipelineCommand, type ScriptPipelineCommandContext } from "./pipeline.js";
+import { ScriptValidateCommand, type ScriptValidateCommandContext } from "./validate.js";
+import { ScriptVoiceCommand, type ScriptVoiceCommandContext } from "./voice.js";
 
 export interface ScriptRouterCommandContext extends CommandContext {
   getArgAfter: (token: string) => string | undefined;
@@ -45,7 +31,11 @@ export class ScriptRouterCommand implements Command {
     return args.length >= 1;
   }
 
-  async execute(args: string[], options: GlobalOptions, ctx: ScriptRouterCommandContext): Promise<number> {
+  async execute(
+    args: string[],
+    options: GlobalOptions,
+    ctx: ScriptRouterCommandContext,
+  ): Promise<number> {
     const subcommandOrDescription = args[0];
 
     if (!subcommandOrDescription) {

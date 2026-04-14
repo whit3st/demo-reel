@@ -368,7 +368,6 @@ export async function runCli(): Promise<number> {
 
       return await cmd.execute([], globalOptions, runDefaultCtx);
     }
-
   } catch (error) {
     if (options.verbose) {
       console.error(error);
