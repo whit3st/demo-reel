@@ -151,7 +151,7 @@ interface CommandContext {
 - [ ] Create `ScriptVoiceCommand`
   - Handle voice generation logic
   - Test with mocked TTS service
-- [ ] Create `ScriptBuildCommand`
+- [x] Create `ScriptBuildCommand` ✅ **COMPLETE**
   - Handle script building logic
 - [ ] Create `ScriptValidateCommand`
   - Handle validation logic
@@ -276,7 +276,7 @@ const createMockContext = () => ({
 | init            | ✅ Migrated           | Low        | Done     | **100% coverage** |
 | script generate | ✅ Migrated           | Medium     | High     | **100% coverage** |
 | script voice    | `handleScriptCommand` | Medium     | High     | Pending           |
-| script build    | `handleScriptCommand` | Medium     | Medium   |
+| script build    | ✅ Migrated           | Medium     | Medium   | **100% coverage** |
 | script validate | `handleScriptCommand` | Medium     | Medium   |
 | script fix      | ✅ Migrated           | Medium     | Low      | **100% coverage** |
 | script pipeline | `handleScriptCommand` | High       | Medium   |

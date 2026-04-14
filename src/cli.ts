@@ -17,10 +17,12 @@ import { resolveVoiceConfig } from "./voice-config.js";
 import {
   InitCommand,
   ScriptGenerateCommand,
+  ScriptBuildCommand,
   ScriptFixCommand,
   CommandRegistry,
   type GlobalOptions,
   type CommandContext,
+  type ScriptBuildCommandContext,
   type ScriptGenerateCommandContext,
   type ScriptFixCommandContext,
 } from "./commands/index.js";
@@ -328,16 +330,22 @@ export async function handleScriptCommand(
     case "build": {
       const descIndex = process.argv.indexOf("build") + 1;
       const scriptPath = process.argv[descIndex];
-      if (!scriptPath) {
+      const buildArgs = scriptPath ? [scriptPath] : [];
+
+      const cmd = new ScriptBuildCommand();
+      if (!cmd.validate(buildArgs, toGlobalOptions(options))) {
         console.error("Usage: demo-reel script build <script.json>");
         return 1;
       }
-      await scriptBuild(scriptPath, {
-        ...baseOpts,
-        resolution: options.resolution,
-        format: options.format,
-      });
-      return 0;
+
+      const buildCtx: ScriptBuildCommandContext = {
+        ...createCommandContext(),
+        scriptCommands: {
+          build: scriptBuild,
+        },
+      };
+
+      return await cmd.execute(buildArgs, toGlobalOptions(options), buildCtx);
     }
 
     case "validate": {
