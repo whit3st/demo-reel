@@ -45,6 +45,9 @@ importers:
       dotenv:
         specifier: ^17.4.1
         version: 17.4.2
+      node:
+        specifier: link:@@types/node
+        version: link:@@types/node
       oxfmt:
         specifier: ^0.45.0
         version: 0.45.0

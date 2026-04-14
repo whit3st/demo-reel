@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 import { loadConfig, loadScenario, findScenarioFiles } from "./config-loader.js";
 import { runVideoScenario, setOnBrowserCreated } from "./video-handler.js";
+import { generate } from "./index.js";
 import { writeFile } from "fs/promises";
 import { join } from "path";
 import { pathToFileURL } from "url";
+import type { DemoReelConfig } from "./schemas.js";
 import {
   scriptGenerate,
   scriptVoice,
@@ -109,6 +111,28 @@ const addTags = (existing: string[] | undefined, value: string | undefined) => {
 
   return [...(existing ?? []), ...tags];
 };
+
+function shouldGenerateVoice(config: DemoReelConfig): boolean {
+  const hasVoice = Boolean(config.voice);
+  const hasNarration = (config.scenes ?? []).some((scene) => Boolean(scene.narration));
+  const hasNarrationAudio = Boolean(config.audio?.narration || config.audio?.narrationManifest);
+  return hasVoice && hasNarration && !hasNarrationAudio;
+}
+
+async function runScenario(
+  loaded: Awaited<ReturnType<typeof loadConfig>>,
+  options: CliOptions,
+): Promise<void> {
+  if (shouldGenerateVoice(loaded.config)) {
+    const config = options.outputDir
+      ? { ...loaded.config, outputDir: options.outputDir }
+      : loaded.config;
+    await generate(config, { verbose: options.verbose });
+    return;
+  }
+
+  await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
+}
 
 export function parseArgs(): { scenario?: string; options: CliOptions } {
   const args = process.argv.slice(2);
@@ -390,7 +414,7 @@ export async function runCli(): Promise<number> {
           continue;
         }
         matchedCount += 1;
-        await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
+        await runScenario(loaded, options);
       }
 
       if (tagFilter && matchedCount === 0) {
@@ -433,7 +457,7 @@ export async function runCli(): Promise<number> {
         console.error(`Scenario does not match tags: ${options.tags?.join(", ")}`);
         return 1;
       }
-      await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
+      await runScenario(loaded, options);
     } else {
       // Run all scenarios
       const files = await findScenarioFiles();
@@ -461,7 +485,7 @@ export async function runCli(): Promise<number> {
           continue;
         }
         matchedCount += 1;
-        await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
+        await runScenario(loaded, options);
       }
 
       if (tagFilter && matchedCount === 0) {

@@ -1,0 +1,43 @@
+{
+  "video": "dashboard-demo.mp4",
+  "scenes": [
+    {
+      "index": 0,
+      "narration": "In this demo, we will explore the template editor and its features.",
+      "isIntro": false,
+      "visualStartMs": 2,
+      "visualEndMs": 4448,
+      "audioStartMs": 2,
+      "audioEndMs": 4443
+    },
+    {
+      "index": 1,
+      "narration": "First, we navigate to the Epistola dashboard and select a template to edit.",
+      "isIntro": false,
+      "visualStartMs": 4448,
+      "visualEndMs": 7384,
+      "audioStartMs": 4448,
+      "audioEndMs": 9620
+    },
+    {
+      "index": 2,
+      "narration": "We then open the template editor and select a block to customize its style.",
+      "isIntro": false,
+      "visualStartMs": 7384,
+      "visualEndMs": 8678,
+      "audioStartMs": 7384,
+      "audioEndMs": 12504
+    },
+    {
+      "index": 3,
+      "narration": "Let's change the background color of the block.",
+      "isIntro": false,
+      "visualStartMs": 8678,
+      "visualEndMs": 15267,
+      "audioStartMs": 8678,
+      "audioEndMs": 12022
+    }
+  ],
+  "introEndMs": null,
+  "totalDurationMs": 15267
+}
