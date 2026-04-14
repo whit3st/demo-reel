@@ -2,8 +2,8 @@
 import { loadConfig, loadScenario, findScenarioFiles } from "./config-loader.js";
 import { runVideoScenario, setOnBrowserCreated } from "./video-handler.js";
 import { generate } from "./index.js";
-import { writeFile } from "fs/promises";
-import { join } from "path";
+import { access, writeFile } from "fs/promises";
+import { resolve as resolvePath } from "path";
 import { pathToFileURL } from "url";
 import type { DemoReelConfig } from "./schemas.js";
 import {
@@ -14,7 +14,20 @@ import {
   scriptFix,
   scriptFullPipeline,
 } from "./script/cli.js";
-import { resolveVoiceConfig } from "./voice-config.js";
+import {
+  InitCommand,
+  ScriptRouterCommand,
+  createDefaultScriptRouterContext,
+  RunAllCommand,
+  RunSingleCommand,
+  RunDefaultCommand,
+  CommandRegistry,
+  type GlobalOptions,
+  type CommandContext,
+  type RunAllCommandContext,
+  type RunDefaultCommandContext,
+  type RunSingleCommandContext,
+} from "./commands/index.js";
 
 interface CliOptions {
   verbose: boolean;
@@ -37,7 +50,41 @@ interface CliOptions {
   format?: string;
 }
 
+function toGlobalOptions(options: CliOptions): GlobalOptions {
+  return {
+    verbose: options.verbose,
+    dryRun: options.dryRun,
+    headed: options.headed,
+    outputDir: options.outputDir,
+    tags: options.tags,
+    scriptUrl: options.scriptUrl,
+    scriptOutput: options.scriptOutput,
+    scriptVoice: options.scriptVoice,
+    scriptSpeed: options.scriptSpeed,
+    scriptHints: options.scriptHints,
+    noCache: options.noCache,
+    resolution: options.resolution,
+    format: options.format,
+  };
+}
+
+function createCommandContext(): CommandContext {
+  return {
+    fs: {
+      writeFile: async (path: string, content: string, encoding: string) => {
+        await writeFile(path, content, encoding as BufferEncoding);
+      },
+    },
+    cwd: () => process.cwd(),
+    console: {
+      log: (msg: string) => console.log(msg),
+      error: (msg: string) => console.error(msg),
+    },
+  };
+}
+
 let currentBrowser: { browser: any; context: any } | null = null;
+let signalHandlersRegistered = false;
 
 function registerCleanup(browser: any, context: any): void {
   currentBrowser = { browser, context };
@@ -60,6 +107,10 @@ async function cleanupBrowser(): Promise<void> {
 }
 
 function setupSignalHandlers(): void {
+  if (signalHandlersRegistered) {
+    return;
+  }
+
   const cleanup = (signal: "SIGINT" | "SIGTERM") => {
     const exitCode = signal === "SIGINT" ? 130 : 0;
     const timeout = setTimeout(() => process.exit(exitCode), 2000);
@@ -72,28 +123,8 @@ function setupSignalHandlers(): void {
   };
   process.once("SIGINT", () => cleanup("SIGINT"));
   process.once("SIGTERM", () => cleanup("SIGTERM"));
+  signalHandlersRegistered = true;
 }
-
-const EXAMPLE_SCENARIO = `import { defineConfig } from 'demo-reel';
-
-export default defineConfig({
-  video: {
-    resolution: "FHD",
-  },
-
-  name: 'example',
-
-  cursor: 'dot',
-  motion: 'smooth',
-  typing: 'humanlike',
-  timing: 'normal',
-
-  steps: [
-    { action: 'goto', url: 'https://example.com' },
-    { action: 'wait', ms: 1000 },
-  ],
-});
-`;
 
 const addTags = (existing: string[] | undefined, value: string | undefined) => {
   if (!value) {
@@ -245,126 +276,8 @@ Examples:
 `);
 }
 
-export async function handleScriptCommand(
-  subcommandOrDescription: string | undefined,
-  options: CliOptions,
-): Promise<number> {
-  const voice = resolveVoiceConfig({
-    provider: "openai",
-    voice: options.scriptVoice || "alloy",
-    speed: options.scriptSpeed || 1.0,
-  });
-
-  const baseOpts = {
-    verbose: options.verbose,
-    headed: options.headed,
-    noCache: options.noCache,
-  };
-
-  if (!subcommandOrDescription) {
-    console.error("Usage: demo-reel script <subcommand|description> [options]");
-    console.error('Run "demo-reel --help" for details.');
-    return 1;
-  }
-
-  // Check if it's a known subcommand
-  switch (subcommandOrDescription) {
-    case "generate": {
-      // demo-reel script generate "description" --url <url>
-      // The actual description is the next positional arg — we need to re-parse
-      const descIndex = process.argv.indexOf("generate") + 1;
-      const description = process.argv[descIndex];
-      if (!description || !options.scriptUrl) {
-        console.error("Usage: demo-reel script generate <description> --url <url>");
-        return 1;
-      }
-      await scriptGenerate(description, options.scriptUrl, options.scriptOutput || "demo", {
-        ...baseOpts,
-        hints: options.scriptHints,
-      });
-      return 0;
-    }
-
-    case "voice": {
-      const descIndex = process.argv.indexOf("voice") + 1;
-      const scriptPath = process.argv[descIndex];
-      if (!scriptPath) {
-        console.error("Usage: demo-reel script voice <script.json>");
-        return 1;
-      }
-      await scriptVoice(scriptPath, voice, baseOpts);
-      return 0;
-    }
-
-    case "build": {
-      const descIndex = process.argv.indexOf("build") + 1;
-      const scriptPath = process.argv[descIndex];
-      if (!scriptPath) {
-        console.error("Usage: demo-reel script build <script.json>");
-        return 1;
-      }
-      await scriptBuild(scriptPath, {
-        ...baseOpts,
-        resolution: options.resolution,
-        format: options.format,
-      });
-      return 0;
-    }
-
-    case "validate": {
-      const descIndex = process.argv.indexOf("validate") + 1;
-      const scriptPath = process.argv[descIndex];
-      if (!scriptPath) {
-        console.error("Usage: demo-reel script validate <script.json>");
-        return 1;
-      }
-      const valid = await scriptValidate(scriptPath, baseOpts);
-      return valid ? 0 : 1;
-    }
-
-    case "fix": {
-      const descIndex = process.argv.indexOf("fix") + 1;
-      const scriptPath = process.argv[descIndex];
-      if (!scriptPath) {
-        console.error("Usage: demo-reel script fix <script.json>");
-        return 1;
-      }
-      await scriptFix(scriptPath, baseOpts);
-      return 0;
-    }
-
-    default: {
-      // Full pipeline: demo-reel script "description" --url <url>
-      if (!options.scriptUrl) {
-        console.error("Usage: demo-reel script <description> --url <url>");
-        console.error("Or use a subcommand: generate, voice, build, validate, fix");
-        return 1;
-      }
-      await scriptFullPipeline(subcommandOrDescription, options.scriptUrl, {
-        ...baseOpts,
-        output: options.scriptOutput,
-        voice,
-        hints: options.scriptHints,
-        resolution: options.resolution,
-        format: options.format,
-      });
-      return 0;
-    }
-  }
-}
-
 export async function runCli(): Promise<number> {
   const { scenario, options } = parseArgs();
-  const tagFilter = options.tags && options.tags.length > 0 ? new Set(options.tags) : null;
-  const matchesTags = (tags: string[] | undefined) => {
-    if (!tagFilter) {
-      return true;
-    }
-    if (!tags || tags.length === 0) {
-      return false;
-    }
-    return tags.some((tag) => tagFilter.has(tag));
-  };
 
   setupSignalHandlers();
   setOnBrowserCreated((browser, context) => {
@@ -377,124 +290,84 @@ export async function runCli(): Promise<number> {
       return 0;
     }
 
+    // Use Command Pattern for init command
     if (options.init) {
-      const demoPath = join(process.cwd(), "example.demo.ts");
-      await writeFile(demoPath, EXAMPLE_SCENARIO, "utf-8");
-      console.log(`Created ${demoPath}`);
-      return 0;
+      const registry = new CommandRegistry();
+      registry.register(new InitCommand());
+
+      const command = registry.find(["init"]);
+      if (command && command.validate([], toGlobalOptions(options))) {
+        return await command.execute([], toGlobalOptions(options), createCommandContext());
+      }
+      return 1;
     }
 
     if (options.script) {
-      return await handleScriptCommand(scenario, options);
+      const cmd = new ScriptRouterCommand();
+      const scriptCtx = createDefaultScriptRouterContext(createCommandContext(), {
+        generate: scriptGenerate,
+        voice: scriptVoice,
+        build: scriptBuild,
+        validate: scriptValidate,
+        fix: scriptFix,
+        pipeline: scriptFullPipeline,
+      });
+      return await cmd.execute(scenario ? [scenario] : [], toGlobalOptions(options), scriptCtx);
     }
 
     if (options.all) {
-      // Run all demo scenarios
-      const files = await findScenarioFiles();
+      type LoadedConfigType = Awaited<ReturnType<typeof loadConfig>>;
+      const cmd = new RunAllCommand<LoadedConfigType>();
+      const globalOptions = toGlobalOptions(options);
 
-      if (files.length === 0) {
-        console.error("No *.demo.ts files found");
-        return 1;
-      }
+      const runAllCtx: RunAllCommandContext<LoadedConfigType> = {
+        ...createCommandContext(),
+        findScenarioFiles,
+        loadConfig,
+        runScenario: async (loaded) => runScenario(loaded, options),
+      };
 
-      console.log(`Found ${files.length} scenario(s)`);
-      if (tagFilter) {
-        console.log(`Filtering by tags: ${options.tags?.join(", ")}`);
-      }
-
-      let matchedCount = 0;
-
-      for (const file of files) {
-        console.log(`\n▶ ${file}`);
-        const loaded = await loadConfig(file, options.outputDir);
-        if (!matchesTags(loaded.config.tags)) {
-          if (options.verbose) {
-            console.log("  ↳ Skipped (tags)");
-          }
-          continue;
-        }
-        matchedCount += 1;
-        await runScenario(loaded, options);
-      }
-
-      if (tagFilter && matchedCount === 0) {
-        console.error(`No scenarios match tags: ${options.tags?.join(", ")}`);
-        return 1;
-      }
+      return await cmd.execute([], globalOptions, runAllCtx);
     } else if (scenario) {
-      // Run specific scenario — accept full file path or scenario name
-      let configPath: string | null = null;
-
-      // Check if it's a direct file path
-      const ext = scenario.split(".").pop();
-      if (ext && ["ts", "js", "mjs", "json"].includes(ext)) {
-        const { resolve } = await import("path");
-        const fullPath = resolve(scenario);
-        const { access } = await import("fs/promises");
-        try {
-          await access(fullPath);
-          configPath = fullPath;
-        } catch {
-          // File doesn't exist, try as scenario name
-        }
-      }
-
-      // Fall back to scenario name lookup
-      if (!configPath) {
-        configPath = await loadScenario(scenario);
-      }
-
-      if (!configPath) {
-        console.error(`Scenario not found: ${scenario}`);
-        console.error("Looked for:");
-        console.error(`  - ${scenario}.demo.ts`);
-        console.error(`  - ${scenario}.config.ts`);
+      type LoadedConfigType = Awaited<ReturnType<typeof loadConfig>>;
+      const cmd = new RunSingleCommand<LoadedConfigType>();
+      const globalOptions = toGlobalOptions(options);
+      const singleArgs = [scenario];
+      if (!cmd.validate(singleArgs, globalOptions)) {
         return 1;
       }
 
-      const loaded = await loadConfig(configPath, options.outputDir);
-      if (!matchesTags(loaded.config.tags)) {
-        console.error(`Scenario does not match tags: ${options.tags?.join(", ")}`);
-        return 1;
-      }
-      await runScenario(loaded, options);
-    } else {
-      // Run all scenarios
-      const files = await findScenarioFiles();
-
-      if (files.length === 0) {
-        console.error("No *.demo.ts files found");
-        console.error('Run "demo-reel init" to create an example scenario');
-        return 1;
-      }
-
-      console.log(`Found ${files.length} scenario(s)`);
-      if (tagFilter) {
-        console.log(`Filtering by tags: ${options.tags?.join(", ")}`);
-      }
-
-      let matchedCount = 0;
-
-      for (const file of files) {
-        console.log(`\n▶ ${file}`);
-        const loaded = await loadConfig(file, options.outputDir);
-        if (!matchesTags(loaded.config.tags)) {
-          if (options.verbose) {
-            console.log("  ↳ Skipped (tags)");
+      const runSingleCtx: RunSingleCommandContext<LoadedConfigType> = {
+        ...createCommandContext(),
+        resolvePath,
+        pathExists: async (path: string) => {
+          try {
+            await access(path);
+            return true;
+          } catch {
+            return false;
           }
-          continue;
-        }
-        matchedCount += 1;
-        await runScenario(loaded, options);
-      }
+        },
+        loadScenario,
+        loadConfig,
+        runScenario: async (loaded) => runScenario(loaded, options),
+      };
 
-      if (tagFilter && matchedCount === 0) {
-        console.error(`No scenarios match tags: ${options.tags?.join(", ")}`);
-        return 1;
-      }
+      return await cmd.execute(singleArgs, globalOptions, runSingleCtx);
+    } else {
+      type LoadedConfigType = Awaited<ReturnType<typeof loadConfig>>;
+      const cmd = new RunDefaultCommand<LoadedConfigType>();
+      const globalOptions = toGlobalOptions(options);
+
+      const runDefaultCtx: RunDefaultCommandContext<LoadedConfigType> = {
+        ...createCommandContext(),
+        findScenarioFiles,
+        loadConfig,
+        runScenario: async (loaded) => runScenario(loaded, options),
+      };
+
+      return await cmd.execute([], globalOptions, runDefaultCtx);
     }
-
-    return 0;
   } catch (error) {
     if (options.verbose) {
       console.error(error);
@@ -509,6 +382,7 @@ export async function main(): Promise<void> {
   process.exit(await runCli());
 }
 
+/* c8 ignore next 3 */
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   void main();
 }
