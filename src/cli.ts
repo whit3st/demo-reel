@@ -2,7 +2,8 @@
 import { loadConfig, loadScenario, findScenarioFiles } from "./config-loader.js";
 import { runVideoScenario, setOnBrowserCreated } from "./video-handler.js";
 import { generate } from "./index.js";
-import { writeFile } from "fs/promises";
+import { access, writeFile } from "fs/promises";
+import { resolve as resolvePath } from "path";
 import { pathToFileURL } from "url";
 import type { DemoReelConfig } from "./schemas.js";
 import {
@@ -23,10 +24,12 @@ import {
   ScriptFixCommand,
   ScriptPipelineCommand,
   RunAllCommand,
+  RunSingleCommand,
   CommandRegistry,
   type GlobalOptions,
   type CommandContext,
   type RunAllCommandContext,
+  type RunSingleCommandContext,
   type ScriptBuildCommandContext,
   type ScriptGenerateCommandContext,
   type ScriptPipelineCommandContext,
@@ -477,42 +480,31 @@ export async function runCli(): Promise<number> {
 
       return await cmd.execute([], globalOptions, runAllCtx);
     } else if (scenario) {
-      // Run specific scenario — accept full file path or scenario name
-      let configPath: string | null = null;
-
-      // Check if it's a direct file path
-      const ext = scenario.split(".").pop();
-      if (ext && ["ts", "js", "mjs", "json"].includes(ext)) {
-        const { resolve } = await import("path");
-        const fullPath = resolve(scenario);
-        const { access } = await import("fs/promises");
-        try {
-          await access(fullPath);
-          configPath = fullPath;
-        } catch {
-          // File doesn't exist, try as scenario name
-        }
-      }
-
-      // Fall back to scenario name lookup
-      if (!configPath) {
-        configPath = await loadScenario(scenario);
-      }
-
-      if (!configPath) {
-        console.error(`Scenario not found: ${scenario}`);
-        console.error("Looked for:");
-        console.error(`  - ${scenario}.demo.ts`);
-        console.error(`  - ${scenario}.config.ts`);
+      type LoadedConfigType = Awaited<ReturnType<typeof loadConfig>>;
+      const cmd = new RunSingleCommand<LoadedConfigType>();
+      const globalOptions = toGlobalOptions(options);
+      const singleArgs = [scenario];
+      if (!cmd.validate(singleArgs, globalOptions)) {
         return 1;
       }
 
-      const loaded = await loadConfig(configPath, options.outputDir);
-      if (!matchesTags(loaded.config.tags)) {
-        console.error(`Scenario does not match tags: ${options.tags?.join(", ")}`);
-        return 1;
-      }
-      await runScenario(loaded, options);
+      const runSingleCtx: RunSingleCommandContext<LoadedConfigType> = {
+        ...createCommandContext(),
+        resolvePath,
+        pathExists: async (path: string) => {
+          try {
+            await access(path);
+            return true;
+          } catch {
+            return false;
+          }
+        },
+        loadScenario,
+        loadConfig,
+        runScenario: async (loaded) => runScenario(loaded, options),
+      };
+
+      return await cmd.execute(singleArgs, globalOptions, runSingleCtx);
     } else {
       // Run all scenarios
       const files = await findScenarioFiles();

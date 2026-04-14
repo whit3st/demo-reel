@@ -171,7 +171,7 @@ interface CommandContext {
   - Handle finding all scenario files
   - Tag filtering logic
   - Loop through files
-- [ ] Create `RunSingleCommand` (specific scenario)
+- [x] Create `RunSingleCommand` (specific scenario) ✅ **COMPLETE**
   - Handle file path resolution
   - Tag validation
 - [ ] Create `RunDefaultCommand` (no args)
@@ -281,7 +281,7 @@ const createMockContext = () => ({
 | script fix      | ✅ Migrated      | Medium     | Low      | **100% coverage** |
 | script pipeline | ✅ Migrated      | High       | Medium   | **100% coverage** |
 | run all         | ✅ Migrated      | High       | High     | **100% coverage** |
-| run single      | `runCli`         | Medium     | High     |
+| run single      | ✅ Migrated      | Medium     | High     | **100% coverage** |
 
 ### Coverage Targets
 
