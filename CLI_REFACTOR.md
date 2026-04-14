@@ -157,7 +157,7 @@ interface CommandContext {
   - Handle validation logic
 - [x] Create `ScriptFixCommand` ✅ **COMPLETE**
   - Handle fix logic
-- [ ] Create `ScriptPipelineCommand`
+- [x] Create `ScriptPipelineCommand` ✅ **COMPLETE**
   - Handle full pipeline (default case)
   - May delegate to other commands
 
@@ -271,17 +271,17 @@ const createMockContext = () => ({
 
 ### Commands To Migrate
 
-| Command         | Current Location      | Complexity | Priority | Status            |
-| --------------- | --------------------- | ---------- | -------- | ----------------- |
-| init            | ✅ Migrated           | Low        | Done     | **100% coverage** |
-| script generate | ✅ Migrated           | Medium     | High     | **100% coverage** |
-| script voice    | ✅ Migrated           | Medium     | High     | **100% coverage** |
-| script build    | ✅ Migrated           | Medium     | Medium   | **100% coverage** |
-| script validate | ✅ Migrated           | Medium     | Medium   | **100% coverage** |
-| script fix      | ✅ Migrated           | Medium     | Low      | **100% coverage** |
-| script pipeline | `handleScriptCommand` | High       | Medium   |
-| run all         | `runCli`              | High       | High     |
-| run single      | `runCli`              | Medium     | High     |
+| Command         | Current Location | Complexity | Priority | Status            |
+| --------------- | ---------------- | ---------- | -------- | ----------------- |
+| init            | ✅ Migrated      | Low        | Done     | **100% coverage** |
+| script generate | ✅ Migrated      | Medium     | High     | **100% coverage** |
+| script voice    | ✅ Migrated      | Medium     | High     | **100% coverage** |
+| script build    | ✅ Migrated      | Medium     | Medium   | **100% coverage** |
+| script validate | ✅ Migrated      | Medium     | Medium   | **100% coverage** |
+| script fix      | ✅ Migrated      | Medium     | Low      | **100% coverage** |
+| script pipeline | ✅ Migrated      | High       | Medium   | **100% coverage** |
+| run all         | `runCli`         | High       | High     |
+| run single      | `runCli`         | Medium     | High     |
 
 ### Coverage Targets
 

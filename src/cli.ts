@@ -21,11 +21,13 @@ import {
   ScriptValidateCommand,
   ScriptVoiceCommand,
   ScriptFixCommand,
+  ScriptPipelineCommand,
   CommandRegistry,
   type GlobalOptions,
   type CommandContext,
   type ScriptBuildCommandContext,
   type ScriptGenerateCommandContext,
+  type ScriptPipelineCommandContext,
   type ScriptValidateCommandContext,
   type ScriptVoiceCommandContext,
   type ScriptFixCommandContext,
@@ -276,18 +278,6 @@ export async function handleScriptCommand(
   subcommandOrDescription: string | undefined,
   options: CliOptions,
 ): Promise<number> {
-  const voice = resolveVoiceConfig({
-    provider: "openai",
-    voice: options.scriptVoice || "alloy",
-    speed: options.scriptSpeed || 1.0,
-  });
-
-  const baseOpts = {
-    verbose: options.verbose,
-    headed: options.headed,
-    noCache: options.noCache,
-  };
-
   if (!subcommandOrDescription) {
     console.error("Usage: demo-reel script <subcommand|description> [options]");
     console.error('Run "demo-reel --help" for details.');
@@ -406,21 +396,24 @@ export async function handleScriptCommand(
     }
 
     default: {
-      // Full pipeline: demo-reel script "description" --url <url>
-      if (!options.scriptUrl) {
+      const pipelineArgs = [subcommandOrDescription];
+
+      const cmd = new ScriptPipelineCommand();
+      if (!cmd.validate(pipelineArgs, toGlobalOptions(options))) {
         console.error("Usage: demo-reel script <description> --url <url>");
         console.error("Or use a subcommand: generate, voice, build, validate, fix");
         return 1;
       }
-      await scriptFullPipeline(subcommandOrDescription, options.scriptUrl, {
-        ...baseOpts,
-        output: options.scriptOutput,
-        voice,
-        hints: options.scriptHints,
-        resolution: options.resolution,
-        format: options.format,
-      });
-      return 0;
+
+      const pipelineCtx: ScriptPipelineCommandContext = {
+        ...createCommandContext(),
+        resolveVoiceConfig,
+        scriptCommands: {
+          pipeline: scriptFullPipeline,
+        },
+      };
+
+      return await cmd.execute(pipelineArgs, toGlobalOptions(options), pipelineCtx);
     }
   }
 }
