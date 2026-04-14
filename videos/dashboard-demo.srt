@@ -1,0 +1,15 @@
+1
+00:00:00,001 --> 00:00:04,442
+In this demo, we will explore the template editor and its features.
+
+2
+00:00:04,517 --> 00:00:09,689
+First, we navigate to the Epistola dashboard and select a template to edit.
+
+3
+00:00:07,525 --> 00:00:12,645
+We then open the template editor and select a block to customize its style.
+
+4
+00:00:09,348 --> 00:00:12,692
+Let's change the background color of the block.

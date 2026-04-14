@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "processingVersion": "v5-no-volume-normalization",
+  "audioPath": "dashboard-demo-narration.mp3",
+  "clips": [
+    {
+      "sceneIndex": 0,
+      "stepIndex": 0,
+      "narration": "In this demo, we will explore the template editor and its features.",
+      "filePath": "dashboard-demo-narration-clips/scene-000.mp3",
+      "audioDurationMs": 4441,
+      "audioOffsetMs": 0,
+      "gapAfterMs": 800
+    },
+    {
+      "sceneIndex": 1,
+      "stepIndex": 4,
+      "narration": "First, we navigate to the Epistola dashboard and select a template to edit.",
+      "filePath": "dashboard-demo-narration-clips/scene-001.mp3",
+      "audioDurationMs": 5172,
+      "audioOffsetMs": 5241,
+      "gapAfterMs": 800
+    },
+    {
+      "sceneIndex": 2,
+      "stepIndex": 11,
+      "narration": "We then open the template editor and select a block to customize its style.",
+      "filePath": "dashboard-demo-narration-clips/scene-002.mp3",
+      "audioDurationMs": 5120,
+      "audioOffsetMs": 11213,
+      "gapAfterMs": 800
+    },
+    {
+      "sceneIndex": 3,
+      "stepIndex": 13,
+      "narration": "Let's change the background color of the block.",
+      "filePath": "dashboard-demo-narration-clips/scene-003.mp3",
+      "audioDurationMs": 3344,
+      "audioOffsetMs": 17133,
+      "gapAfterMs": 0
+    }
+  ]
+}
