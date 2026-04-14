@@ -14,15 +14,10 @@ import {
   scriptFix,
   scriptFullPipeline,
 } from "./script/cli.js";
-import { resolveVoiceConfig } from "./voice-config.js";
 import {
   InitCommand,
-  ScriptGenerateCommand,
-  ScriptBuildCommand,
-  ScriptValidateCommand,
-  ScriptVoiceCommand,
-  ScriptFixCommand,
-  ScriptPipelineCommand,
+  ScriptRouterCommand,
+  createDefaultScriptRouterContext,
   RunAllCommand,
   RunSingleCommand,
   RunDefaultCommand,
@@ -32,12 +27,6 @@ import {
   type RunAllCommandContext,
   type RunDefaultCommandContext,
   type RunSingleCommandContext,
-  type ScriptBuildCommandContext,
-  type ScriptGenerateCommandContext,
-  type ScriptPipelineCommandContext,
-  type ScriptValidateCommandContext,
-  type ScriptVoiceCommandContext,
-  type ScriptFixCommandContext,
 } from "./commands/index.js";
 
 interface CliOptions {
@@ -95,6 +84,7 @@ function createCommandContext(): CommandContext {
 }
 
 let currentBrowser: { browser: any; context: any } | null = null;
+let signalHandlersRegistered = false;
 
 function registerCleanup(browser: any, context: any): void {
   currentBrowser = { browser, context };
@@ -117,6 +107,10 @@ async function cleanupBrowser(): Promise<void> {
 }
 
 function setupSignalHandlers(): void {
+  if (signalHandlersRegistered) {
+    return;
+  }
+
   const cleanup = (signal: "SIGINT" | "SIGTERM") => {
     const exitCode = signal === "SIGINT" ? 130 : 0;
     const timeout = setTimeout(() => process.exit(exitCode), 2000);
@@ -129,6 +123,7 @@ function setupSignalHandlers(): void {
   };
   process.once("SIGINT", () => cleanup("SIGINT"));
   process.once("SIGTERM", () => cleanup("SIGTERM"));
+  signalHandlersRegistered = true;
 }
 
 const addTags = (existing: string[] | undefined, value: string | undefined) => {
@@ -281,150 +276,6 @@ Examples:
 `);
 }
 
-export async function handleScriptCommand(
-  subcommandOrDescription: string | undefined,
-  options: CliOptions,
-): Promise<number> {
-  if (!subcommandOrDescription) {
-    console.error("Usage: demo-reel script <subcommand|description> [options]");
-    console.error('Run "demo-reel --help" for details.');
-    return 1;
-  }
-
-  // Check if it's a known subcommand
-  switch (subcommandOrDescription) {
-    case "generate": {
-      // demo-reel script generate "description" --url <url>
-      // The actual description is the next positional arg — we need to re-parse
-      const descIndex = process.argv.indexOf("generate") + 1;
-      const description = process.argv[descIndex];
-      const generateArgs = description ? [description] : [];
-
-      const cmd = new ScriptGenerateCommand();
-      if (!cmd.validate(generateArgs, toGlobalOptions(options))) {
-        console.error("Usage: demo-reel script generate <description> --url <url>");
-        return 1;
-      }
-
-      const generateCtx: ScriptGenerateCommandContext = {
-        ...createCommandContext(),
-        scriptCommands: {
-          generate: scriptGenerate,
-        },
-        getArgs: () => process.argv,
-      };
-
-      return await cmd.execute(generateArgs, toGlobalOptions(options), generateCtx);
-    }
-
-    case "voice": {
-      const descIndex = process.argv.indexOf("voice") + 1;
-      const scriptPath = process.argv[descIndex];
-      const voiceArgs = scriptPath ? [scriptPath] : [];
-
-      const cmd = new ScriptVoiceCommand();
-      if (!cmd.validate(voiceArgs, toGlobalOptions(options))) {
-        console.error("Usage: demo-reel script voice <script.json>");
-        return 1;
-      }
-
-      const voiceCtx: ScriptVoiceCommandContext = {
-        ...createCommandContext(),
-        resolveVoiceConfig,
-        scriptCommands: {
-          voice: scriptVoice,
-        },
-      };
-
-      return await cmd.execute(voiceArgs, toGlobalOptions(options), voiceCtx);
-    }
-
-    case "build": {
-      const descIndex = process.argv.indexOf("build") + 1;
-      const scriptPath = process.argv[descIndex];
-      const buildArgs = scriptPath ? [scriptPath] : [];
-
-      const cmd = new ScriptBuildCommand();
-      if (!cmd.validate(buildArgs, toGlobalOptions(options))) {
-        console.error("Usage: demo-reel script build <script.json>");
-        return 1;
-      }
-
-      const buildCtx: ScriptBuildCommandContext = {
-        ...createCommandContext(),
-        scriptCommands: {
-          build: scriptBuild,
-        },
-      };
-
-      return await cmd.execute(buildArgs, toGlobalOptions(options), buildCtx);
-    }
-
-    case "validate": {
-      const descIndex = process.argv.indexOf("validate") + 1;
-      const scriptPath = process.argv[descIndex];
-      const validateArgs = scriptPath ? [scriptPath] : [];
-
-      const cmd = new ScriptValidateCommand();
-      if (!cmd.validate(validateArgs, toGlobalOptions(options))) {
-        console.error("Usage: demo-reel script validate <script.json>");
-        return 1;
-      }
-
-      const validateCtx: ScriptValidateCommandContext = {
-        ...createCommandContext(),
-        scriptCommands: {
-          validate: scriptValidate,
-        },
-      };
-
-      return await cmd.execute(validateArgs, toGlobalOptions(options), validateCtx);
-    }
-
-    case "fix": {
-      const descIndex = process.argv.indexOf("fix") + 1;
-      const scriptPath = process.argv[descIndex];
-      const fixArgs = scriptPath ? [scriptPath] : [];
-
-      const cmd = new ScriptFixCommand();
-      if (!cmd.validate(fixArgs, toGlobalOptions(options))) {
-        console.error("Usage: demo-reel script fix <script.json>");
-        return 1;
-      }
-
-      const fixCtx: ScriptFixCommandContext = {
-        ...createCommandContext(),
-        scriptCommands: {
-          fix: scriptFix,
-        },
-      };
-
-      return await cmd.execute(fixArgs, toGlobalOptions(options), fixCtx);
-    }
-
-    default: {
-      const pipelineArgs = [subcommandOrDescription];
-
-      const cmd = new ScriptPipelineCommand();
-      if (!cmd.validate(pipelineArgs, toGlobalOptions(options))) {
-        console.error("Usage: demo-reel script <description> --url <url>");
-        console.error("Or use a subcommand: generate, voice, build, validate, fix");
-        return 1;
-      }
-
-      const pipelineCtx: ScriptPipelineCommandContext = {
-        ...createCommandContext(),
-        resolveVoiceConfig,
-        scriptCommands: {
-          pipeline: scriptFullPipeline,
-        },
-      };
-
-      return await cmd.execute(pipelineArgs, toGlobalOptions(options), pipelineCtx);
-    }
-  }
-}
-
 export async function runCli(): Promise<number> {
   const { scenario, options } = parseArgs();
 
@@ -452,16 +303,22 @@ export async function runCli(): Promise<number> {
     }
 
     if (options.script) {
-      return await handleScriptCommand(scenario, options);
+      const cmd = new ScriptRouterCommand();
+      const scriptCtx = createDefaultScriptRouterContext(createCommandContext(), {
+        generate: scriptGenerate,
+        voice: scriptVoice,
+        build: scriptBuild,
+        validate: scriptValidate,
+        fix: scriptFix,
+        pipeline: scriptFullPipeline,
+      });
+      return await cmd.execute(scenario ? [scenario] : [], toGlobalOptions(options), scriptCtx);
     }
 
     if (options.all) {
       type LoadedConfigType = Awaited<ReturnType<typeof loadConfig>>;
       const cmd = new RunAllCommand<LoadedConfigType>();
       const globalOptions = toGlobalOptions(options);
-      if (!cmd.validate([], globalOptions)) {
-        return 1;
-      }
 
       const runAllCtx: RunAllCommandContext<LoadedConfigType> = {
         ...createCommandContext(),
@@ -501,9 +358,6 @@ export async function runCli(): Promise<number> {
       type LoadedConfigType = Awaited<ReturnType<typeof loadConfig>>;
       const cmd = new RunDefaultCommand<LoadedConfigType>();
       const globalOptions = toGlobalOptions(options);
-      if (!cmd.validate([], globalOptions)) {
-        return 1;
-      }
 
       const runDefaultCtx: RunDefaultCommandContext<LoadedConfigType> = {
         ...createCommandContext(),
@@ -515,7 +369,6 @@ export async function runCli(): Promise<number> {
       return await cmd.execute([], globalOptions, runDefaultCtx);
     }
 
-    return 0;
   } catch (error) {
     if (options.verbose) {
       console.error(error);
@@ -530,6 +383,7 @@ export async function main(): Promise<void> {
   process.exit(await runCli());
 }
 
+/* c8 ignore next 3 */
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   void main();
 }

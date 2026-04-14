@@ -3,9 +3,9 @@
 ## Status: **In Progress** 🚧
 
 - **Phase 1** (Init Command): ✅ Complete
-- **Phase 2** (Script Commands): ⏳ Planned
-- **Phase 3** (Run Commands): ⏳ Planned
-- **Phase 4** (Cleanup & Finalize): ⏳ Planned
+- **Phase 2** (Script Commands): ✅ Complete
+- **Phase 3** (Run Commands): ✅ Complete
+- **Phase 4** (Cleanup & Finalize): 🚧 In Progress
 
 ---
 
@@ -184,11 +184,11 @@ interface CommandContext {
 
 **Goal**: Polish and remove old code
 
-- [ ] Remove old `EXAMPLE_SCENARIO` constant from `cli.ts`
-- [ ] Remove old `handleScriptCommand()` function
-- [ ] Extract remaining helper functions (if any)
-- [ ] Add integration tests for command routing
-- [ ] Update documentation
+- [x] Remove old `EXAMPLE_SCENARIO` constant from `cli.ts` ✅ **COMPLETE**
+- [x] Remove old `handleScriptCommand()` function ✅ **COMPLETE**
+- [x] Extract remaining helper functions (if any) ✅ **COMPLETE**
+- [x] Add integration tests for command routing ✅ **COMPLETE**
+- [x] Update documentation ✅ **COMPLETE**
 - [ ] Achieve 90%+ coverage on `cli.ts`
 
 **Expected Result**:
@@ -282,6 +282,7 @@ const createMockContext = () => ({
 | script pipeline | ✅ Migrated      | High       | Medium   | **100% coverage** |
 | run all         | ✅ Migrated      | High       | High     | **100% coverage** |
 | run single      | ✅ Migrated      | Medium     | High     | **100% coverage** |
+| run default     | ✅ Migrated      | High       | High     | **100% coverage** |
 
 ### Coverage Targets
 

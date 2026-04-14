@@ -1,5 +1,6 @@
 export { InitCommand } from "./init.js";
 export { ScriptGenerateCommand } from "./script/generate.js";
+export { ScriptRouterCommand, createDefaultScriptRouterContext } from "./script/router.js";
 export { ScriptBuildCommand } from "./script/build.js";
 export { ScriptValidateCommand } from "./script/validate.js";
 export { ScriptVoiceCommand } from "./script/voice.js";
@@ -12,6 +13,7 @@ export { CommandRegistry, createDefaultRegistry } from "./registry.js";
 export type { Command, CommandContext, GlobalOptions } from "./types.js";
 export type { ScriptBuildCommandContext } from "./script/build.js";
 export type { ScriptGenerateCommandContext } from "./script/generate.js";
+export type { ScriptRouterCommandContext } from "./script/router.js";
 export type { ScriptValidateCommandContext } from "./script/validate.js";
 export type { ScriptVoiceCommandContext } from "./script/voice.js";
 export type { ScriptFixCommandContext } from "./script/fix.js";
