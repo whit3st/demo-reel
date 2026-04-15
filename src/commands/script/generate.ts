@@ -1,24 +1,19 @@
 import type { Command, CommandContext, GlobalOptions } from "../types.js";
+import { scriptGenerate, type ScriptCliOptions } from "../../script/cli.js";
 
-export interface ScriptGenerateCommandContext extends CommandContext {
-  scriptCommands: {
-    generate: (
-      description: string,
-      url: string,
-      outputName: string,
-      options: {
-        verbose?: boolean;
-        headed?: boolean;
-        noCache?: boolean;
-        hints?: string[];
-      },
-    ) => Promise<string>;
-  };
-  getArgs: () => string[];
-}
+export type ScriptGenerateFn = (
+  description: string,
+  url: string,
+  outputName: string,
+  options: ScriptCliOptions & { hints?: string[] },
+) => Promise<string>;
+
+export type ScriptGenerateCommandContext = CommandContext;
 
 export class ScriptGenerateCommand implements Command {
   readonly name = "script:generate";
+
+  constructor(private readonly generateScript: ScriptGenerateFn = scriptGenerate) {}
 
   validate(args: string[], options: GlobalOptions): boolean {
     // Need at least a description and --url
@@ -30,13 +25,13 @@ export class ScriptGenerateCommand implements Command {
   async execute(
     args: string[],
     options: GlobalOptions,
-    ctx: ScriptGenerateCommandContext,
+    _ctx: ScriptGenerateCommandContext,
   ): Promise<number> {
     const description = args[0];
     const url = options.scriptUrl!;
     const outputName = options.scriptOutput || "demo";
 
-    await ctx.scriptCommands.generate(description, url, outputName, {
+    await this.generateScript(description, url, outputName, {
       verbose: options.verbose,
       headed: options.headed,
       noCache: options.noCache,

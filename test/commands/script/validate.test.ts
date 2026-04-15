@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   ScriptValidateCommand,
+  type ScriptValidateFn,
   type ScriptValidateCommandContext,
 } from "../../../src/commands/script/validate.js";
 import type { GlobalOptions } from "../../../src/commands/types.js";
@@ -16,9 +17,6 @@ function createMockContext(
     console: {
       log: vi.fn(),
       error: vi.fn(),
-    },
-    scriptCommands: {
-      validate: vi.fn().mockResolvedValue(true),
     },
     ...overrides,
   };
@@ -55,12 +53,9 @@ describe("ScriptValidateCommand", () => {
 
   describe("execution", () => {
     it("returns success when script validates", async () => {
-      const cmd = new ScriptValidateCommand();
-      const ctx = createMockContext({
-        scriptCommands: {
-          validate: vi.fn().mockResolvedValue(true),
-        },
-      });
+      const validateScript: ScriptValidateFn = vi.fn().mockResolvedValue(true);
+      const cmd = new ScriptValidateCommand(validateScript);
+      const ctx = createMockContext();
 
       const exitCode = await cmd.execute(["demo.script.json"], createGlobalOptions(), ctx);
 
@@ -68,12 +63,9 @@ describe("ScriptValidateCommand", () => {
     });
 
     it("returns error when script validation fails", async () => {
-      const cmd = new ScriptValidateCommand();
-      const ctx = createMockContext({
-        scriptCommands: {
-          validate: vi.fn().mockResolvedValue(false),
-        },
-      });
+      const validateScript: ScriptValidateFn = vi.fn().mockResolvedValue(false);
+      const cmd = new ScriptValidateCommand(validateScript);
+      const ctx = createMockContext();
 
       const exitCode = await cmd.execute(["demo.script.json"], createGlobalOptions(), ctx);
 
@@ -81,7 +73,8 @@ describe("ScriptValidateCommand", () => {
     });
 
     it("passes verbose and headed options", async () => {
-      const cmd = new ScriptValidateCommand();
+      const validateScript: ScriptValidateFn = vi.fn().mockResolvedValue(true);
+      const cmd = new ScriptValidateCommand(validateScript);
       const ctx = createMockContext();
 
       await cmd.execute(
@@ -90,7 +83,7 @@ describe("ScriptValidateCommand", () => {
         ctx,
       );
 
-      expect(ctx.scriptCommands.validate).toHaveBeenCalledWith(
+      expect(validateScript).toHaveBeenCalledWith(
         "demo.script.json",
         expect.objectContaining({ verbose: true, headed: true }),
       );

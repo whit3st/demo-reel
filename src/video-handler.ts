@@ -298,7 +298,7 @@ export async function processVideoWithAudio(
 
 // --- Subtitle and metadata generation ---
 
-interface SubtitleCue {
+export interface SubtitleCue {
   narration: string;
   startMs: number;
   endMs: number;
@@ -309,7 +309,7 @@ interface SubtitleCue {
  * Build subtitle cues. When audio is present, use the narrationDelay + audio durations
  * so subtitles sync with the voiceover. Otherwise fall back to recording timestamps.
  */
-function buildSubtitleCues(
+export function buildSubtitleCues(
   sceneTimestamps: SceneTimestamp[],
   config: DemoReelConfig,
 ): SubtitleCue[] {
@@ -345,7 +345,7 @@ function buildSubtitleCues(
 /**
  * Build subtitle cues from exact narration placement when available.
  */
-function buildSubtitleCuesWithNarrationPlacements(
+export function buildSubtitleCuesWithNarrationPlacements(
   sceneTimestamps: SceneTimestamp[],
   config: DemoReelConfig,
   narrationPlacements: NarrationPlacement[],
@@ -377,7 +377,7 @@ function buildSubtitleCuesWithNarrationPlacements(
   });
 }
 
-function formatTimecode(ms: number, separator: string): string {
+export function formatTimecode(ms: number, separator: string): string {
   const totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -386,7 +386,7 @@ function formatTimecode(ms: number, separator: string): string {
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}${separator}${String(millis).padStart(3, "0")}`;
 }
 
-function generateSRT(cues: SubtitleCue[]): string {
+export function generateSRT(cues: SubtitleCue[]): string {
   return cues
     .map((cue, i) => {
       const start = formatTimecode(cue.startMs, ",");
@@ -396,7 +396,7 @@ function generateSRT(cues: SubtitleCue[]): string {
     .join("\n");
 }
 
-function generateVTT(cues: SubtitleCue[]): string {
+export function generateVTT(cues: SubtitleCue[]): string {
   const lines = cues
     .map((cue) => {
       const start = formatTimecode(cue.startMs, ".");
@@ -407,7 +407,7 @@ function generateVTT(cues: SubtitleCue[]): string {
   return `WEBVTT\n\n${lines}`;
 }
 
-function generateMetadata(
+export function generateMetadata(
   sceneTimestamps: SceneTimestamp[],
   subtitleCues: SubtitleCue[],
   videoPath: string,

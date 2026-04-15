@@ -24,7 +24,7 @@ export interface TTSProvider {
 
 // --- Audio utilities (shared by all providers) ---
 
-async function getFFmpegPath(): Promise<string> {
+export async function getFFmpegPath(): Promise<string> {
   try {
     const mod: any = await import("ffmpeg-static");
     const ffmpegPath = mod.default || mod;
@@ -39,7 +39,7 @@ async function getFFmpegPath(): Promise<string> {
   return "ffmpeg";
 }
 
-async function getFFprobePath(ffmpegPath: string): Promise<string> {
+export async function getFFprobePath(ffmpegPath: string): Promise<string> {
   // Try alongside ffmpeg-static first
   const adjacent = ffmpegPath.replace(/ffmpeg([^/\\]*)$/, "ffprobe$1");
   try {
@@ -51,53 +51,7 @@ async function getFFprobePath(ffmpegPath: string): Promise<string> {
   }
 }
 
-export async function measureAudioDuration(audioBuffer: Buffer): Promise<number> {
-  const ffmpegPath = await getFFmpegPath();
-  const ffprobePath = await getFFprobePath(ffmpegPath);
-
-  // Write to temp file — ffprobe needs seeking which pipes don't support for MP3
-  const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
-  await mkdir(tempDir, { recursive: true });
-  const tempPath = join(tempDir, `probe-${Date.now()}.mp3`);
-  await writeFile(tempPath, audioBuffer);
-
-  try {
-    return await new Promise((resolve, reject) => {
-      const proc = spawn(ffprobePath, [
-        "-v",
-        "quiet",
-        "-show_entries",
-        "format=duration",
-        "-of",
-        "default=noprint_wrappers=1:nokey=1",
-        tempPath,
-      ]);
-
-      let output = "";
-      proc.stdout.on("data", (data: Buffer) => {
-        output += data.toString();
-      });
-      proc.stderr.on("data", () => {});
-
-      proc.on("close", (code) => {
-        if (code !== 0) {
-          reject(new Error(`ffprobe exited with code ${code}`));
-          return;
-        }
-        const seconds = parseFloat(output.trim());
-        if (isNaN(seconds)) {
-          reject(new Error("Could not parse audio duration"));
-          return;
-        }
-        resolve(Math.round(seconds * 1000));
-      });
-    });
-  } finally {
-    await unlink(tempPath).catch(() => {});
-  }
-}
-
-function runFFmpeg(ffmpegPath: string, args: string[]): Promise<void> {
+export function runFFmpeg(ffmpegPath: string, args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
     const proc = spawn(ffmpegPath, args);
     let stderr = "";
@@ -115,8 +69,56 @@ function runFFmpeg(ffmpegPath: string, args: string[]): Promise<void> {
   });
 }
 
+export function runFfprobe(ffprobePath: string, args: string[]): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const proc = spawn(ffprobePath, args);
+    let output = "";
+    proc.stdout.on("data", (data: Buffer) => {
+      output += data.toString();
+    });
+    proc.stderr.on("data", () => {});
+    proc.on("close", (code) => {
+      if (code !== 0) {
+        reject(new Error(`ffprobe exited with code ${code}`));
+        return;
+      }
+      resolve(output);
+    });
+    proc.on("error", reject);
+  });
+}
+
+export async function measureAudioDuration(audioBuffer: Buffer): Promise<number> {
+  const ffmpegPath = await getFFmpegPath();
+  const ffprobePath = await getFFprobePath(ffmpegPath);
+
+  const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
+  await mkdir(tempDir, { recursive: true });
+  const tempPath = join(tempDir, `probe-${Date.now()}.mp3`);
+  await writeFile(tempPath, audioBuffer);
+
+  try {
+    const output = await runFfprobe(ffprobePath, [
+      "-v",
+      "quiet",
+      "-show_entries",
+      "format=duration",
+      "-of",
+      "default=noprint_wrappers=1:nokey=1",
+      tempPath,
+    ]);
+    const seconds = parseFloat(output.trim());
+    if (isNaN(seconds)) {
+      throw new Error("Could not parse audio duration");
+    }
+    return Math.round(seconds * 1000);
+  } finally {
+    await unlink(tempPath).catch(() => {});
+  }
+}
+
 /** Convert WAV buffer to MP3 buffer via FFmpeg. */
-async function wavToMp3(wavBuffer: Buffer): Promise<Buffer> {
+export async function wavToMp3(wavBuffer: Buffer): Promise<Buffer> {
   const ffmpegPath = await getFFmpegPath();
   const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
   await mkdir(tempDir, { recursive: true });
@@ -373,7 +375,7 @@ async function setCache(key: string, audio: Buffer): Promise<void> {
 
 // --- Concatenation ---
 
-async function generateSilence(
+export async function generateSilence(
   ffmpegPath: string,
   outputPath: string,
   durationMs: number,
@@ -392,7 +394,7 @@ async function generateSilence(
   ]);
 }
 
-async function concatenateAudio(
+export async function concatenateAudio(
   segments: { audio: Buffer; gapAfterMs: number }[],
 ): Promise<Buffer> {
   const ffmpegPath = await getFFmpegPath();
@@ -449,7 +451,7 @@ interface VoiceSegment {
  * Apply pronunciation replacements to text before sending to TTS.
  * Replacements are case-insensitive and match whole words.
  */
-function applyPronunciation(text: string, pronunciation?: Record<string, string>): string {
+export function applyPronunciation(text: string, pronunciation?: Record<string, string>): string {
   if (!pronunciation) return text;
   let result = text;
   for (const [word, replacement] of Object.entries(pronunciation)) {

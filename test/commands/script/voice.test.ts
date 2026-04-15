@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   ScriptVoiceCommand,
+  type ScriptVoiceFn,
   type ScriptVoiceCommandContext,
 } from "../../../src/commands/script/voice.js";
 import type { GlobalOptions } from "../../../src/commands/types.js";
@@ -22,9 +23,6 @@ function createMockContext(
       voice: "alloy",
       speed: 1.0,
     }),
-    scriptCommands: {
-      voice: vi.fn().mockResolvedValue("demo-narration.mp3"),
-    },
     ...overrides,
   };
 }
@@ -60,7 +58,8 @@ describe("ScriptVoiceCommand", () => {
 
   describe("execution", () => {
     it("calls resolveVoiceConfig with defaults", async () => {
-      const cmd = new ScriptVoiceCommand();
+      const generateVoice: ScriptVoiceFn = vi.fn().mockResolvedValue("demo-narration.mp3");
+      const cmd = new ScriptVoiceCommand(generateVoice);
       const ctx = createMockContext();
 
       const exitCode = await cmd.execute(["demo.script.json"], createGlobalOptions(), ctx);
@@ -74,7 +73,8 @@ describe("ScriptVoiceCommand", () => {
     });
 
     it("uses custom voice and speed when provided", async () => {
-      const cmd = new ScriptVoiceCommand();
+      const generateVoice: ScriptVoiceFn = vi.fn().mockResolvedValue("demo-narration.mp3");
+      const cmd = new ScriptVoiceCommand(generateVoice);
       const ctx = createMockContext();
       const options = createGlobalOptions({ scriptVoice: "nova", scriptSpeed: 1.3 });
 
@@ -88,13 +88,14 @@ describe("ScriptVoiceCommand", () => {
     });
 
     it("calls script voice with resolved voice and options", async () => {
-      const cmd = new ScriptVoiceCommand();
+      const generateVoice: ScriptVoiceFn = vi.fn().mockResolvedValue("demo-narration.mp3");
+      const cmd = new ScriptVoiceCommand(generateVoice);
       const ctx = createMockContext();
       const options = createGlobalOptions({ verbose: true, headed: true, noCache: true });
 
       await cmd.execute(["demo.script.json"], options, ctx);
 
-      expect(ctx.scriptCommands.voice).toHaveBeenCalledWith(
+      expect(generateVoice).toHaveBeenCalledWith(
         "demo.script.json",
         expect.any(Object),
         expect.objectContaining({ verbose: true, headed: true, noCache: true }),

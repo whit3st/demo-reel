@@ -1,28 +1,27 @@
 import type { VoiceConfig, VoiceConfigOverrides } from "../../voice-config.js";
 import type { Command, CommandContext, GlobalOptions } from "../types.js";
+import { scriptFullPipeline, type ScriptCliOptions } from "../../script/cli.js";
 
 export interface ScriptPipelineCommandContext extends CommandContext {
   resolveVoiceConfig: (overrides: VoiceConfigOverrides) => VoiceConfig;
-  scriptCommands: {
-    pipeline: (
-      description: string,
-      url: string,
-      options: {
-        verbose?: boolean;
-        headed?: boolean;
-        noCache?: boolean;
-        output?: string;
-        voice?: VoiceConfig;
-        hints?: string[];
-        resolution?: string;
-        format?: string;
-      },
-    ) => Promise<string>;
-  };
 }
+
+export type ScriptPipelineFn = (
+  description: string,
+  url: string,
+  options: ScriptCliOptions & {
+    output?: string;
+    voice?: VoiceConfig;
+    hints?: string[];
+    resolution?: string;
+    format?: string;
+  },
+) => Promise<string>;
 
 export class ScriptPipelineCommand implements Command {
   readonly name = "script:pipeline";
+
+  constructor(private readonly runPipeline: ScriptPipelineFn = scriptFullPipeline) {}
 
   validate(args: string[], options: GlobalOptions): boolean {
     const hasDescription = args.length >= 1 && args[0].length > 0;
@@ -43,7 +42,7 @@ export class ScriptPipelineCommand implements Command {
       speed: options.scriptSpeed || 1.0,
     });
 
-    await ctx.scriptCommands.pipeline(description, url, {
+    await this.runPipeline(description, url, {
       verbose: options.verbose,
       headed: options.headed,
       noCache: options.noCache,

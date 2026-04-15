@@ -32,6 +32,13 @@ function createGlobalOptions(overrides: Partial<GlobalOptions> = {}): GlobalOpti
 }
 
 describe("RunAllCommand", () => {
+  it("always validates", () => {
+    const cmd = new RunAllCommand();
+
+    expect(cmd.validate([], createGlobalOptions())).toBe(true);
+    expect(cmd.validate(["extra"], createGlobalOptions({ tags: ["smoke"] }))).toBe(true);
+  });
+
   it("returns error when no scenario files found", async () => {
     const cmd = new RunAllCommand();
     const ctx = createMockContext({
@@ -86,5 +93,20 @@ describe("RunAllCommand", () => {
 
     expect(exitCode).toBe(1);
     expect(ctx.console.error).toHaveBeenCalledWith("No scenarios match tags: smoke");
+  });
+
+  it("skips scenarios with missing tags when filter set", async () => {
+    const cmd = new RunAllCommand();
+    const ctx = createMockContext({
+      loadConfig: vi
+        .fn()
+        .mockResolvedValueOnce({ config: {} })
+        .mockResolvedValueOnce({ config: { tags: ["smoke"] } }),
+    });
+
+    const exitCode = await cmd.execute([], createGlobalOptions({ tags: ["smoke"] }), ctx);
+
+    expect(exitCode).toBe(0);
+    expect(ctx.runScenario).toHaveBeenCalledTimes(1);
   });
 });

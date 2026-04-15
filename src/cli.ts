@@ -7,14 +7,6 @@ import { resolve as resolvePath } from "path";
 import { pathToFileURL } from "url";
 import type { DemoReelConfig } from "./schemas.js";
 import {
-  scriptGenerate,
-  scriptVoice,
-  scriptBuild,
-  scriptValidate,
-  scriptFix,
-  scriptFullPipeline,
-} from "./script/cli.js";
-import {
   InitCommand,
   ScriptRouterCommand,
   createDefaultScriptRouterContext,
@@ -304,14 +296,7 @@ export async function runCli(): Promise<number> {
 
     if (options.script) {
       const cmd = new ScriptRouterCommand();
-      const scriptCtx = createDefaultScriptRouterContext(createCommandContext(), {
-        generate: scriptGenerate,
-        voice: scriptVoice,
-        build: scriptBuild,
-        validate: scriptValidate,
-        fix: scriptFix,
-        pipeline: scriptFullPipeline,
-      });
+      const scriptCtx = createDefaultScriptRouterContext(createCommandContext());
       return await cmd.execute(scenario ? [scenario] : [], toGlobalOptions(options), scriptCtx);
     }
 

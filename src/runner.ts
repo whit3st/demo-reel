@@ -20,14 +20,14 @@ type MouseState = {
   position: Point;
 };
 
-const clamp = (value: number, min: number, max: number) => {
+export const clamp = (value: number, min: number, max: number) => {
   return Math.min(max, Math.max(min, value));
 };
 
 const MOTION_OFFSET_JITTER = 0.15;
 const TYPING_DELAY_JITTER = 0.15;
 
-const applyJitter = (value: number, jitter: number, rng?: RandomSource) => {
+export const applyJitter = (value: number, jitter: number, rng?: RandomSource) => {
   if (!rng || value === 0 || jitter <= 0) {
     return value;
   }
@@ -42,7 +42,7 @@ const applyStepDelay = async (page: Page, delayMs?: number) => {
   }
 };
 
-const assertRawSelector = (selector: SelectorConfig) => {
+export const assertRawSelector = (selector: SelectorConfig) => {
   if (
     (selector.strategy === "id" || selector.strategy === "class") &&
     (selector.value.startsWith("#") || selector.value.startsWith("."))
@@ -53,7 +53,7 @@ const assertRawSelector = (selector: SelectorConfig) => {
   }
 };
 
-const resolveLocator = (page: Page, selector: SelectorConfig): Locator => {
+export const resolveLocator = (page: Page, selector: SelectorConfig): Locator => {
   assertRawSelector(selector);
 
   let locator: Locator;
@@ -80,7 +80,7 @@ const resolveLocator = (page: Page, selector: SelectorConfig): Locator => {
 
 const punctuationCharacters = new Set([".", ",", "!", "?", ":", ";", "-"]);
 
-const getTypingDelay = (character: string, typing: TypingConfig, baseDelay: number) => {
+export const getTypingDelay = (character: string, typing: TypingConfig, baseDelay: number) => {
   if (character === "\n") {
     return baseDelay + typing.enterDelayMs;
   }
@@ -327,7 +327,7 @@ const getLocatorCenter = async (locator: Locator) => {
   };
 };
 
-const cubicBezierPoint = (t: number, p0: Point, p1: Point, p2: Point, p3: Point): Point => {
+export const cubicBezierPoint = (t: number, p0: Point, p1: Point, p2: Point, p3: Point): Point => {
   const u = 1 - t;
   const tt = t * t;
   const uu = u * u;
@@ -340,7 +340,7 @@ const cubicBezierPoint = (t: number, p0: Point, p1: Point, p2: Point, p3: Point)
   };
 };
 
-const easeInOutCubic = (t: number) => {
+export const easeInOutCubic = (t: number) => {
   if (t < 0.5) {
     return 4 * t * t * t;
   }
@@ -352,7 +352,7 @@ const easingLookup = {
   easeInOutCubic,
 } as const;
 
-const getBezierControlPoints = (
+export const getBezierControlPoints = (
   start: Point,
   end: Point,
   motion: MotionConfig,
@@ -518,7 +518,7 @@ const applyStartDelayIfNeeded = async (
   return true;
 };
 
-const buildTimeoutOption = (timeoutMs?: number) => {
+export const buildTimeoutOption = (timeoutMs?: number) => {
   if (typeof timeoutMs === "number") {
     return { timeout: timeoutMs };
   }
@@ -526,7 +526,7 @@ const buildTimeoutOption = (timeoutMs?: number) => {
   return {};
 };
 
-const isConfirmStep = (step: Step | undefined): step is Extract<Step, { action: "confirm" }> => {
+export const isConfirmStep = (step: Step | undefined): step is Extract<Step, { action: "confirm" }> => {
   return step?.action === "confirm";
 };
 
@@ -873,7 +873,7 @@ const runStep = async (
   return startDelayApplied;
 };
 
-const formatStepForLog = (step: Step): string => {
+export const formatStepForLog = (step: Step): string => {
   if (step.action === "goto") return `goto ${step.url}`;
   if (step.action === "wait") return `wait ${step.ms}ms`;
   if (step.action === "waitFor") return `waitFor ${step.kind}`;
@@ -958,6 +958,59 @@ export interface SceneTimestamp {
   endMs: number;
 }
 
+export function buildSceneBoundaries(
+  scenes: DemoReelConfig["scenes"],
+): Map<number, number> {
+  const boundaries = new Map<number, number>();
+  if (!scenes) return boundaries;
+  for (let i = 0; i < scenes.length; i++) {
+    boundaries.set(scenes[i].stepIndex, i);
+  }
+  return boundaries;
+}
+
+export function buildSceneTimestamps(
+  scenes: DemoReelConfig["scenes"],
+  sceneBoundaries: Map<number, number>,
+  steps: DemoReelConfig["steps"],
+  nowProvider: () => number,
+  recordingStart: number,
+): SceneTimestamp[] {
+  const timestamps: SceneTimestamp[] = [];
+  let currentScene: { index: number; startMs: number } | null = null;
+
+  for (let stepIdx = 0; stepIdx < steps.length; stepIdx++) {
+    const sceneIdx = sceneBoundaries.get(stepIdx);
+    if (sceneIdx !== undefined && scenes) {
+      const now = nowProvider() - recordingStart;
+      if (currentScene !== null) {
+        const prevScene = scenes[currentScene.index];
+        timestamps.push({
+          sceneIndex: currentScene.index,
+          narration: prevScene.narration,
+          isIntro: prevScene.isIntro ?? false,
+          startMs: currentScene.startMs,
+          endMs: now,
+        });
+      }
+      currentScene = { index: sceneIdx, startMs: now };
+    }
+  }
+
+  if (currentScene !== null && scenes) {
+    const finalScene = scenes[currentScene.index];
+    timestamps.push({
+      sceneIndex: currentScene.index,
+      narration: finalScene.narration,
+      isIntro: finalScene.isIntro ?? false,
+      startMs: currentScene.startMs,
+      endMs: nowProvider() - recordingStart,
+    });
+  }
+
+  return timestamps;
+}
+
 export const runDemo = async (page: Page, config: DemoReelConfig): Promise<SceneTimestamp[]> => {
   const resolvedCursor = await installCursorOverlay(page, config.cursor);
   const mouseState: MouseState = {
@@ -967,13 +1020,7 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
   let startDelayApplied = false;
   const rng = config.randomization ? createRandom(config.randomization.seed) : undefined;
 
-  // Build scene boundary lookup: stepIndex → sceneIndex
-  const sceneBoundaries = new Map<number, number>();
-  if (config.scenes) {
-    for (let i = 0; i < config.scenes.length; i++) {
-      sceneBoundaries.set(config.scenes[i].stepIndex, i);
-    }
-  }
+  const sceneBoundaries = buildSceneBoundaries(config.scenes);
 
   const timestamps: SceneTimestamp[] = [];
   const recordingStart = Date.now();
@@ -983,15 +1030,12 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
     const step = config.steps[stepIdx];
     const nextStep = config.steps[stepIdx + 1];
 
-    // Ensure cursor overlay exists before each step (SPA navigation may have destroyed it)
     await ensureCursorOverlay(page, resolvedCursor);
 
-    // Check if this step starts a new scene
     const sceneIdx = sceneBoundaries.get(stepIdx);
     if (sceneIdx !== undefined && config.scenes) {
       const now = Date.now() - recordingStart;
 
-      // Close previous scene
       if (currentScene !== null) {
         const prevScene = config.scenes[currentScene.index];
         timestamps.push({
