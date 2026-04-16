@@ -2,9 +2,6 @@ import { describe, expect, it, vi } from "vitest";
 import type { Page } from "playwright";
 import { formatPage, filterHeadings, processElements, extractPage } from "../src/script/explore.js";
 
-const INTERACTIVE_SELECTOR =
-  "button, a[href], input:not([type=hidden]), select, textarea, [role=button]";
-
 describe("filterHeadings", () => {
   const makeHeading = (text: string) => ({ innerText: text });
 
@@ -452,7 +449,7 @@ describe("formatPage", () => {
 
 describe("extractPage", () => {
   it("extracts url path, title, headings and elements from page", async () => {
-    const evaluateImpl = vi.fn().mockImplementation((fn: () => unknown, arg?: string) => {
+    const evaluateImpl = vi.fn().mockImplementation((fn: () => unknown) => {
       if (fn.toString().includes("filterHeadings")) {
         const rawHeadings = [{ innerText: "Dashboard" }, { innerText: "Welcome User" }];
         return Promise.resolve(filterHeadings(rawHeadings));
@@ -483,7 +480,7 @@ describe("extractPage", () => {
   });
 
   it("uses filterHeadings on evaluate results (filters Session/Logged Out)", async () => {
-    const evaluateImpl = vi.fn().mockImplementation((fn: () => unknown, arg?: string) => {
+    const evaluateImpl = vi.fn().mockImplementation((fn: () => unknown) => {
       if (fn.toString().includes("filterHeadings")) {
         const rawHeadings = [
           { innerText: "Valid" },
@@ -509,7 +506,7 @@ describe("extractPage", () => {
   });
 
   it("passes INTERACTIVE_SELECTOR to processElements", async () => {
-    const evaluateImpl = vi.fn().mockImplementation((fn: () => unknown, arg?: string) => {
+    const evaluateImpl = vi.fn().mockImplementation((fn: () => unknown) => {
       if (fn.toString().includes("filterHeadings")) {
         return Promise.resolve(filterHeadings([{ innerText: "Heading" }]));
       }

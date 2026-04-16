@@ -93,11 +93,11 @@ export async function extractPage(page: Page): Promise<PageInfo> {
   const title = await page.title();
 
   const headings = await page.evaluate(() =>
-    filterHeadings(Array.from(document.querySelectorAll("h1,h2,h3,h4"))),
+    filterHeadings(Array.from(document.querySelectorAll("h1,h2,h3,h4")) as unknown as RawHeading[]),
   );
 
   const elements = await page.evaluate(
-    (sel) => processElements(Array.from(document.querySelectorAll(sel))),
+    (sel) => processElements(Array.from(document.querySelectorAll(sel)) as unknown as RawElement[]),
     INTERACTIVE_SELECTOR,
   );
 

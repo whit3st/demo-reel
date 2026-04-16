@@ -148,7 +148,7 @@ describe("handleAuth", () => {
     loadSessionMock.mockResolvedValue({ cookies: [] });
     validateSessionMock.mockResolvedValue(false);
     runStepSimpleMock.mockResolvedValue(undefined);
-    const secondValidate = validateSessionMock.mockResolvedValue(false);
+    validateSessionMock.mockResolvedValue(false);
 
     await expect(handleAuth(context, page, authConfig, "/path/config.yaml")).rejects.toThrow(
       "Login failed",
@@ -565,13 +565,11 @@ describe("runVideoScenario", () => {
 
     const postBrowserMock = {
       newContext: vi.fn().mockResolvedValue({
-        newPage: vi
-          .fn()
-          .mockResolvedValue({
-            goto: vi.fn(),
-            close: vi.fn().mockResolvedValue(undefined),
-            video: vi.fn().mockReturnValue(null),
-          }),
+        newPage: vi.fn().mockResolvedValue({
+          goto: vi.fn(),
+          close: vi.fn().mockResolvedValue(undefined),
+          video: vi.fn().mockReturnValue(null),
+        }),
         setDefaultTimeout: vi.fn(),
         close: vi.fn().mockResolvedValue(undefined),
       }),

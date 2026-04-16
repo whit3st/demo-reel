@@ -31,16 +31,12 @@ import {
   applyPronunciation,
   getTTSProvider,
   registerTTSProvider,
-  getFFmpegPath,
-  getFFprobePath,
   runFFmpeg,
   runFfprobe,
   wavToMp3,
   generateSilence,
   concatenateAudio,
-  measureAudioDuration,
   generateVoiceSegments,
-  generateNarrationAudio,
 } from "../src/script/tts.js";
 
 describe("applyPronunciation", () => {
@@ -558,8 +554,7 @@ describe("generateVoiceSegments", () => {
       }),
     });
 
-    const segments = await generateVoiceSegments(script, script.voice!, { noCache: true });
-
+    await generateVoiceSegments(script, script.voice!, { noCache: true });
     expect(mockGenerate).toHaveBeenCalled();
   });
 });
@@ -571,7 +566,6 @@ describe("generateNarrationAudio", () => {
   });
 
   it("writes clip files and concatenates segments", async () => {
-    const concatMock = vi.fn().mockResolvedValue(Buffer.from("concatenated"));
     vi.doMock("child_process", () => ({ spawn: spawnMock }));
     vi.doMock("fs", () => ({ accessSync: accessSyncMock }));
     vi.doMock("fs/promises", () => ({

@@ -14,13 +14,7 @@ import {
   resolveLocator,
 } from "../src/runner.js";
 import type { Locator, Page } from "playwright";
-import type {
-  DemoReelConfig,
-  SelectorConfig,
-  MotionConfig,
-  Step,
-  TypingConfig,
-} from "../src/schemas.js";
+import type { SelectorConfig, MotionConfig, Step, TypingConfig } from "../src/schemas.js";
 
 const makePage = (overrides: Partial<Page> = {}): Page =>
   ({
@@ -533,7 +527,7 @@ describe("buildSceneBoundaries", () => {
 
 describe("buildSceneTimestamps", () => {
   const makeSteps = (count: number): Step[] =>
-    Array.from({ length: count }, (_, i) => ({ action: "wait", ms: 10 }) as Step);
+    Array.from({ length: count }, () => ({ action: "wait", ms: 10 }) as Step);
 
   const makeScenes = (stepIndices: number[], narrations: string[]) =>
     stepIndices.map((stepIndex, i) => ({
