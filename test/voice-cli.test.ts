@@ -67,11 +67,11 @@ describe("voice-cli", () => {
   it("exits with usage when script path missing", async () => {
     process.argv = ["node", "voice-cli"];
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    const exitSpy = vi
-      .spyOn(process, "exit")
-      .mockImplementation(((code?: string | number | null) => {
-        throw new Error(`exit:${code}`);
-      }) as never);
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation(((
+      code?: string | number | null,
+    ) => {
+      throw new Error(`exit:${code}`);
+    }) as never);
 
     await expect(main()).rejects.toThrow("exit:1");
     expect(errorSpy).toHaveBeenCalledWith(
@@ -167,7 +167,9 @@ describe("voice-cli", () => {
     statMock.mockResolvedValue(undefined);
     readFileMock
       .mockResolvedValueOnce('{"scenes":[]}')
-      .mockResolvedValueOnce('{"voice":{"provider":"elevenlabs","voice":"Rachel","speed":0.95,"pronunciation":{"OpenAI":"Open A I"}}}');
+      .mockResolvedValueOnce(
+        '{"voice":{"provider":"elevenlabs","voice":"Rachel","speed":0.95,"pronunciation":{"OpenAI":"Open A I"}}}',
+      );
     parseMock.mockReturnValue(parsedScript);
     resolveVoiceConfigMock.mockReturnValue(voice);
     getVoiceNameMock.mockReturnValue("Rachel");
@@ -256,11 +258,11 @@ describe("voice-cli", () => {
     statMock.mockRejectedValue(new Error("missing"));
     readFileMock.mockRejectedValue(new Error("cannot read"));
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    const exitSpy = vi
-      .spyOn(process, "exit")
-      .mockImplementation(((code?: string | number | null) => {
-        throw new Error(`exit:${code}`);
-      }) as never);
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation(((
+      code?: string | number | null,
+    ) => {
+      throw new Error(`exit:${code}`);
+    }) as never);
 
     await expect(main()).rejects.toThrow("exit:1");
     expect(errorSpy).toHaveBeenCalledWith("Error: cannot read");

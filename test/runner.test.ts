@@ -1,13 +1,33 @@
 import { describe, expect, it, vi } from "vitest";
-import { applyJitter, assertRawSelector, buildTimeoutOption, buildSceneBoundaries, buildSceneTimestamps, cubicBezierPoint, easeInOutCubic, formatStepForLog, getBezierControlPoints, getTypingDelay, isConfirmStep, resolveLocator } from "../src/runner.js";
+import {
+  applyJitter,
+  assertRawSelector,
+  buildTimeoutOption,
+  buildSceneBoundaries,
+  buildSceneTimestamps,
+  cubicBezierPoint,
+  easeInOutCubic,
+  formatStepForLog,
+  getBezierControlPoints,
+  getTypingDelay,
+  isConfirmStep,
+  resolveLocator,
+} from "../src/runner.js";
 import type { Locator, Page } from "playwright";
-import type { DemoReelConfig, SelectorConfig, MotionConfig, Step, TypingConfig } from "../src/schemas.js";
+import type {
+  DemoReelConfig,
+  SelectorConfig,
+  MotionConfig,
+  Step,
+  TypingConfig,
+} from "../src/schemas.js";
 
-const makePage = (overrides: Partial<Page> = {}): Page => ({
-  getByTestId: vi.fn(() => mockLocator()) as any,
-  locator: vi.fn(() => mockLocator()) as any,
-  ...overrides,
-} as unknown as Page);
+const makePage = (overrides: Partial<Page> = {}): Page =>
+  ({
+    getByTestId: vi.fn(() => mockLocator()) as any,
+    locator: vi.fn(() => mockLocator()) as any,
+    ...overrides,
+  }) as unknown as Page;
 
 const mockLocator = (): Locator =>
   ({
@@ -134,7 +154,7 @@ describe("resolveLocator", () => {
   it("resolves data-node-id strategy", () => {
     const sel: SelectorConfig = { strategy: "data-node-id", value: "node-42" };
     resolveLocator(page, sel);
-    expect(page.locator).toHaveBeenCalledWith('[data-node-id=node-42]');
+    expect(page.locator).toHaveBeenCalledWith("[data-node-id=node-42]");
   });
 
   it("resolves custom strategy as-is", () => {
@@ -348,7 +368,9 @@ describe("isConfirmStep", () => {
   });
 
   it("returns false for other actions", () => {
-    expect(isConfirmStep({ action: "click", selector: { strategy: "id", value: "btn" } })).toBe(false);
+    expect(isConfirmStep({ action: "click", selector: { strategy: "id", value: "btn" } })).toBe(
+      false,
+    );
     expect(isConfirmStep({ action: "goto", url: "http://example.com" })).toBe(false);
     expect(isConfirmStep({ action: "wait", ms: 100 })).toBe(false);
     expect(isConfirmStep(undefined)).toBe(false);
@@ -357,7 +379,9 @@ describe("isConfirmStep", () => {
 
 describe("formatStepForLog", () => {
   it("formats goto steps", () => {
-    expect(formatStepForLog({ action: "goto", url: "http://example.com" })).toBe("goto http://example.com");
+    expect(formatStepForLog({ action: "goto", url: "http://example.com" })).toBe(
+      "goto http://example.com",
+    );
   });
 
   it("formats wait steps", () => {
@@ -365,9 +389,20 @@ describe("formatStepForLog", () => {
   });
 
   it("formats waitFor steps", () => {
-    expect(formatStepForLog({ action: "waitFor", kind: "selector", selector: { strategy: "id", value: "x" }, state: "visible" })).toBe("waitFor selector");
-    expect(formatStepForLog({ action: "waitFor", kind: "url", url: "**/done" })).toBe("waitFor url");
-    expect(formatStepForLog({ action: "waitFor", kind: "loadState", state: "networkidle" })).toBe("waitFor loadState");
+    expect(
+      formatStepForLog({
+        action: "waitFor",
+        kind: "selector",
+        selector: { strategy: "id", value: "x" },
+        state: "visible",
+      }),
+    ).toBe("waitFor selector");
+    expect(formatStepForLog({ action: "waitFor", kind: "url", url: "**/done" })).toBe(
+      "waitFor url",
+    );
+    expect(formatStepForLog({ action: "waitFor", kind: "loadState", state: "networkidle" })).toBe(
+      "waitFor loadState",
+    );
   });
 
   it("formats confirm steps", () => {
@@ -381,7 +416,11 @@ describe("formatStepForLog", () => {
   });
 
   it("formats type steps", () => {
-    const step = { action: "type" as const, selector: { strategy: "testId", value: "input" }, text: "hello" };
+    const step = {
+      action: "type" as const,
+      selector: { strategy: "testId", value: "input" },
+      text: "hello",
+    };
     expect(formatStepForLog(step)).toContain("type");
   });
 
@@ -391,27 +430,48 @@ describe("formatStepForLog", () => {
   });
 
   it("formats press steps", () => {
-    const step = { action: "press" as const, selector: { strategy: "id", value: "field" }, key: "Enter" };
+    const step = {
+      action: "press" as const,
+      selector: { strategy: "id", value: "field" },
+      key: "Enter",
+    };
     expect(formatStepForLog(step)).toContain("press");
   });
 
   it("formats scroll steps", () => {
-    const step = { action: "scroll" as const, selector: { strategy: "id", value: "el" }, x: 0, y: 100 };
+    const step = {
+      action: "scroll" as const,
+      selector: { strategy: "id", value: "el" },
+      x: 0,
+      y: 100,
+    };
     expect(formatStepForLog(step)).toContain("scroll");
   });
 
   it("formats select steps", () => {
-    const step = { action: "select" as const, selector: { strategy: "id", value: "dropdown" }, value: "opt1" };
+    const step = {
+      action: "select" as const,
+      selector: { strategy: "id", value: "dropdown" },
+      value: "opt1",
+    };
     expect(formatStepForLog(step)).toContain("select");
   });
 
   it("formats check steps", () => {
-    const step = { action: "check" as const, selector: { strategy: "testId", value: "check" }, checked: true };
+    const step = {
+      action: "check" as const,
+      selector: { strategy: "testId", value: "check" },
+      checked: true,
+    };
     expect(formatStepForLog(step)).toContain("check");
   });
 
   it("formats upload steps", () => {
-    const step = { action: "upload" as const, selector: { strategy: "id", value: "file" }, filePath: "/tmp/file.txt" };
+    const step = {
+      action: "upload" as const,
+      selector: { strategy: "id", value: "file" },
+      filePath: "/tmp/file.txt",
+    };
     expect(formatStepForLog(step)).toContain("upload");
   });
 
@@ -425,7 +485,9 @@ describe("formatStepForLog", () => {
   });
 
   it("returns unknown-step for unrecognized actions", () => {
-    expect(formatStepForLog({ action: "goto", url: "http://example.com" } as any)).not.toBe("unknown-step");
+    expect(formatStepForLog({ action: "goto", url: "http://example.com" } as any)).not.toBe(
+      "unknown-step",
+    );
   });
 });
 
@@ -471,7 +533,7 @@ describe("buildSceneBoundaries", () => {
 
 describe("buildSceneTimestamps", () => {
   const makeSteps = (count: number): Step[] =>
-    Array.from({ length: count }, (_, i) => ({ action: "wait", ms: 10 } as Step));
+    Array.from({ length: count }, (_, i) => ({ action: "wait", ms: 10 }) as Step);
 
   const makeScenes = (stepIndices: number[], narrations: string[]) =>
     stepIndices.map((stepIndex, i) => ({

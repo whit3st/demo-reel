@@ -131,9 +131,7 @@ describe("handleAuth", () => {
 
   it("clears invalid session and runs login", async () => {
     loadSessionMock.mockResolvedValue({ cookies: [] });
-    validateSessionMock
-      .mockResolvedValueOnce(false)
-      .mockResolvedValueOnce(true);
+    validateSessionMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
     captureSessionMock.mockResolvedValue({ cookies: [] });
     saveSessionMock.mockResolvedValue(undefined);
     restoreSessionMock.mockResolvedValue(undefined);
@@ -152,9 +150,9 @@ describe("handleAuth", () => {
     runStepSimpleMock.mockResolvedValue(undefined);
     const secondValidate = validateSessionMock.mockResolvedValue(false);
 
-    await expect(
-      handleAuth(context, page, authConfig, "/path/config.yaml"),
-    ).rejects.toThrow("Login failed");
+    await expect(handleAuth(context, page, authConfig, "/path/config.yaml")).rejects.toThrow(
+      "Login failed",
+    );
   });
 
   it("force reauth clears session first", async () => {
@@ -195,7 +193,13 @@ describe("processVideoWithAudio", () => {
   });
 
   it("copies video when no audio config", async () => {
-    const result = await processVideoWithAudio("/tmp/raw.mp4", "/out/demo.mp4", undefined, "/cfg/config.yaml", []);
+    const result = await processVideoWithAudio(
+      "/tmp/raw.mp4",
+      "/out/demo.mp4",
+      undefined,
+      "/cfg/config.yaml",
+      [],
+    );
 
     expect(mkdirMock).toHaveBeenCalledWith("/out", { recursive: true });
     expect(copyFileMock).toHaveBeenCalledWith("/tmp/raw.mp4", "/out/demo.mp4");
@@ -208,7 +212,13 @@ describe("processVideoWithAudio", () => {
 
   it("copies video when audio has no sources", async () => {
     const audio = {} as any;
-    const result = await processVideoWithAudio("/tmp/raw.mp4", "/out/demo.mp4", audio, "/cfg/config.yaml", []);
+    const result = await processVideoWithAudio(
+      "/tmp/raw.mp4",
+      "/out/demo.mp4",
+      audio,
+      "/cfg/config.yaml",
+      [],
+    );
 
     expect(copyFileMock).toHaveBeenCalled();
     expect(result.narrationPlacements).toEqual([]);
@@ -219,7 +229,13 @@ describe("processVideoWithAudio", () => {
     mergeAudioVideoMock.mockResolvedValue("/out/final.mp4");
 
     const audio = { background: "/music/bg.mp3" } as any;
-    const result = await processVideoWithAudio("/tmp/raw.mp4", "/out/final.mp4", audio, "/cfg/config.yaml", []);
+    const result = await processVideoWithAudio(
+      "/tmp/raw.mp4",
+      "/out/final.mp4",
+      audio,
+      "/cfg/config.yaml",
+      [],
+    );
 
     expect(mergeAudioVideoMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -238,15 +254,21 @@ describe("processVideoWithAudio", () => {
     });
     readFileMock.mockResolvedValue('{"clips":[]}');
     narrationManifestSchemaMock.mockReturnValue({
-      clips: [
-        { sceneIndex: 0, narration: "Hello", filePath: "clip-0.mp3", audioDurationMs: 800 },
-      ],
+      clips: [{ sceneIndex: 0, narration: "Hello", filePath: "clip-0.mp3", audioDurationMs: 800 }],
     });
     mergeAudioVideoMock.mockResolvedValue("/out/final.mp4");
 
-    const timestamps = [{ sceneIndex: 0, narration: "Hello", startMs: 0, endMs: 1000, isIntro: false }];
+    const timestamps = [
+      { sceneIndex: 0, narration: "Hello", startMs: 0, endMs: 1000, isIntro: false },
+    ];
     const audio = { narration: "/cfg/voice.mp3" } as any;
-    const result = await processVideoWithAudio("/tmp/raw.mp4", "/out/final.mp4", audio, "/cfg/config.yaml", timestamps);
+    const result = await processVideoWithAudio(
+      "/tmp/raw.mp4",
+      "/out/final.mp4",
+      audio,
+      "/cfg/config.yaml",
+      timestamps,
+    );
 
     expect(result.narrationPlacements).toEqual([
       expect.objectContaining({ sceneIndex: 0, startMs: 0, endMs: 800 }),
@@ -272,9 +294,17 @@ describe("processVideoWithAudio", () => {
     });
     mergeAudioVideoMock.mockResolvedValue("/out/final.mp4");
 
-    const timestamps = [{ sceneIndex: 0, narration: "Hello", startMs: 0, endMs: 1000, isIntro: false }];
+    const timestamps = [
+      { sceneIndex: 0, narration: "Hello", startMs: 0, endMs: 1000, isIntro: false },
+    ];
     const audio = { narration: "v.mp3" } as any;
-    const result = await processVideoWithAudio("/tmp/raw.mp4", "/out/final.mp4", audio, "/cfg/config.yaml", timestamps);
+    const result = await processVideoWithAudio(
+      "/tmp/raw.mp4",
+      "/out/final.mp4",
+      audio,
+      "/cfg/config.yaml",
+      timestamps,
+    );
 
     expect(result.warnings[0]).toContain("No recorded scene timestamp");
     expect(result.narrationPlacements).toEqual([]);
@@ -298,7 +328,13 @@ describe("processVideoWithAudio", () => {
       { sceneIndex: 1, narration: "B", startMs: 1000, endMs: 2000, isIntro: false },
     ];
     const audio = { narration: "v.mp3" } as any;
-    const result = await processVideoWithAudio("/tmp/raw.mp4", "/out/final.mp4", audio, "/cfg/config.yaml", timestamps);
+    const result = await processVideoWithAudio(
+      "/tmp/raw.mp4",
+      "/out/final.mp4",
+      audio,
+      "/cfg/config.yaml",
+      timestamps,
+    );
 
     expect(result.warnings.some((w) => w.includes("Narration overlap"))).toBe(true);
   });
@@ -311,7 +347,13 @@ describe("processVideoWithAudio", () => {
     mergeAudioVideoMock.mockResolvedValue("/out/final.mp4");
 
     const audio = { narration: "v.mp3" } as any;
-    const result = await processVideoWithAudio("/tmp/raw.mp4", "/out/final.mp4", audio, "/cfg/config.yaml", []);
+    const result = await processVideoWithAudio(
+      "/tmp/raw.mp4",
+      "/out/final.mp4",
+      audio,
+      "/cfg/config.yaml",
+      [],
+    );
 
     expect(result.warnings[0]).toContain("Failed to load narration manifest");
     expect(result.warnings[0]).toContain("ENOENT");
@@ -523,7 +565,13 @@ describe("runVideoScenario", () => {
 
     const postBrowserMock = {
       newContext: vi.fn().mockResolvedValue({
-        newPage: vi.fn().mockResolvedValue({ goto: vi.fn(), close: vi.fn().mockResolvedValue(undefined), video: vi.fn().mockReturnValue(null) }),
+        newPage: vi
+          .fn()
+          .mockResolvedValue({
+            goto: vi.fn(),
+            close: vi.fn().mockResolvedValue(undefined),
+            video: vi.fn().mockReturnValue(null),
+          }),
         setDefaultTimeout: vi.fn(),
         close: vi.fn().mockResolvedValue(undefined),
       }),
@@ -537,7 +585,9 @@ describe("runVideoScenario", () => {
     } as any;
 
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-    const result = await runVideoScenario(config, "/out/demo.mp4", "/cfg/config.yaml", { verbose: true });
+    const result = await runVideoScenario(config, "/out/demo.mp4", "/cfg/config.yaml", {
+      verbose: true,
+    });
 
     expect(result).toBe("/out/demo.mp4");
     expect(launchMock).toHaveBeenCalledTimes(2);
@@ -557,8 +607,15 @@ describe("runVideoScenario", () => {
 
     // Post-steps browser
     const postPageMock = { goto: vi.fn() };
-    const postContextMock = { newPage: vi.fn().mockResolvedValue(postPageMock), setDefaultTimeout: vi.fn(), close: vi.fn().mockResolvedValue(undefined) };
-    const postBrowserMock = { newContext: vi.fn().mockResolvedValue(postContextMock), close: vi.fn().mockResolvedValue(undefined) };
+    const postContextMock = {
+      newPage: vi.fn().mockResolvedValue(postPageMock),
+      setDefaultTimeout: vi.fn(),
+      close: vi.fn().mockResolvedValue(undefined),
+    };
+    const postBrowserMock = {
+      newContext: vi.fn().mockResolvedValue(postContextMock),
+      close: vi.fn().mockResolvedValue(undefined),
+    };
     launchMock.mockResolvedValueOnce(browserMock).mockResolvedValueOnce(postBrowserMock);
 
     const config = {
@@ -566,9 +623,9 @@ describe("runVideoScenario", () => {
       postSteps: [{ action: "click", selector: "#cleanup" }],
     } as any;
 
-    await expect(
-      runVideoScenario(config, "/out/demo.mp4", "/cfg/config.yaml"),
-    ).rejects.toThrow("recording failed");
+    await expect(runVideoScenario(config, "/out/demo.mp4", "/cfg/config.yaml")).rejects.toThrow(
+      "recording failed",
+    );
   });
 
   it("ignores postSteps error during error cleanup", async () => {
@@ -592,8 +649,8 @@ describe("runVideoScenario", () => {
       postSteps: [{ action: "click", selector: "#cleanup" }],
     } as any;
 
-    await expect(
-      runVideoScenario(config, "/out/demo.mp4", "/cfg/config.yaml"),
-    ).rejects.toThrow("boom");
+    await expect(runVideoScenario(config, "/out/demo.mp4", "/cfg/config.yaml")).rejects.toThrow(
+      "boom",
+    );
   });
 });

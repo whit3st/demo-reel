@@ -23,11 +23,11 @@ describe("crawl-cli", () => {
   it("exits with usage when url missing", async () => {
     process.argv = ["node", "crawl-cli"];
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    const exitSpy = vi
-      .spyOn(process, "exit")
-      .mockImplementation(((code?: string | number | null) => {
-        throw new Error(`exit:${code}`);
-      }) as never);
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation(((
+      code?: string | number | null,
+    ) => {
+      throw new Error(`exit:${code}`);
+    }) as never);
 
     await expect(main()).rejects.toThrow("exit:1");
     expect(errorSpy).toHaveBeenCalledWith("Usage: node dist/script/crawl-cli.js <url> [json|text]");
@@ -66,11 +66,11 @@ describe("crawl-cli", () => {
     process.argv = ["node", "crawl-cli", "https://bad.example"];
     crawlUrlMock.mockRejectedValue(new Error("network down"));
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    const exitSpy = vi
-      .spyOn(process, "exit")
-      .mockImplementation(((code?: string | number | null) => {
-        throw new Error(`exit:${code}`);
-      }) as never);
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation(((
+      code?: string | number | null,
+    ) => {
+      throw new Error(`exit:${code}`);
+    }) as never);
 
     await expect(main()).rejects.toThrow("exit:1");
     expect(errorSpy).toHaveBeenCalledWith("Error crawling https://bad.example: network down");
@@ -83,11 +83,11 @@ describe("crawl-cli", () => {
     process.argv = ["node", "crawl-cli", "https://bad.example"];
     crawlUrlMock.mockRejectedValue("boom");
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    const exitSpy = vi
-      .spyOn(process, "exit")
-      .mockImplementation(((code?: string | number | null) => {
-        throw new Error(`exit:${code}`);
-      }) as never);
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation(((
+      code?: string | number | null,
+    ) => {
+      throw new Error(`exit:${code}`);
+    }) as never);
 
     await expect(main()).rejects.toThrow("exit:1");
     expect(errorSpy).toHaveBeenCalledWith("Error crawling https://bad.example: boom");

@@ -131,7 +131,9 @@ describe("ScriptRouterCommand", () => {
     const exitCode = await cmd.execute(["validate"], createGlobalOptions(), ctx);
 
     expect(exitCode).toBe(1);
-    expect(ctx.console.error).toHaveBeenCalledWith("Usage: demo-reel script validate <script.json>");
+    expect(ctx.console.error).toHaveBeenCalledWith(
+      "Usage: demo-reel script validate <script.json>",
+    );
   });
 
   it("returns usage error for pipeline route when URL missing", async () => {
@@ -141,7 +143,9 @@ describe("ScriptRouterCommand", () => {
     const exitCode = await cmd.execute(["show signup"], createGlobalOptions(), ctx);
 
     expect(exitCode).toBe(1);
-    expect(ctx.console.error).toHaveBeenCalledWith("Usage: demo-reel script <description> --url <url>");
+    expect(ctx.console.error).toHaveBeenCalledWith(
+      "Usage: demo-reel script <description> --url <url>",
+    );
     expect(ctx.console.error).toHaveBeenCalledWith(
       "Or use a subcommand: generate, voice, build, validate, fix",
     );

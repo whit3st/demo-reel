@@ -113,10 +113,14 @@ describe("script cli", () => {
     synchronizeTimingMock.mockReturnValue(timedScript);
     writeScriptJsonMock.mockResolvedValue(undefined);
 
-    const out = await scriptVoice("demo.script.json", { provider: "openai", voice: "alloy" } as any, {
-      noCache: true,
-      verbose: true,
-    });
+    const out = await scriptVoice(
+      "demo.script.json",
+      { provider: "openai", voice: "alloy" } as any,
+      {
+        noCache: true,
+        verbose: true,
+      },
+    );
 
     expect(out).toBe("demo-narration.mp3");
     expect(generateVoiceSegmentsMock).toHaveBeenCalledWith(
@@ -230,7 +234,10 @@ describe("script cli", () => {
       timedScenes: [{ duration: 1.2 }],
       narrationManifestPath: "narration.json",
     });
-    synchronizeTimingMock.mockReturnValue({ scenes: [{ steps: [] }], audioPath: "demo-narration.mp3" });
+    synchronizeTimingMock.mockReturnValue({
+      scenes: [{ steps: [] }],
+      audioPath: "demo-narration.mp3",
+    });
     writeDemoConfigMock.mockResolvedValue(undefined);
 
     const out = await scriptFullPipeline("show signup", "https://example.com", {

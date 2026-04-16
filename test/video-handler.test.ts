@@ -46,9 +46,7 @@ describe("formatTimecode", () => {
 // ── generateSRT ───────────────────────────────────────────────────
 describe("generateSRT", () => {
   it("generates single cue", () => {
-    const cues: SubtitleCue[] = [
-      { narration: "Hello", startMs: 0, endMs: 1000, isIntro: false },
-    ];
+    const cues: SubtitleCue[] = [{ narration: "Hello", startMs: 0, endMs: 1000, isIntro: false }];
     const srt = generateSRT(cues);
 
     expect(srt).toContain("1\n00:00:00,000 --> 00:00:01,000\nHello\n");
@@ -75,18 +73,14 @@ describe("generateSRT", () => {
 // ── generateVTT ───────────────────────────────────────────────────
 describe("generateVTT", () => {
   it("starts with WEBVTT header", () => {
-    const cues: SubtitleCue[] = [
-      { narration: "Test", startMs: 0, endMs: 1000, isIntro: false },
-    ];
+    const cues: SubtitleCue[] = [{ narration: "Test", startMs: 0, endMs: 1000, isIntro: false }];
     const vtt = generateVTT(cues);
 
     expect(vtt).toMatch(/^WEBVTT/);
   });
 
   it("uses dot separator in timecodes", () => {
-    const cues: SubtitleCue[] = [
-      { narration: "Dot", startMs: 500, endMs: 1500, isIntro: false },
-    ];
+    const cues: SubtitleCue[] = [{ narration: "Dot", startMs: 500, endMs: 1500, isIntro: false }];
     const vtt = generateVTT(cues);
 
     expect(vtt).toContain("00:00:00.500 --> 00:00:01.500");

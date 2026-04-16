@@ -28,14 +28,16 @@ interface ScriptRouterSubcommands {
 export class ScriptRouterCommand implements Command {
   readonly name = "script";
 
-  constructor(private readonly subcommands: ScriptRouterSubcommands = {
-    generate: new ScriptGenerateCommand(),
-    voice: new ScriptVoiceCommand(),
-    build: new ScriptBuildCommand(),
-    validate: new ScriptValidateCommand(),
-    fix: new ScriptFixCommand(),
-    pipeline: new ScriptPipelineCommand(),
-  }) {}
+  constructor(
+    private readonly subcommands: ScriptRouterSubcommands = {
+      generate: new ScriptGenerateCommand(),
+      voice: new ScriptVoiceCommand(),
+      build: new ScriptBuildCommand(),
+      validate: new ScriptValidateCommand(),
+      fix: new ScriptFixCommand(),
+      pipeline: new ScriptPipelineCommand(),
+    },
+  ) {}
 
   validate(args: string[], _options: GlobalOptions): boolean {
     return args.length >= 1;
@@ -156,9 +158,7 @@ export class ScriptRouterCommand implements Command {
   }
 }
 
-export function createDefaultScriptRouterContext(
-  base: CommandContext,
-): ScriptRouterCommandContext {
+export function createDefaultScriptRouterContext(base: CommandContext): ScriptRouterCommandContext {
   return {
     ...base,
     getArgAfter: (token: string) => {

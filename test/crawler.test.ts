@@ -28,7 +28,13 @@ vi.mock("playwright", () => ({
   chromium: { launch: launchMock },
 }));
 
-import { formatPageContext, crawlPage, crawlUrl, inferRole, buildSelector } from "../src/script/crawler.js";
+import {
+  formatPageContext,
+  crawlPage,
+  crawlUrl,
+  inferRole,
+  buildSelector,
+} from "../src/script/crawler.js";
 import type { CrawledPage } from "../src/script/types.js";
 
 describe("inferRole", () => {
@@ -382,9 +388,7 @@ describe("crawlUrl", () => {
     pageMock.url.mockReturnValue("http://example.com");
     pageMock.evaluate.mockResolvedValue([]);
     pageMock.$$.mockResolvedValue([]);
-    pageMock.goto
-      .mockRejectedValueOnce(new Error("timeout"))
-      .mockResolvedValueOnce({} as any);
+    pageMock.goto.mockRejectedValueOnce(new Error("timeout")).mockResolvedValueOnce({} as any);
 
     const result = await crawlUrl("http://example.com");
 

@@ -92,16 +92,12 @@ export async function extractPage(page: Page): Promise<PageInfo> {
   const path = new URL(url).pathname;
   const title = await page.title();
 
-  const headings = await page.evaluate(
-    () =>
-      filterHeadings(
-        Array.from(document.querySelectorAll("h1,h2,h3,h4")),
-      ),
+  const headings = await page.evaluate(() =>
+    filterHeadings(Array.from(document.querySelectorAll("h1,h2,h3,h4"))),
   );
 
   const elements = await page.evaluate(
-    (sel) =>
-      processElements(Array.from(document.querySelectorAll(sel))),
+    (sel) => processElements(Array.from(document.querySelectorAll(sel))),
     INTERACTIVE_SELECTOR,
   );
 

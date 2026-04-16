@@ -526,7 +526,9 @@ export const buildTimeoutOption = (timeoutMs?: number) => {
   return {};
 };
 
-export const isConfirmStep = (step: Step | undefined): step is Extract<Step, { action: "confirm" }> => {
+export const isConfirmStep = (
+  step: Step | undefined,
+): step is Extract<Step, { action: "confirm" }> => {
   return step?.action === "confirm";
 };
 
@@ -958,9 +960,7 @@ export interface SceneTimestamp {
   endMs: number;
 }
 
-export function buildSceneBoundaries(
-  scenes: DemoReelConfig["scenes"],
-): Map<number, number> {
+export function buildSceneBoundaries(scenes: DemoReelConfig["scenes"]): Map<number, number> {
   const boundaries = new Map<number, number>();
   if (!scenes) return boundaries;
   for (let i = 0; i < scenes.length; i++) {

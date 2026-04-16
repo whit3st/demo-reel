@@ -1,10 +1,7 @@
 import type { Command, CommandContext, GlobalOptions } from "../types.js";
 import { scriptValidate, type ScriptCliOptions } from "../../script/cli.js";
 
-export type ScriptValidateFn = (
-  scriptPath: string,
-  options: ScriptCliOptions,
-) => Promise<boolean>;
+export type ScriptValidateFn = (scriptPath: string, options: ScriptCliOptions) => Promise<boolean>;
 
 export type ScriptValidateCommandContext = CommandContext;
 

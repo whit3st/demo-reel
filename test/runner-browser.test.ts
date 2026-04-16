@@ -24,7 +24,12 @@ const { locatorMock, pageMock } = vi.hoisted(() => {
     locator: vi.fn(() => locatorMock),
     goto: vi.fn().mockResolvedValue(undefined),
     waitForTimeout: vi.fn().mockResolvedValue(undefined),
-    waitForEvent: vi.fn(() => Promise.resolve({ accept: vi.fn().mockResolvedValue(undefined), dismiss: vi.fn().mockResolvedValue(undefined) })),
+    waitForEvent: vi.fn(() =>
+      Promise.resolve({
+        accept: vi.fn().mockResolvedValue(undefined),
+        dismiss: vi.fn().mockResolvedValue(undefined),
+      }),
+    ),
     waitForURL: vi.fn().mockResolvedValue(undefined),
     waitForLoadState: vi.fn().mockResolvedValue(undefined),
     waitForRequest: vi.fn().mockResolvedValue({ url: () => "http://example.com" }),
@@ -57,7 +62,7 @@ import { runStepSimple, runSteps } from "../src/runner.js";
 import type { Page } from "playwright";
 
 const makePage = (overrides: Partial<Page> = {}): Page =>
-  ({ ...pageMock, ...overrides } as unknown as Page);
+  ({ ...pageMock, ...overrides }) as unknown as Page;
 
 describe("runStepSimple", () => {
   let page: Page;
@@ -73,7 +78,11 @@ describe("runStepSimple", () => {
   });
 
   it("handles goto step with waitUntil", async () => {
-    await runStepSimple(page, { action: "goto", url: "http://example.com/", waitUntil: "networkidle" });
+    await runStepSimple(page, {
+      action: "goto",
+      url: "http://example.com/",
+      waitUntil: "networkidle",
+    });
     expect(page.goto).toHaveBeenCalledWith("http://example.com/", { waitUntil: "networkidle" });
   });
 
@@ -96,47 +105,82 @@ describe("runStepSimple", () => {
   });
 
   it("handles type step with clear", async () => {
-    await runStepSimple(page, { action: "type", selector: { strategy: "id", value: "input" }, text: "hello", clear: true });
+    await runStepSimple(page, {
+      action: "type",
+      selector: { strategy: "id", value: "input" },
+      text: "hello",
+      clear: true,
+    });
     expect(page.locator).toHaveBeenCalledWith("#input");
     expect(locatorMock.fill).toHaveBeenCalledWith("hello");
   });
 
   it("handles type step without clear", async () => {
-    await runStepSimple(page, { action: "type", selector: { strategy: "id", value: "input" }, text: "hello", clear: false });
+    await runStepSimple(page, {
+      action: "type",
+      selector: { strategy: "id", value: "input" },
+      text: "hello",
+      clear: false,
+    });
     expect(locatorMock.type).toHaveBeenCalledWith("hello");
   });
 
   it("handles press step", async () => {
-    await runStepSimple(page, { action: "press", selector: { strategy: "class", value: "field" }, key: "Enter" });
+    await runStepSimple(page, {
+      action: "press",
+      selector: { strategy: "class", value: "field" },
+      key: "Enter",
+    });
     expect(page.locator).toHaveBeenCalledWith(".field");
     expect(locatorMock.press).toHaveBeenCalledWith("Enter");
   });
 
   it("handles scroll step", async () => {
-    await runStepSimple(page, { action: "scroll", selector: { strategy: "id", value: "el" }, x: 0, y: 200 });
+    await runStepSimple(page, {
+      action: "scroll",
+      selector: { strategy: "id", value: "el" },
+      x: 0,
+      y: 200,
+    });
     expect(page.locator).toHaveBeenCalledWith("#el");
     expect(locatorMock.evaluate).toHaveBeenCalled();
   });
 
   it("handles select step", async () => {
-    await runStepSimple(page, { action: "select", selector: { strategy: "id", value: "dropdown" }, value: "opt1" });
+    await runStepSimple(page, {
+      action: "select",
+      selector: { strategy: "id", value: "dropdown" },
+      value: "opt1",
+    });
     expect(page.locator).toHaveBeenCalledWith("#dropdown");
     expect(locatorMock.selectOption).toHaveBeenCalledWith("opt1");
   });
 
   it("handles check step (checked)", async () => {
-    await runStepSimple(page, { action: "check", selector: { strategy: "testId", value: "agree" }, checked: true });
+    await runStepSimple(page, {
+      action: "check",
+      selector: { strategy: "testId", value: "agree" },
+      checked: true,
+    });
     expect(page.getByTestId).toHaveBeenCalledWith("agree");
     expect(locatorMock.setChecked).toHaveBeenCalledWith(true);
   });
 
   it("handles check step (unchecked)", async () => {
-    await runStepSimple(page, { action: "check", selector: { strategy: "testId", value: "agree" }, checked: false });
+    await runStepSimple(page, {
+      action: "check",
+      selector: { strategy: "testId", value: "agree" },
+      checked: false,
+    });
     expect(locatorMock.setChecked).toHaveBeenCalledWith(false);
   });
 
   it("handles upload step", async () => {
-    await runStepSimple(page, { action: "upload", selector: { strategy: "id", value: "file-input" }, filePath: "/tmp/test.png" });
+    await runStepSimple(page, {
+      action: "upload",
+      selector: { strategy: "id", value: "file-input" },
+      filePath: "/tmp/test.png",
+    });
     expect(page.locator).toHaveBeenCalledWith("#file-input");
     expect(locatorMock.setInputFiles).toHaveBeenCalledWith("/tmp/test.png");
   });
@@ -160,24 +204,44 @@ describe("runStepSimple", () => {
       dragTo: vi.fn().mockResolvedValue(undefined),
       focus: vi.fn().mockResolvedValue(undefined),
     };
-    page.locator = vi.fn((sel: string) => sel === "#src" ? locatorMock : targetLocator);
-    await runStepSimple(page, { action: "drag", source: { strategy: "id", value: "src" }, target: { strategy: "id", value: "tgt" } });
+    page.locator = vi.fn((sel: string) => (sel === "#src" ? locatorMock : targetLocator));
+    await runStepSimple(page, {
+      action: "drag",
+      source: { strategy: "id", value: "src" },
+      target: { strategy: "id", value: "tgt" },
+    });
     expect(locatorMock.dragTo).toHaveBeenCalledWith(targetLocator);
   });
 
   it("handles waitFor selector", async () => {
-    await runStepSimple(page, { action: "waitFor", kind: "selector", selector: { strategy: "id", value: "el" }, state: "visible" });
+    await runStepSimple(page, {
+      action: "waitFor",
+      kind: "selector",
+      selector: { strategy: "id", value: "el" },
+      state: "visible",
+    });
     expect(page.locator).toHaveBeenCalledWith("#el");
     expect(locatorMock.waitFor).toHaveBeenCalledWith({ state: "visible" });
   });
 
   it("handles waitFor selector with timeout", async () => {
-    await runStepSimple(page, { action: "waitFor", kind: "selector", selector: { strategy: "id", value: "el" }, state: "hidden", timeoutMs: 5000 });
+    await runStepSimple(page, {
+      action: "waitFor",
+      kind: "selector",
+      selector: { strategy: "id", value: "el" },
+      state: "hidden",
+      timeoutMs: 5000,
+    });
     expect(locatorMock.waitFor).toHaveBeenCalledWith({ state: "hidden", timeout: 5000 });
   });
 
   it("handles waitFor url", async () => {
-    await runStepSimple(page, { action: "waitFor", kind: "url", url: "**/done", waitUntil: "networkidle" });
+    await runStepSimple(page, {
+      action: "waitFor",
+      kind: "url",
+      url: "**/done",
+      waitUntil: "networkidle",
+    });
     expect(page.waitForURL).toHaveBeenCalledWith("**/done", { waitUntil: "networkidle" });
   });
 
@@ -198,30 +262,56 @@ describe("runStepSimple", () => {
 
   it("handles waitFor function", async () => {
     await runStepSimple(page, { action: "waitFor", kind: "function", expression: "() => true" });
-    expect(page.waitForFunction).toHaveBeenCalledWith("() => true", undefined, expect.objectContaining({ polling: undefined }));
+    expect(page.waitForFunction).toHaveBeenCalledWith(
+      "() => true",
+      undefined,
+      expect.objectContaining({ polling: undefined }),
+    );
   });
 
   it("handles waitFor function with polling and timeout", async () => {
-    await runStepSimple(page, { action: "waitFor", kind: "function", expression: "() => true", polling: 500, timeoutMs: 3000 });
-    expect(page.waitForFunction).toHaveBeenCalledWith("() => true", undefined, expect.objectContaining({ polling: 500, timeout: 3000 }));
+    await runStepSimple(page, {
+      action: "waitFor",
+      kind: "function",
+      expression: "() => true",
+      polling: 500,
+      timeoutMs: 3000,
+    });
+    expect(page.waitForFunction).toHaveBeenCalledWith(
+      "() => true",
+      undefined,
+      expect.objectContaining({ polling: 500, timeout: 3000 }),
+    );
   });
 
   it("resolves nth index selector", async () => {
-    await runStepSimple(page, { action: "click", selector: { strategy: "class", value: "item", index: 2 } });
+    await runStepSimple(page, {
+      action: "click",
+      selector: { strategy: "class", value: "item", index: 2 },
+    });
     expect(page.locator).toHaveBeenCalledWith(".item");
     expect(locatorMock.nth).toHaveBeenCalledWith(2);
   });
 
   it("throws for unknown selector strategy", async () => {
-    await expect(runStepSimple(page, { action: "click", selector: { strategy: "unknown" as any, value: "x" } })).rejects.toThrow("Unsupported selector strategy: unknown");
+    await expect(
+      runStepSimple(page, {
+        action: "click",
+        selector: { strategy: "unknown" as any, value: "x" },
+      }),
+    ).rejects.toThrow("Unsupported selector strategy: unknown");
   });
 
   it("throws for id selector with # prefix", async () => {
-    await expect(runStepSimple(page, { action: "click", selector: { strategy: "id", value: "#my-id" } })).rejects.toThrow('Selector values must be raw names without "#" or "."');
+    await expect(
+      runStepSimple(page, { action: "click", selector: { strategy: "id", value: "#my-id" } }),
+    ).rejects.toThrow('Selector values must be raw names without "#" or "."');
   });
 
   it("throws for class selector with . prefix", async () => {
-    await expect(runStepSimple(page, { action: "click", selector: { strategy: "class", value: ".my-class" } })).rejects.toThrow('Selector values must be raw names without "#" or "."');
+    await expect(
+      runStepSimple(page, { action: "click", selector: { strategy: "class", value: ".my-class" } }),
+    ).rejects.toThrow('Selector values must be raw names without "#" or "."');
   });
 });
 
@@ -260,18 +350,26 @@ describe("runSteps", () => {
 
   it("tolerant mode catches errors and continues", async () => {
     page.goto = vi.fn().mockRejectedValueOnce(new Error("fail")).mockResolvedValue(undefined);
-    await runSteps(page, [
-      { action: "goto", url: "http://example.com/fail" },
-      { action: "goto", url: "http://example.com/ok" },
-    ], { tolerant: true });
+    await runSteps(
+      page,
+      [
+        { action: "goto", url: "http://example.com/fail" },
+        { action: "goto", url: "http://example.com/ok" },
+      ],
+      { tolerant: true },
+    );
     expect(page.goto).toHaveBeenCalledTimes(2);
   });
 
   it("tolerant mode skips confirm when paired", async () => {
-    await runSteps(page, [
-      { action: "click", selector: { strategy: "id", value: "btn" } },
-      { action: "confirm", accept: true },
-    ], { tolerant: true });
+    await runSteps(
+      page,
+      [
+        { action: "click", selector: { strategy: "id", value: "btn" } },
+        { action: "confirm", accept: true },
+      ],
+      { tolerant: true },
+    );
     expect(pageMock.locator().click).toHaveBeenCalledTimes(1);
   });
 
@@ -285,14 +383,20 @@ describe("runSteps", () => {
   it("verbose mode logs skipped steps on error", async () => {
     page.goto = vi.fn().mockRejectedValue(new Error("fail"));
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-    await runSteps(page, [{ action: "goto", url: "http://example.com/" }], { tolerant: true, verbose: true });
+    await runSteps(page, [{ action: "goto", url: "http://example.com/" }], {
+      tolerant: true,
+      verbose: true,
+    });
     expect(spy).toHaveBeenCalledWith(expect.stringContaining("skipped"));
     spy.mockRestore();
   });
 
   it("uses label in verbose mode", async () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-    await runSteps(page, [{ action: "goto", url: "http://example.com/" }], { verbose: true, label: "pre" });
+    await runSteps(page, [{ action: "goto", url: "http://example.com/" }], {
+      verbose: true,
+      label: "pre",
+    });
     expect(spy).toHaveBeenCalledWith("  ↳ pre step 1/1: goto http://example.com/");
     spy.mockRestore();
   });

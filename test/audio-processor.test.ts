@@ -284,7 +284,9 @@ describe("mergeAudioVideo", () => {
 
   it("falls back to system ffmpeg when ffmpeg-static returns null", async () => {
     ffmpegStaticMock.mockResolvedValue(null);
-    accessSyncMock.mockImplementation(() => { throw new Error("not found"); });
+    accessSyncMock.mockImplementation(() => {
+      throw new Error("not found");
+    });
     spawnMock.mockReturnValue({
       stderr: { on: vi.fn() },
       on: vi.fn((evt: string, cb: (code: number | null) => void) => {
@@ -298,11 +300,7 @@ describe("mergeAudioVideo", () => {
       audio: { background: "/bg.mp3" },
     });
 
-    expect(spawnMock).toHaveBeenCalledWith(
-      "ffmpeg",
-      expect.any(Array),
-      expect.any(Object),
-    );
+    expect(spawnMock).toHaveBeenCalledWith("ffmpeg", expect.any(Array), expect.any(Object));
   });
 
   it("throws when spawn fails to start", async () => {
