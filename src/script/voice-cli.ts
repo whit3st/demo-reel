@@ -13,6 +13,7 @@ import { generateVoiceSegments, generateNarrationAudio } from "./tts.js";
 import { synchronizeTiming } from "./timing.js";
 import { writeScriptJson } from "./assembler.js";
 import { getVoiceName, resolveVoiceConfig } from "../voice-config.js";
+import { pathToFileURL } from "url";
 
 /**
  * Walk up from scriptPath looking for a config.json with voice settings.
@@ -68,7 +69,7 @@ function pickVoiceOverrides(source: unknown): VoiceConfigOverridesSource {
   };
 }
 
-async function main() {
+export async function main() {
   const args = process.argv.slice(2);
   let scriptPath: string | undefined;
 
@@ -173,4 +174,7 @@ async function main() {
   }
 }
 
-main();
+/* c8 ignore next 3 */
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  void main();
+}

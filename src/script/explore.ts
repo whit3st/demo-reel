@@ -7,6 +7,7 @@
  */
 import { chromium, type Page } from "playwright";
 import { writeFile } from "fs/promises";
+import { pathToFileURL } from "url";
 
 interface PageInfo {
   url: string;
@@ -29,52 +30,81 @@ interface PageInfo {
 const INTERACTIVE_SELECTOR =
   "button, a[href], input:not([type=hidden]), select, textarea, [role=button]";
 
-async function extractPage(page: Page): Promise<PageInfo> {
+interface RawHeading {
+  innerText: string;
+}
+
+interface RawElement {
+  tagName: string;
+  getAttribute(name: string): string | null;
+  innerText: string;
+  getBoundingClientRect(): { width: number; height: number };
+}
+
+export function filterHeadings(headings: RawHeading[]): string[] {
+  return headings
+    .map((el) => el.innerText?.trim())
+    .filter((t) => t && t.length > 0 && !t.includes("Session") && !t.includes("Logged Out"))
+    .slice(0, 15);
+}
+
+interface ProcessedElement {
+  tag: string;
+  type: string | null;
+  id: string | null;
+  testId: string | null;
+  name: string | null;
+  placeholder: string | null;
+  classes: string;
+  text: string;
+  href: string | null;
+}
+
+export function processElements(elements: RawElement[]): ProcessedElement[] {
+  return elements
+    .map((el) => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return null;
+      return {
+        tag: el.tagName.toLowerCase(),
+        type: el.getAttribute("type"),
+        id: el.getAttribute("id"),
+        testId: el.getAttribute("data-testid"),
+        name: el.getAttribute("name"),
+        placeholder: el.getAttribute("placeholder"),
+        classes: (el.getAttribute("class") || "")
+          .split(" ")
+          .filter((c) => c.length > 2)
+          .slice(0, 4)
+          .join(" "),
+        text:
+          el.getAttribute("aria-label") ||
+          el.innerText?.trim().replace(/\s+/g, " ").slice(0, 80) ||
+          "",
+        href: el.getAttribute("href"),
+      };
+    })
+    .filter(Boolean) as ProcessedElement[];
+}
+
+export async function extractPage(page: Page): Promise<PageInfo> {
   const url = page.url();
   const path = new URL(url).pathname;
   const title = await page.title();
 
   const headings = await page.evaluate(() =>
-    Array.from(document.querySelectorAll("h1,h2,h3,h4"))
-      .map((el) => (el as HTMLElement).innerText?.trim())
-      .filter((t) => t && t.length > 0 && !t.includes("Session") && !t.includes("Logged Out"))
-      .slice(0, 15),
+    filterHeadings(Array.from(document.querySelectorAll("h1,h2,h3,h4")) as unknown as RawHeading[]),
   );
 
   const elements = await page.evaluate(
-    (sel) =>
-      Array.from(document.querySelectorAll(sel))
-        .map((el) => {
-          const htmlEl = el as HTMLElement;
-          const rect = htmlEl.getBoundingClientRect();
-          if (rect.width === 0 || rect.height === 0) return null;
-          return {
-            tag: el.tagName.toLowerCase(),
-            type: el.getAttribute("type"),
-            id: el.getAttribute("id"),
-            testId: el.getAttribute("data-testid"),
-            name: el.getAttribute("name"),
-            placeholder: el.getAttribute("placeholder"),
-            classes: (el.getAttribute("class") || "")
-              .split(" ")
-              .filter((c) => c.length > 2)
-              .slice(0, 4)
-              .join(" "),
-            text:
-              el.getAttribute("aria-label") ||
-              htmlEl.innerText?.trim().replace(/\s+/g, " ").slice(0, 80) ||
-              "",
-            href: el.getAttribute("href"),
-          };
-        })
-        .filter(Boolean) as PageInfo["elements"],
+    (sel) => processElements(Array.from(document.querySelectorAll(sel)) as unknown as RawElement[]),
     INTERACTIVE_SELECTOR,
   );
 
   return { url, path, title, headings, elements };
 }
 
-function formatPage(page: PageInfo): string {
+export function formatPage(page: PageInfo): string {
   const lines: string[] = [];
   lines.push(`### ${page.path}`);
   lines.push(`Title: ${page.title}`);
@@ -273,7 +303,10 @@ async function main() {
   console.log(formatted);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+/* c8 ignore next 5 */
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

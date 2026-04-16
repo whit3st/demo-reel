@@ -1,20 +1,14 @@
 import type { Command, CommandContext, GlobalOptions } from "../types.js";
+import { scriptValidate, type ScriptCliOptions } from "../../script/cli.js";
 
-export interface ScriptValidateCommandContext extends CommandContext {
-  scriptCommands: {
-    validate: (
-      scriptPath: string,
-      options: {
-        verbose?: boolean;
-        headed?: boolean;
-        noCache?: boolean;
-      },
-    ) => Promise<boolean>;
-  };
-}
+export type ScriptValidateFn = (scriptPath: string, options: ScriptCliOptions) => Promise<boolean>;
+
+export type ScriptValidateCommandContext = CommandContext;
 
 export class ScriptValidateCommand implements Command {
   readonly name = "script:validate";
+
+  constructor(private readonly validateScript: ScriptValidateFn = scriptValidate) {}
 
   validate(args: string[], _options: GlobalOptions): boolean {
     return args.length >= 1 && args[0].length > 0;
@@ -23,11 +17,11 @@ export class ScriptValidateCommand implements Command {
   async execute(
     args: string[],
     options: GlobalOptions,
-    ctx: ScriptValidateCommandContext,
+    _ctx: ScriptValidateCommandContext,
   ): Promise<number> {
     const scriptPath = args[0];
 
-    const valid = await ctx.scriptCommands.validate(scriptPath, {
+    const valid = await this.validateScript(scriptPath, {
       verbose: options.verbose,
       headed: options.headed,
       noCache: options.noCache,

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   ScriptPipelineCommand,
+  type ScriptPipelineFn,
   type ScriptPipelineCommandContext,
 } from "../../../src/commands/script/pipeline.js";
 import type { GlobalOptions } from "../../../src/commands/types.js";
@@ -22,9 +23,6 @@ function createMockContext(
       voice: "alloy",
       speed: 1.0,
     }),
-    scriptCommands: {
-      pipeline: vi.fn().mockResolvedValue("demo.demo.ts"),
-    },
     ...overrides,
   };
 }
@@ -64,7 +62,8 @@ describe("ScriptPipelineCommand", () => {
 
   describe("execution", () => {
     it("calls pipeline with description, URL, and defaults", async () => {
-      const cmd = new ScriptPipelineCommand();
+      const runPipeline: ScriptPipelineFn = vi.fn().mockResolvedValue("demo.demo.ts");
+      const cmd = new ScriptPipelineCommand(runPipeline);
       const ctx = createMockContext();
       const options = createGlobalOptions({ scriptUrl: "https://example.com" });
 
@@ -76,7 +75,7 @@ describe("ScriptPipelineCommand", () => {
         voice: "alloy",
         speed: 1.0,
       });
-      expect(ctx.scriptCommands.pipeline).toHaveBeenCalledWith(
+      expect(runPipeline).toHaveBeenCalledWith(
         "show signup",
         "https://example.com",
         expect.objectContaining({
@@ -89,7 +88,8 @@ describe("ScriptPipelineCommand", () => {
     });
 
     it("passes custom voice, speed, and pipeline options", async () => {
-      const cmd = new ScriptPipelineCommand();
+      const runPipeline: ScriptPipelineFn = vi.fn().mockResolvedValue("demo.demo.ts");
+      const cmd = new ScriptPipelineCommand(runPipeline);
       const ctx = createMockContext();
       const options = createGlobalOptions({
         scriptUrl: "https://example.com",
@@ -111,7 +111,7 @@ describe("ScriptPipelineCommand", () => {
         voice: "nova",
         speed: 1.4,
       });
-      expect(ctx.scriptCommands.pipeline).toHaveBeenCalledWith(
+      expect(runPipeline).toHaveBeenCalledWith(
         "show signup",
         "https://example.com",
         expect.objectContaining({

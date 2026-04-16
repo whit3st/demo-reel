@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   ScriptGenerateCommand,
+  type ScriptGenerateFn,
   type ScriptGenerateCommandContext,
 } from "../../../src/commands/script/generate.js";
 import type { GlobalOptions } from "../../../src/commands/types.js";
@@ -17,10 +18,6 @@ function createMockContext(
       log: vi.fn(),
       error: vi.fn(),
     },
-    scriptCommands: {
-      generate: vi.fn().mockResolvedValue("demo.script.json"),
-    },
-    getArgs: () => ["node", "cli", "script", "generate", "test description"],
     ...overrides,
   };
 }
@@ -66,14 +63,15 @@ describe("ScriptGenerateCommand", () => {
 
   describe("execution", () => {
     it("calls scriptGenerate with description and URL", async () => {
-      const cmd = new ScriptGenerateCommand();
+      const generateScript: ScriptGenerateFn = vi.fn().mockResolvedValue("demo.script.json");
+      const cmd = new ScriptGenerateCommand(generateScript);
       const ctx = createMockContext();
       const options = createGlobalOptions({ scriptUrl: "https://example.com" });
 
       const exitCode = await cmd.execute(["test description"], options, ctx);
 
       expect(exitCode).toBe(0);
-      expect(ctx.scriptCommands.generate).toHaveBeenCalledWith(
+      expect(generateScript).toHaveBeenCalledWith(
         "test description",
         "https://example.com",
         "demo",
@@ -82,7 +80,8 @@ describe("ScriptGenerateCommand", () => {
     });
 
     it("uses custom output name when provided", async () => {
-      const cmd = new ScriptGenerateCommand();
+      const generateScript: ScriptGenerateFn = vi.fn().mockResolvedValue("demo.script.json");
+      const cmd = new ScriptGenerateCommand(generateScript);
       const ctx = createMockContext();
       const options = createGlobalOptions({
         scriptUrl: "https://example.com",
@@ -91,7 +90,7 @@ describe("ScriptGenerateCommand", () => {
 
       await cmd.execute(["test description"], options, ctx);
 
-      expect(ctx.scriptCommands.generate).toHaveBeenCalledWith(
+      expect(generateScript).toHaveBeenCalledWith(
         "test description",
         "https://example.com",
         "my-demo",
@@ -100,7 +99,8 @@ describe("ScriptGenerateCommand", () => {
     });
 
     it("passes verbose option", async () => {
-      const cmd = new ScriptGenerateCommand();
+      const generateScript: ScriptGenerateFn = vi.fn().mockResolvedValue("demo.script.json");
+      const cmd = new ScriptGenerateCommand(generateScript);
       const ctx = createMockContext();
       const options = createGlobalOptions({
         scriptUrl: "https://example.com",
@@ -109,7 +109,7 @@ describe("ScriptGenerateCommand", () => {
 
       await cmd.execute(["test description"], options, ctx);
 
-      expect(ctx.scriptCommands.generate).toHaveBeenCalledWith(
+      expect(generateScript).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(String),
         expect.any(String),
@@ -118,7 +118,8 @@ describe("ScriptGenerateCommand", () => {
     });
 
     it("passes headed option", async () => {
-      const cmd = new ScriptGenerateCommand();
+      const generateScript: ScriptGenerateFn = vi.fn().mockResolvedValue("demo.script.json");
+      const cmd = new ScriptGenerateCommand(generateScript);
       const ctx = createMockContext();
       const options = createGlobalOptions({
         scriptUrl: "https://example.com",
@@ -127,7 +128,7 @@ describe("ScriptGenerateCommand", () => {
 
       await cmd.execute(["test description"], options, ctx);
 
-      expect(ctx.scriptCommands.generate).toHaveBeenCalledWith(
+      expect(generateScript).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(String),
         expect.any(String),
@@ -136,7 +137,8 @@ describe("ScriptGenerateCommand", () => {
     });
 
     it("passes hints when provided", async () => {
-      const cmd = new ScriptGenerateCommand();
+      const generateScript: ScriptGenerateFn = vi.fn().mockResolvedValue("demo.script.json");
+      const cmd = new ScriptGenerateCommand(generateScript);
       const ctx = createMockContext();
       const options = createGlobalOptions({
         scriptUrl: "https://example.com",
@@ -145,7 +147,7 @@ describe("ScriptGenerateCommand", () => {
 
       await cmd.execute(["test description"], options, ctx);
 
-      expect(ctx.scriptCommands.generate).toHaveBeenCalledWith(
+      expect(generateScript).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(String),
         expect.any(String),
@@ -154,7 +156,8 @@ describe("ScriptGenerateCommand", () => {
     });
 
     it("passes noCache option", async () => {
-      const cmd = new ScriptGenerateCommand();
+      const generateScript: ScriptGenerateFn = vi.fn().mockResolvedValue("demo.script.json");
+      const cmd = new ScriptGenerateCommand(generateScript);
       const ctx = createMockContext();
       const options = createGlobalOptions({
         scriptUrl: "https://example.com",
@@ -163,7 +166,7 @@ describe("ScriptGenerateCommand", () => {
 
       await cmd.execute(["test description"], options, ctx);
 
-      expect(ctx.scriptCommands.generate).toHaveBeenCalledWith(
+      expect(generateScript).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(String),
         expect.any(String),
@@ -172,7 +175,8 @@ describe("ScriptGenerateCommand", () => {
     });
 
     it("handles special characters in description", async () => {
-      const cmd = new ScriptGenerateCommand();
+      const generateScript: ScriptGenerateFn = vi.fn().mockResolvedValue("demo.script.json");
+      const cmd = new ScriptGenerateCommand(generateScript);
       const ctx = createMockContext();
       const options = createGlobalOptions({ scriptUrl: "https://example.com" });
       const description = "Test \"quotes\" and 'apostrophes'";
@@ -180,7 +184,7 @@ describe("ScriptGenerateCommand", () => {
       const exitCode = await cmd.execute([description], options, ctx);
 
       expect(exitCode).toBe(0);
-      expect(ctx.scriptCommands.generate).toHaveBeenCalledWith(
+      expect(generateScript).toHaveBeenCalledWith(
         description,
         expect.any(String),
         expect.any(String),
@@ -189,14 +193,15 @@ describe("ScriptGenerateCommand", () => {
     });
 
     it("handles URL with query parameters", async () => {
-      const cmd = new ScriptGenerateCommand();
+      const generateScript: ScriptGenerateFn = vi.fn().mockResolvedValue("demo.script.json");
+      const cmd = new ScriptGenerateCommand(generateScript);
       const ctx = createMockContext();
       const url = "https://example.com?token=abc&user=123";
       const options = createGlobalOptions({ scriptUrl: url });
 
       await cmd.execute(["test"], options, ctx);
 
-      expect(ctx.scriptCommands.generate).toHaveBeenCalledWith(
+      expect(generateScript).toHaveBeenCalledWith(
         expect.any(String),
         url,
         expect.any(String),

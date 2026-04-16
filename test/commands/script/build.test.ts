@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   ScriptBuildCommand,
+  type ScriptBuildFn,
   type ScriptBuildCommandContext,
 } from "../../../src/commands/script/build.js";
 import type { GlobalOptions } from "../../../src/commands/types.js";
@@ -16,9 +17,6 @@ function createMockContext(
     console: {
       log: vi.fn(),
       error: vi.fn(),
-    },
-    scriptCommands: {
-      build: vi.fn().mockResolvedValue("demo.demo.ts"),
     },
     ...overrides,
   };
@@ -55,14 +53,15 @@ describe("ScriptBuildCommand", () => {
 
   describe("execution", () => {
     it("calls script build and returns success", async () => {
-      const cmd = new ScriptBuildCommand();
+      const buildScript: ScriptBuildFn = vi.fn().mockResolvedValue("demo.demo.ts");
+      const cmd = new ScriptBuildCommand(buildScript);
       const ctx = createMockContext();
       const options = createGlobalOptions();
 
       const exitCode = await cmd.execute(["demo.script.json"], options, ctx);
 
       expect(exitCode).toBe(0);
-      expect(ctx.scriptCommands.build).toHaveBeenCalledWith(
+      expect(buildScript).toHaveBeenCalledWith(
         "demo.script.json",
         expect.objectContaining({
           verbose: false,
@@ -75,26 +74,28 @@ describe("ScriptBuildCommand", () => {
     });
 
     it("passes verbose option", async () => {
-      const cmd = new ScriptBuildCommand();
+      const buildScript: ScriptBuildFn = vi.fn().mockResolvedValue("demo.demo.ts");
+      const cmd = new ScriptBuildCommand(buildScript);
       const ctx = createMockContext();
       const options = createGlobalOptions({ verbose: true });
 
       await cmd.execute(["demo.script.json"], options, ctx);
 
-      expect(ctx.scriptCommands.build).toHaveBeenCalledWith(
+      expect(buildScript).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({ verbose: true }),
       );
     });
 
     it("passes resolution and format options", async () => {
-      const cmd = new ScriptBuildCommand();
+      const buildScript: ScriptBuildFn = vi.fn().mockResolvedValue("demo.demo.ts");
+      const cmd = new ScriptBuildCommand(buildScript);
       const ctx = createMockContext();
       const options = createGlobalOptions({ resolution: "FHD", format: "webm" });
 
       await cmd.execute(["demo.script.json"], options, ctx);
 
-      expect(ctx.scriptCommands.build).toHaveBeenCalledWith(
+      expect(buildScript).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({ resolution: "FHD", format: "webm" }),
       );

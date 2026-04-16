@@ -93,7 +93,11 @@ export async function mergeAudioVideo(options: MergeOptions): Promise<string> {
   });
 }
 
-function buildFfmpegArgs(videoPath: string, outputPath: string, audio: AudioConfig): string[] {
+export function buildFfmpegArgs(
+  videoPath: string,
+  outputPath: string,
+  audio: AudioConfig,
+): string[] {
   const mixAudio = audio as MixAudioConfig;
   const args: string[] = [
     "-y", // Overwrite output file

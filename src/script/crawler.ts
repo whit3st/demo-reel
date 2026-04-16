@@ -16,7 +16,7 @@ const INTERACTIVE_SELECTOR = [
   "[contenteditable]",
 ].join(", ");
 
-function inferRole(tag: string, type: string | null): CrawledElement["role"] {
+export function inferRole(tag: string, type: string | null): CrawledElement["role"] {
   if (tag === "a") return "link";
   if (tag === "button" || type === "submit" || type === "button") return "button";
   if (tag === "select") return "select";
@@ -31,7 +31,7 @@ function inferRole(tag: string, type: string | null): CrawledElement["role"] {
  * Build the best stable selector for an element.
  * Priority: data-testid > id > aria-label (unique) > text content match > CSS path
  */
-function buildSelector(
+export function buildSelector(
   tag: string,
   attrs: Record<string, string>,
   _text: string,

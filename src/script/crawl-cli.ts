@@ -5,8 +5,9 @@
  * Outputs crawled page data as JSON to stdout.
  */
 import { crawlUrl, formatPageContext } from "./crawler.js";
+import { pathToFileURL } from "url";
 
-async function main() {
+export async function main() {
   const url = process.argv[2];
   const format = process.argv[3]; // "json" or "text" (default: text)
 
@@ -29,4 +30,7 @@ async function main() {
   }
 }
 
-main();
+/* c8 ignore next 3 */
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  void main();
+}
