@@ -103,13 +103,25 @@ export const timingPresets: Record<TimingPresetName, TimingConfig> = {
   normal: {
     afterGotoDelayMs: 2000,
     endDelayMs: 2000,
+    narrationSyncMode: "auto",
+    narrationGapMs: 300,
+    maxAutoPadMs: 5000,
+    maxSyncPasses: 2,
   },
   fast: {
     afterGotoDelayMs: 1000,
     endDelayMs: 1000,
+    narrationSyncMode: "auto",
+    narrationGapMs: 200,
+    maxAutoPadMs: 3000,
+    maxSyncPasses: 1,
   },
   instant: {
     afterGotoDelayMs: 0,
     endDelayMs: 0,
+    narrationSyncMode: "off",
+    narrationGapMs: 0,
+    maxAutoPadMs: 0,
+    maxSyncPasses: 1,
   },
 };

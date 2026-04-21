@@ -13,6 +13,7 @@ export type {
   SelectorStrategy,
   SelectorConfig,
   Step,
+  NarrationSyncMode,
   DemoReelConfig,
   DemoReelConfigInput,
   CursorPresetOrConfig,

@@ -9,6 +9,7 @@ import {
 } from "./schemas.js";
 import { getNarrationManifestPath } from "./narration-manifest.js";
 import { narrationManifestSchema, NARRATION_PROCESSING_VERSION } from "./narration-manifest.js";
+import { syncNarration, logSyncReport, type NarrationClipInfo } from "./narration-sync.js";
 
 const DEFAULT_IMAGE = "ghcr.io/whit3st/demo-reel:latest";
 const LOCAL_IMAGE = "demo-reel:latest";
@@ -206,6 +207,78 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
         }
       : resolvedConfig;
 
+  // --- Narration auto-sync ---
+  if (hasNarration && existsSync(narrationManifestPath) && resolvedConfig.scenes) {
+    try {
+      const syncMode = resolvedConfig.timing.narrationSyncMode ?? "auto";
+      if (syncMode !== "off") {
+        const rawManifest = JSON.parse(readFileSync(narrationManifestPath, "utf-8"));
+        const manifest = narrationManifestSchema.parse(rawManifest);
+
+        const clips: NarrationClipInfo[] = manifest.clips.map((clip) => ({
+          sceneIndex: clip.sceneIndex,
+          narration: clip.narration,
+          audioDurationMs: clip.audioDurationMs,
+          gapAfterMs: clip.gapAfterMs ?? 0,
+        }));
+
+        const syncOutput = syncNarration({
+          steps: configWithAudio.steps,
+          scenes: resolvedConfig.scenes,
+          clips,
+          config: {
+            narrationSyncMode: syncMode,
+            narrationGapMs: resolvedConfig.timing.narrationGapMs ?? 300,
+            maxAutoPadMs: resolvedConfig.timing.maxAutoPadMs ?? 5000,
+            maxSyncPasses: resolvedConfig.timing.maxSyncPasses ?? 2,
+          },
+        });
+
+        if (syncOutput.hasOverflow && syncMode === "strict") {
+          throw new Error(
+            `Narration sync overflow: scenes ${syncOutput.report.overflowScenes.join(", ")} exceed maxAutoPadMs`,
+          );
+        }
+
+        if (verbose) {
+          logSyncReport(syncOutput.report, verbose);
+        }
+
+        // Apply synced steps and scene indices
+        if (syncOutput.report.appliedPadMs > 0) {
+          (configWithAudio as DemoReelConfigInput).steps = syncOutput.steps;
+          if (resolvedConfig.scenes) {
+            (configWithAudio as DemoReelConfigInput).scenes = resolvedConfig.scenes.map(
+              (scene, i) => ({
+                ...scene,
+                stepIndex: syncOutput.sceneStepIndices[i],
+              }),
+            );
+          }
+          if (verbose) {
+            console.log(
+              `✓ Narration sync applied: ${syncOutput.report.appliedPadMs}ms total padding`,
+            );
+          }
+        }
+      }
+    } catch (error) {
+      if (verbose) {
+        console.warn(
+          `Narration sync skipped: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+      // Re-throw strict mode errors
+      if (
+        error instanceof Error &&
+        error.message.startsWith("Narration sync") &&
+        error.message.includes("strict")
+      ) {
+        throw error;
+      }
+    }
+  }
+
   const jsonPath = `.${name}.tmp.json`;
 
   try {
@@ -290,3 +363,12 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
 export { demoReelConfigSchema, demoReelConfigInputSchema };
 export type { DemoReelConfig, DemoReelConfigInput } from "./schemas.js";
 export type * from "./types.js";
+export { syncNarration, logSyncReport, buildSceneWindows, injectPadding } from "./narration-sync.js";
+export type {
+  NarrationClipInfo,
+  SceneWindow,
+  SyncReport,
+  SyncConfig,
+  SyncInput,
+  SyncOutput,
+} from "./narration-sync.js";

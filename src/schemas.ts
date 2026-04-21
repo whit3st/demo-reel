@@ -93,9 +93,40 @@ export const motionSchema = z
     message: "curve.offsetMax must be greater than or equal to curve.offsetMin",
   });
 
+export const narrationSyncModeSchema = z
+  .enum(["auto", "strict", "off"])
+  .describe(
+    'Narration sync mode: "auto" pads steps to prevent overlap, "strict" fails on overlap, "off" disables sync',
+  );
+
 export const timingSchema = z.object({
   afterGotoDelayMs: z.number().int().min(0).describe("Wait time after navigation in ms"),
   endDelayMs: z.number().int().min(0).describe("Wait time at end of demo in ms"),
+  narrationSyncMode: narrationSyncModeSchema
+    .optional()
+    .default("auto")
+    .describe("How to handle narration/visual timing overlaps"),
+  narrationGapMs: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .default(300)
+    .describe("Minimum silence gap between narration clips in ms"),
+  maxAutoPadMs: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .default(5000)
+    .describe("Maximum padding to add per scene in auto mode (warns if exceeded)"),
+  maxSyncPasses: z
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .default(2)
+    .describe("Maximum correction passes for auto-sync (1 = pre-record only)"),
 });
 
 export const typingSchema = z.object({
@@ -515,4 +546,5 @@ export type AuthConfig = z.infer<typeof authConfigSchema>;
 export type SelectorStrategy = z.infer<typeof selectorStrategySchema>;
 export type SelectorConfig = z.infer<typeof selectorSchema>;
 export type Step = z.infer<typeof stepSchema>;
+export type NarrationSyncMode = z.infer<typeof narrationSyncModeSchema>;
 export type DemoReelConfig = z.infer<typeof demoReelConfigSchema>;

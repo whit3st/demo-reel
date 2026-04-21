@@ -255,7 +255,7 @@ export async function processVideoWithAudio(
             return null;
           }
 
-          const startMs = scene.startMs;
+          const startMs = scene.startMs + (resolvedAudio.narrationDelay ?? 0);
           return {
             sceneIndex: clip.sceneIndex,
             narration: clip.narration,
@@ -271,8 +271,9 @@ export async function processVideoWithAudio(
         const previous = narrationPlacements[i - 1];
         const current = narrationPlacements[i];
         if (current.startMs < previous.endMs) {
+          const overlapMs = previous.endMs - current.startMs;
           warnings.push(
-            `Narration overlap: scene ${current.sceneIndex} starts at ${current.startMs}ms before scene ${previous.sceneIndex} narration ends at ${previous.endMs}ms`,
+            `Narration overlap: scene ${current.sceneIndex} starts at ${current.startMs}ms (with narrationDelay) before scene ${previous.sceneIndex} narration ends at ${previous.endMs}ms (overlap: ${overlapMs}ms)`,
           );
         }
       }
