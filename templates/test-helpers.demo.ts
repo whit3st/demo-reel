@@ -1,10 +1,6 @@
 import "dotenv/config";
 import { defineConfig } from "demo-reel";
-import {
-  epistolaAuth,
-  createTemplateSteps,
-  deleteTemplateSteps,
-} from "../helpers/epistola.js";
+import { epistolaAuth, createTemplateSteps, deleteTemplateSteps } from "../helpers/epistola.js";
 
 const TEST_SLUG = "test-helper-demo";
 const TEST_NAME = "Test Helper Demo";
@@ -40,7 +36,5 @@ export default defineConfig({
       stepIndex: 5,
     },
   ],
-  steps: [
-    ...createTemplateSteps({ slug: TEST_SLUG, name: TEST_NAME }),
-  ],
+  steps: [...createTemplateSteps({ slug: TEST_SLUG, name: TEST_NAME })],
 });

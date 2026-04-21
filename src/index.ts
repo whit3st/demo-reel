@@ -363,7 +363,12 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
 export { demoReelConfigSchema, demoReelConfigInputSchema };
 export type { DemoReelConfig, DemoReelConfigInput } from "./schemas.js";
 export type * from "./types.js";
-export { syncNarration, logSyncReport, buildSceneWindows, injectPadding } from "./narration-sync.js";
+export {
+  syncNarration,
+  logSyncReport,
+  buildSceneWindows,
+  injectPadding,
+} from "./narration-sync.js";
 export type {
   NarrationClipInfo,
   SceneWindow,

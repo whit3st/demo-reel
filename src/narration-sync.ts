@@ -198,11 +198,7 @@ export function injectPadding(
     );
 
     // Replace the window steps
-    steps.splice(
-      adjustedStartStep,
-      window.steps.length,
-      ...paddedSteps,
-    );
+    steps.splice(adjustedStartStep, window.steps.length, ...paddedSteps);
 
     // Track cumulative shift for downstream scenes
     cumulativeShift += paddedSteps.length - window.steps.length;
@@ -245,9 +241,7 @@ export function syncNarration(input: SyncInput): SyncOutput {
   // Build report
   const totalDeficitMs = windows.reduce((sum, w) => sum + w.deficitMs, 0);
   const maxDeficitMs = Math.max(0, ...windows.map((w) => w.deficitMs));
-  const overflowScenes = windows
-    .filter((w) => w.deficitMs > maxAutoPadMs)
-    .map((w) => w.sceneIndex);
+  const overflowScenes = windows.filter((w) => w.deficitMs > maxAutoPadMs).map((w) => w.sceneIndex);
 
   const report: SyncReport = {
     windows,
@@ -278,10 +272,7 @@ export function syncNarration(input: SyncInput): SyncOutput {
   }
 
   // Auto mode: inject padding
-  const { steps: adjustedSteps, sceneStepIndices } = injectPadding(
-    steps,
-    windows,
-  );
+  const { steps: adjustedSteps, sceneStepIndices } = injectPadding(steps, windows);
 
   report.appliedPadMs = totalDeficitMs;
 
