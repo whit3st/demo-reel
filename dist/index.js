@@ -293,5 +293,5 @@ export async function generate(config, options = {}) {
     }
 }
 export { demoReelConfigSchema, demoReelConfigInputSchema };
-export { syncNarration, logSyncReport, buildSceneWindows, injectPadding } from "./narration-sync.js";
+export { syncNarration, logSyncReport, buildSceneWindows, injectPadding, } from "./narration-sync.js";
 //# sourceMappingURL=index.js.map
