@@ -65,11 +65,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Product-specific helpers removed**: Removed the product-specific helper and example assets so the package stays app-agnostic
 - **Voice configuration model**: Voice settings are now resolved through a shared provider-specific schema used by the main CLI and script tooling
 - **Narration/subtitle synchronization**: Video processing now aligns narration clips to recorded scene timestamps and surfaces overlap/missing-scene warnings
 - **Docker image layout**: Container build now uses stricter multi-stage packaging, verified Piper downloads, isolated Playwright browser installation, and non-root runtime defaults
 - **Docs and examples**: Voice examples now use provider-specific values and document custom Piper `voicePath` usage
-- **Demo assets**: Removed the old Epistola demo/config example from the repository
+- **Demo assets**: Removed the old product-specific demo/config example from the repository
 - **`demo-reel` (no args)**: Now runs all `*.demo.ts` files instead of requiring `--all` flag
 - **Simplified CLI**: Removed default config file concept; scenarios are always `*.demo.ts` files
 - **Type Exports**: Added `DemoReelConfigInput` type for autocomplete with preset strings
