@@ -6,6 +6,8 @@ export const ELEVENLABS_VOICES = [
   "21m00Tcm4TlvDq8ikWAM",
   "5zhopMftSdRGaPYVcwKK",
   "CwhRBWXzGAHq8TQ4Fs17",
+  "21m00Tcm4TlvDq8ikWAM", // Native Dutch
+  "Cz0K1kOv9tD8l0b5Qu53", // Native English
 ] as const;
 
 const pronunciationSchema = z

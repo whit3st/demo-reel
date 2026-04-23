@@ -189,7 +189,7 @@ Built-in voice values:
 
 - `piper`: `"nl_NL-mls-medium"`, `"en_US-amy-medium"`
 - `openai`: `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`
-- `elevenlabs`: `"21m00Tcm4TlvDq8ikWAM"`, `"5zhopMftSdRGaPYVcwKK"`, `CwhRBWXzGAHq8TQ4Fs17`
+- `elevenlabs`: `"21m00Tcm4TlvDq8ikWAM"`, `"5zhopMftSdRGaPYVcwKK"`, `CwhRBWXzGAHq8TQ4Fs17`, `60CwgZt94Yf7yYIXMDDe`
 
 For a custom Piper `.onnx` model, use `voicePath` instead of `voice`:
 
