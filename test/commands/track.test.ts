@@ -32,13 +32,17 @@ function createMockPage(): Page {
     url: vi.fn().mockReturnValue("https://example.com/page"),
     goto: vi.fn().mockResolvedValue(undefined),
     evaluate: vi.fn().mockResolvedValue(undefined),
-    exposeFunction: vi.fn().mockImplementation((_name: string, handler: (event: Record<string, unknown>) => void) => {
-      exposedHandler = handler;
-    }),
+    exposeFunction: vi
+      .fn()
+      .mockImplementation((_name: string, handler: (event: Record<string, unknown>) => void) => {
+        exposedHandler = handler;
+      }),
     getExposedHandler: () => exposedHandler,
     on: vi.fn(),
     mainFrame: vi.fn().mockReturnValue(frame),
-  } as unknown as Page & { getExposedHandler: () => ((event: Record<string, unknown>) => void) | undefined };
+  } as unknown as Page & {
+    getExposedHandler: () => ((event: Record<string, unknown>) => void) | undefined;
+  };
 
   return page;
 }
@@ -59,9 +63,7 @@ function createMockBrowser(page: Page): { browser: Browser; context: BrowserCont
   return { browser, context, page };
 }
 
-function createMockContext(
-  overrides: Partial<TrackCommandContext> = {},
-): TrackCommandContext {
+function createMockContext(overrides: Partial<TrackCommandContext> = {}): TrackCommandContext {
   const page = createMockPage();
   const { browser, context } = createMockBrowser(page);
 
@@ -155,9 +157,7 @@ describe("TrackCommand", () => {
       const exitCode = await cmd.execute([], options, ctx);
 
       expect(exitCode).toBe(1);
-      expect(ctx.console.error).toHaveBeenCalledWith(
-        "Error: --name is required for track command",
-      );
+      expect(ctx.console.error).toHaveBeenCalledWith("Error: --name is required for track command");
     });
 
     it("opens browser and starts recording when name is provided", async () => {
@@ -174,7 +174,7 @@ describe("TrackCommand", () => {
       expect(ctx.launchBrowser).toHaveBeenCalled();
       expect(ctx.fs.writeFile).toHaveBeenCalledWith(
         "test-track.track.json",
-        expect.stringContaining("\"name\": \"test-track\""),
+        expect.stringContaining('"name": "test-track"'),
         "utf-8",
       );
     });
@@ -345,13 +345,17 @@ describe("TrackCommand", () => {
       const promise = cmd.execute([], options, ctx);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      (page as unknown as { getExposedHandler: () => (event: Record<string, unknown>) => void }).getExposedHandler()({
+      (
+        page as unknown as { getExposedHandler: () => (event: Record<string, unknown>) => void }
+      ).getExposedHandler()({
         type: "click",
         url: "https://example.com",
         button: "left",
         x: 100,
         y: 200,
-        target: { element: { tag: "button", text: "Submit", role: null, attributes: { id: "submit" } } },
+        target: {
+          element: { tag: "button", text: "Submit", role: null, attributes: { id: "submit" } },
+        },
       });
 
       triggerKey("q");
@@ -393,11 +397,25 @@ describe("TrackCommand", () => {
         handler(page2);
       }
 
-      (page1 as unknown as { getExposedHandler: () => (event: Record<string, unknown>) => void }).getExposedHandler()({
-        type: "click", url: "https://example.com", button: "left", x: 1, y: 1, target: { element: { tag: "a" } },
+      (
+        page1 as unknown as { getExposedHandler: () => (event: Record<string, unknown>) => void }
+      ).getExposedHandler()({
+        type: "click",
+        url: "https://example.com",
+        button: "left",
+        x: 1,
+        y: 1,
+        target: { element: { tag: "a" } },
       });
-      (page2 as unknown as { getExposedHandler: () => (event: Record<string, unknown>) => void }).getExposedHandler()({
-        type: "click", url: "https://example.com/p2", button: "left", x: 2, y: 2, target: { element: { tag: "a" } },
+      (
+        page2 as unknown as { getExposedHandler: () => (event: Record<string, unknown>) => void }
+      ).getExposedHandler()({
+        type: "click",
+        url: "https://example.com/p2",
+        button: "left",
+        x: 2,
+        y: 2,
+        target: { element: { tag: "a" } },
       });
 
       triggerKey("q");
@@ -424,7 +442,9 @@ describe("TrackCommand", () => {
 
       triggerKey("p");
 
-      (page as unknown as { getExposedHandler: () => (event: Record<string, unknown>) => void }).getExposedHandler()({
+      (
+        page as unknown as { getExposedHandler: () => (event: Record<string, unknown>) => void }
+      ).getExposedHandler()({
         type: "click",
         url: "https://example.com",
         button: "left",
@@ -520,9 +540,9 @@ describe("TrackCommand", () => {
       await promise;
 
       // Should only log once (from initial setup doesn't log resume when already recording)
-      const resumeLogs = vi.mocked(ctx.console.log).mock.calls.filter(
-        (call) => call[0] === "Resumed recording",
-      );
+      const resumeLogs = vi
+        .mocked(ctx.console.log)
+        .mock.calls.filter((call) => call[0] === "Resumed recording");
       expect(resumeLogs).toHaveLength(1);
     });
 
@@ -537,9 +557,9 @@ describe("TrackCommand", () => {
       triggerKey("p");
       await promise;
 
-      const pauseLogs = vi.mocked(ctx.console.log).mock.calls.filter(
-        (call) => call[0] === "Paused recording",
-      );
+      const pauseLogs = vi
+        .mocked(ctx.console.log)
+        .mock.calls.filter((call) => call[0] === "Paused recording");
       expect(pauseLogs).toHaveLength(0);
     });
   });
@@ -549,7 +569,18 @@ describe("TrackCommand", () => {
       vi.mocked(loadSession).mockResolvedValue({
         name: "my-app",
         timestamp: Date.now(),
-        cookies: [{ name: "session", value: "abc", domain: ".example.com", path: "/", expires: -1, httpOnly: true, secure: true, sameSite: "Lax" }],
+        cookies: [
+          {
+            name: "session",
+            value: "abc",
+            domain: ".example.com",
+            path: "/",
+            expires: -1,
+            httpOnly: true,
+            secure: true,
+            sameSite: "Lax",
+          },
+        ],
         localStorage: { "example.com": { key1: "value1" } },
       });
 
@@ -614,8 +645,15 @@ describe("TrackCommand", () => {
       // Should start paused with isRecording=false
       triggerKey("r");
 
-      (page as unknown as { getExposedHandler: () => (event: Record<string, unknown>) => void }).getExposedHandler()({
-        type: "click", url: "https://example.com", button: "left", x: 1, y: 1, target: { element: { tag: "a" } },
+      (
+        page as unknown as { getExposedHandler: () => (event: Record<string, unknown>) => void }
+      ).getExposedHandler()({
+        type: "click",
+        url: "https://example.com",
+        button: "left",
+        x: 1,
+        y: 1,
+        target: { element: { tag: "a" } },
       });
 
       triggerKey("q");
@@ -702,7 +740,10 @@ describe("TrackCommand", () => {
       triggerKey("q");
       await promise;
 
-      expect(page.exposeFunction).toHaveBeenCalledWith("__demoReelTrackEvent", expect.any(Function));
+      expect(page.exposeFunction).toHaveBeenCalledWith(
+        "__demoReelTrackEvent",
+        expect.any(Function),
+      );
       expect(page.evaluate).toHaveBeenCalled();
       expect(context.addInitScript).toHaveBeenCalled();
     });
@@ -755,10 +796,26 @@ describe("TrackCommand", () => {
       const promise = cmd.execute([], options, ctx);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      const handler = (page as unknown as { getExposedHandler: () => (event: Record<string, unknown>) => void }).getExposedHandler();
-      handler({ type: "click", url: "https://example.com", button: "left", x: 1, y: 1, target: { element: { tag: "a" } } });
+      const handler = (
+        page as unknown as { getExposedHandler: () => (event: Record<string, unknown>) => void }
+      ).getExposedHandler();
+      handler({
+        type: "click",
+        url: "https://example.com",
+        button: "left",
+        x: 1,
+        y: 1,
+        target: { element: { tag: "a" } },
+      });
       await new Promise((resolve) => setTimeout(resolve, 20));
-      handler({ type: "click", url: "https://example.com", button: "left", x: 2, y: 2, target: { element: { tag: "a" } } });
+      handler({
+        type: "click",
+        url: "https://example.com",
+        button: "left",
+        x: 2,
+        y: 2,
+        target: { element: { tag: "a" } },
+      });
 
       triggerKey("q");
       await promise;
