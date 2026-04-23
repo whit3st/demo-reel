@@ -5,6 +5,7 @@ import { generate } from "./index.js";
 import { access, writeFile } from "fs/promises";
 import { resolve as resolvePath } from "path";
 import { pathToFileURL } from "url";
+import { chromium } from "playwright";
 import type { DemoReelConfig } from "./schemas.js";
 import {
   InitCommand,
@@ -13,12 +14,14 @@ import {
   RunAllCommand,
   RunSingleCommand,
   RunDefaultCommand,
+  TrackCommand,
   CommandRegistry,
   type GlobalOptions,
   type CommandContext,
   type RunAllCommandContext,
   type RunDefaultCommandContext,
   type RunSingleCommandContext,
+  type TrackCommandContext,
 } from "./commands/index.js";
 
 interface CliOptions {
@@ -40,6 +43,10 @@ interface CliOptions {
   noCache?: boolean;
   resolution?: string;
   format?: string;
+  // Track-specific options
+  track?: boolean;
+  trackName?: string;
+  trackSession?: string;
 }
 
 function toGlobalOptions(options: CliOptions): GlobalOptions {
@@ -57,6 +64,8 @@ function toGlobalOptions(options: CliOptions): GlobalOptions {
     noCache: options.noCache,
     resolution: options.resolution,
     format: options.format,
+    trackName: options.trackName,
+    trackSession: options.trackSession,
   };
 }
 
@@ -187,8 +196,20 @@ export function parseArgs(): { scenario?: string; options: CliOptions } {
       options.scriptUrl = args[++i];
     } else if (arg.startsWith("--url=")) {
       options.scriptUrl = arg.slice("--url=".length);
-    } else if (arg === "--output" || arg === "--name") {
+    } else if (arg === "--output") {
       options.scriptOutput = args[++i];
+    } else if (arg === "--name") {
+      const val = args[++i];
+      options.scriptOutput = val;
+      options.trackName = val;
+    } else if (arg.startsWith("--name=")) {
+      const val = arg.slice("--name=".length);
+      options.scriptOutput = val;
+      options.trackName = val;
+    } else if (arg === "--session") {
+      options.trackSession = args[++i];
+    } else if (arg.startsWith("--session=")) {
+      options.trackSession = arg.slice("--session=".length);
     } else if (arg === "--voice") {
       options.scriptVoice = args[++i];
     } else if (arg === "--speed") {
@@ -208,6 +229,8 @@ export function parseArgs(): { scenario?: string; options: CliOptions } {
       options.init = true;
     } else if (arg === "script") {
       options.script = true;
+    } else if (arg === "track") {
+      options.track = true;
     } else if (!arg.startsWith("-") && scenario === undefined) {
       scenario = arg;
     }
@@ -225,8 +248,14 @@ Usage:
 
 Commands:
   init                         Create example .demo.ts scenario file
+  track --name <name>          Record browser interactions to a track file
   script <subcommand>          AI-powered script generation
   [scenario]                   Run a specific scenario
+
+Track options:
+  --name <name>                Track file name (without extension)
+  --url <url>                  Starting URL for tracking
+  --session <name>             Auth session name for save/load
 
 Script subcommands:
   script generate "desc" --url <url>   Generate a script from description
@@ -292,6 +321,22 @@ export async function runCli(): Promise<number> {
         return await command.execute([], toGlobalOptions(options), createCommandContext());
       }
       return 1;
+    }
+
+    if (options.track) {
+      const cmd = new TrackCommand();
+      const trackCtx: TrackCommandContext = {
+        ...createCommandContext(),
+        async launchBrowser() {
+          const browser = await chromium.launch({ headless: false });
+          const context = await browser.newContext({
+            viewport: { width: 1280, height: 720 },
+          });
+          const page = await context.newPage();
+          return { browser, context, page };
+        },
+      };
+      return await cmd.execute([], toGlobalOptions(options), trackCtx);
     }
 
     if (options.script) {

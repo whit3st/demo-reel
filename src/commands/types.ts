@@ -15,6 +15,9 @@ export interface GlobalOptions {
   noCache?: boolean;
   resolution?: string;
   format?: string;
+  // Track-specific options
+  trackName?: string;
+  trackSession?: string;
 }
 
 export interface CommandContext {

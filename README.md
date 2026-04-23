@@ -128,6 +128,48 @@ Then use `/demo-script` in Claude Code:
 
 Claude crawls your app, builds the script with you scene by scene, and generates the `.demo.ts`.
 
+## Track CLI
+
+Use `track` when you already know the flow you want to capture and want AI to start from your real interactions instead of re-exploring the app.
+
+```bash
+demo-reel track --name=create-template
+demo-reel track --name=create-template --url=app.example.com/templates
+demo-reel track --name=create-template --session=my-app --url=app.example.com/templates
+```
+
+That opens a headed Playwright browser, optionally navigates to the provided URL first, and writes `create-template.track.json` in the current directory when you close the browser or press `q` in the terminal.
+
+If `--url` does not include a scheme, `track` prepends `https://` automatically.
+
+`track` also supports pause/resume controls in the terminal:
+
+- `r` resumes recording
+- `p` pauses recording
+- `q` stops and writes the track file
+
+For login-heavy flows, use `--session <name>`. That starts `track` paused, restores any previously saved auth state, and enables:
+
+- `s` to save the current browser session into `.demo-reel-sessions/<name>.json`
+
+Recommended auth-safe flow:
+
+1. Run `demo-reel track --name=create-template --session=my-app --url=app.example.com/templates`
+2. Log in while recording is paused
+3. Press `s` to save the session
+4. Press `r` to start recording the real demo flow
+
+The written `.track.json` is normalized for AI consumption before it is saved.
+
+It still reflects your real flow, but it now collapses noisy low-level browser activity:
+
+- scroll bursts become a small number of meaningful scroll events
+- typing bursts become final field values instead of one event per keystroke
+- duplicate navigation bursts are reduced
+- obvious weak selectors like generic buttons are upgraded when possible
+
+See `TRACKING.md` for the raw file format and guidance for AI tools that consume `.track.json` files.
+
 ## Configuration
 
 ### Voice / TTS
