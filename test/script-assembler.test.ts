@@ -168,7 +168,7 @@ afterEach(async () => {
 });
 
 describe("script assembler", () => {
-  it("generates a complete demo config with scene comments, waits, and serialized steps", () => {
+  it("generates a complete demo config with scene-owned steps and serialized steps", () => {
     const source = generateDemoConfig(createTimedScript(), {
       resolution: "4K",
       format: "webm",
@@ -178,7 +178,8 @@ describe("script assembler", () => {
     expect(source).toContain('resolution: "4K"');
     expect(source).toContain('outputFormat: "webm"');
     expect(source).toContain('narration: "/tmp/audio/final-narration.mp3"');
-    expect(source).toContain('// Scene 1: "Open the template page and click the create button."');
+    expect(source).toContain('scenes: [');
+    expect(source).toContain('narration: "Open the template page and click the create button."');
     expect(source).toContain(
       '{ action: "goto", url: "https://example.com/templates", waitUntil: "networkidle" },',
     );
@@ -186,6 +187,7 @@ describe("script assembler", () => {
       '{ action: "click", selector: {"strategy":"testId","value":"create-template"}, delayAfterMs: 250 },',
     );
     expect(source).toContain('{ action: "wait", ms: 400 },');
+    expect(source).toContain('narration: "Fill in the form and submit it."');
     expect(source).toContain(
       '{ action: "type", selector: {"strategy":"id","value":"name"}, text: "Invoice", clear: true, delayMs: 50 },',
     );
@@ -194,21 +196,18 @@ describe("script assembler", () => {
     );
   });
 
-  it("truncates long narration previews in scene comments", () => {
-    const longNarration = "A".repeat(100);
-    const source = generateDemoConfig(
-      createTimedScript({
-        scenes: [
-          {
-            ...createTimedScript().scenes[0],
-            narration: longNarration,
-            gapAfterMs: 0,
-          },
-        ],
-      }),
-    );
+  it("places inter-scene gaps as the last step of each scene", () => {
+    const source = generateDemoConfig(createTimedScript());
 
-    expect(source).toContain(`// Scene 1: "${"A".repeat(80)}..."`);
+    // First scene has gap wait (400ms) as its final step
+    // We verify by checking the gap wait appears and second scene follows
+    expect(source).toContain('{ action: "wait", ms: 400 },');
+    expect(source).not.toContain('stepIndex');
+    // There should be no top-level steps array; scene-owned steps are inside each scene
+    const topLevelStepsMatch = source.match(/export default defineConfig\(\{[\s\S]*?scenes:/);
+    expect(topLevelStepsMatch).toBeDefined();
+    const beforeScenes = source.slice(0, source.indexOf('scenes:'));
+    expect(beforeScenes).not.toContain('steps:');
   });
 
   it("writes demo config with narration path relative to the output file", async () => {

@@ -434,6 +434,19 @@ function resolveResolution(val: z.infer<typeof resolutionSchema>): z.infer<typeo
   return typeof val === "string" ? resolutionPresets[val] : val;
 }
 
+// Scene schemas
+const legacySceneInputSchema = z.object({
+  narration: z.string().describe("Voiceover narration text for this scene"),
+  stepIndex: z.number().int().min(0).describe("Index of the first step in this scene"),
+  isIntro: z.boolean().optional().describe("Whether this scene is the intro/context scene"),
+});
+
+const sceneOwnedSceneInputSchema = z.object({
+  narration: z.string().describe("Voiceover narration text for this scene"),
+  steps: z.array(stepSchema).min(1).describe("Steps belonging to this scene"),
+  isIntro: z.boolean().optional().describe("Whether this scene is the intro/context scene"),
+});
+
 export const demoReelConfigInputSchema = z
   .object({
     video: videoConfigSchema.describe("Video recording settings"),
@@ -449,7 +462,11 @@ export const demoReelConfigInputSchema = z
     timing: timingPresetOrConfigSchema.describe(
       "Timing preset name or custom timing configuration",
     ),
-    steps: z.array(stepSchema).min(1).describe("Demo scenario steps to execute"),
+    steps: z
+      .array(stepSchema)
+      .min(1)
+      .optional()
+      .describe("Demo scenario steps to execute (required in legacy mode)"),
     setup: z
       .array(stepSchema)
       .optional()
@@ -486,13 +503,7 @@ export const demoReelConfigInputSchema = z
       .optional()
       .describe("Voice/TTS configuration for narration generation"),
     scenes: z
-      .array(
-        z.object({
-          narration: z.string().describe("Voiceover narration text for this scene"),
-          stepIndex: z.number().int().min(0).describe("Index of the first step in this scene"),
-          isIntro: z.boolean().optional().describe("Whether this scene is the intro/context scene"),
-        }),
-      )
+      .array(z.union([legacySceneInputSchema, sceneOwnedSceneInputSchema]))
       .optional()
       .describe("Scene markers for timeline tracking and subtitle generation"),
   })
@@ -504,22 +515,138 @@ export const demoReelConfigInputSchema = z
         path: ["outputFormat"],
       });
     }
+
+    const hasTopLevelSteps = value.steps !== undefined && value.steps.length > 0;
+    const hasScenes = value.scenes !== undefined && value.scenes.length > 0;
+
+    if (!hasTopLevelSteps && !hasScenes) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Config must have either top-level steps or scenes with steps",
+        path: ["steps"],
+      });
+      return;
+    }
+
+    if (hasScenes) {
+      const firstScene = value.scenes![0];
+      const isSceneOwned = "steps" in firstScene;
+
+      for (let i = 0; i < value.scenes!.length; i++) {
+        const scene = value.scenes![i];
+        const sceneIsOwned = "steps" in scene;
+        if (sceneIsOwned !== isSceneOwned) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+              "All scenes must use the same format (either all stepIndex or all steps). Scene 0 and scene " +
+              i +
+              " are inconsistent.",
+            path: ["scenes", i],
+          });
+          return;
+        }
+      }
+
+      if (isSceneOwned && hasTopLevelSteps) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Cannot use top-level steps with scene-owned steps. Use one or the other.",
+          path: ["steps"],
+        });
+        return;
+      }
+
+      if (!isSceneOwned) {
+        const legacyScenes = value.scenes as z.infer<typeof legacySceneInputSchema>[];
+        const stepIndices = legacyScenes.map((s) => s.stepIndex);
+
+        for (let i = 1; i < stepIndices.length; i++) {
+          if (stepIndices[i] <= stepIndices[i - 1]) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Scene stepIndex values must be strictly increasing. Found ${stepIndices[i - 1]} followed by ${stepIndices[i]}`,
+              path: ["scenes", i, "stepIndex"],
+            });
+          }
+        }
+
+        if (hasTopLevelSteps && value.steps) {
+          const maxStepIndex = Math.max(...stepIndices);
+          if (maxStepIndex >= value.steps.length) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Scene stepIndex ${maxStepIndex} exceeds top-level steps length ${value.steps.length}`,
+              path: ["scenes"],
+            });
+          }
+        }
+      }
+    }
   });
 
-export const demoReelConfigSchema = demoReelConfigInputSchema.transform((val) => ({
-  ...val,
-  video: {
-    ...val.video,
-    resolution: resolveResolution(val.video.resolution),
-  },
-  cursor: resolveCursor(val.cursor),
-  motion: resolveMotion(val.motion),
-  typing: resolveTyping(val.typing),
-  timing: resolveTiming(val.timing),
-  // Resolve setup/cleanup aliases
-  preSteps: val.setup || val.preSteps,
-  postSteps: val.cleanup || val.postSteps,
-}));
+export interface RuntimeScene {
+  narration: string;
+  stepIndex: number;
+  isIntro?: boolean;
+}
+
+export type DemoReelConfigInput = z.infer<typeof demoReelConfigInputSchema>;
+
+export interface DemoReelConfig extends Omit<DemoReelConfigInput, "steps" | "scenes" | "video" | "cursor" | "motion" | "typing" | "timing"> {
+  steps: Step[];
+  scenes?: RuntimeScene[];
+  video: { resolution: SizeConfig };
+  cursor: CursorConfig;
+  motion: MotionConfig;
+  typing: TypingConfig;
+  timing: TimingConfig;
+  preSteps?: Step[];
+  postSteps?: Step[];
+}
+
+export const demoReelConfigSchema = demoReelConfigInputSchema.transform((val): DemoReelConfig => {
+  let normalizedSteps = val.steps;
+  let normalizedScenes = val.scenes;
+
+  if (val.scenes && val.scenes.length > 0 && "steps" in val.scenes[0]) {
+    const sceneOwnedScenes = val.scenes as z.infer<typeof sceneOwnedSceneInputSchema>[];
+    const flattenedSteps: Step[] = [];
+    const runtimeScenes: RuntimeScene[] = [];
+    let stepIndex = 0;
+
+    for (let i = 0; i < sceneOwnedScenes.length; i++) {
+      const scene = sceneOwnedScenes[i];
+      runtimeScenes.push({
+        narration: scene.narration,
+        stepIndex,
+        isIntro: scene.isIntro,
+      });
+      flattenedSteps.push(...scene.steps);
+      stepIndex += scene.steps.length;
+    }
+
+    normalizedSteps = flattenedSteps;
+    normalizedScenes = runtimeScenes;
+  }
+
+  return {
+    ...val,
+    steps: normalizedSteps!,
+    scenes: normalizedScenes as RuntimeScene[] | undefined,
+    video: {
+      ...val.video,
+      resolution: resolveResolution(val.video.resolution),
+    },
+    cursor: resolveCursor(val.cursor),
+    motion: resolveMotion(val.motion),
+    typing: resolveTyping(val.typing),
+    timing: resolveTiming(val.timing),
+    // Resolve setup/cleanup aliases
+    preSteps: val.setup || val.preSteps,
+    postSteps: val.cleanup || val.postSteps,
+  };
+});
 
 export type CursorPresetOrConfig = z.infer<typeof cursorPresetOrConfigSchema>;
 export type MotionPresetOrConfig = z.infer<typeof motionPresetOrConfigSchema>;
@@ -528,7 +655,6 @@ export type TimingPresetOrConfig = z.infer<typeof timingPresetOrConfigSchema>;
 export type ResolutionPreset = z.infer<typeof resolutionPresetSchema>;
 export type ResolutionConfig = z.infer<typeof resolutionSchema>;
 export type RandomizationConfig = z.infer<typeof randomizationSchema>;
-export type DemoReelConfigInput = z.infer<typeof demoReelConfigInputSchema>;
 
 // Export types
 export type SizeConfig = z.infer<typeof sizeSchema>;
@@ -547,4 +673,3 @@ export type SelectorStrategy = z.infer<typeof selectorStrategySchema>;
 export type SelectorConfig = z.infer<typeof selectorSchema>;
 export type Step = z.infer<typeof stepSchema>;
 export type NarrationSyncMode = z.infer<typeof narrationSyncModeSchema>;
-export type DemoReelConfig = z.infer<typeof demoReelConfigSchema>;

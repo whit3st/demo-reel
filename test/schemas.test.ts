@@ -632,4 +632,174 @@ describe("Schema Validation", () => {
       expect(result.success).toBe(false);
     });
   });
+
+  describe("Scene Config Modes", () => {
+    const baseConfig = {
+      video: { resolution: { width: 1920, height: 1080 } },
+      cursor: {
+        start: { x: 100, y: 100 },
+        persistPosition: false,
+        type: "dot",
+        size: 10,
+        borderWidth: 2,
+        borderColor: "#000",
+        shadowColor: "#fff",
+      },
+      motion: {
+        moveDurationMs: 500,
+        moveStepsMin: 20,
+        stepsPerPx: 10,
+        clickDelayMs: 100,
+        curve: {
+          offsetRatio: 0.1,
+          offsetMin: 5,
+          offsetMax: 50,
+          easing: "easeInOutCubic",
+        },
+      },
+      typing: {
+        baseDelayMs: 50,
+        spaceDelayMs: 100,
+        punctuationDelayMs: 150,
+        enterDelayMs: 200,
+      },
+      timing: {
+        afterGotoDelayMs: 1000,
+        endDelayMs: 2000,
+      },
+    };
+
+    it("should accept scene-owned mode with scenes containing steps", () => {
+      const result = demoReelConfigSchema.safeParse({
+        ...baseConfig,
+        scenes: [
+          {
+            narration: "Intro",
+            isIntro: true,
+            steps: [
+              { action: "goto", url: "https://example.com" },
+              { action: "wait", ms: 500 },
+            ],
+          },
+          {
+            narration: "Main",
+            steps: [{ action: "click", selector: { strategy: "id", value: "btn" } }],
+          },
+        ],
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.steps).toHaveLength(3);
+        expect(result.data.scenes).toHaveLength(2);
+        expect(result.data.scenes?.[0].stepIndex).toBe(0);
+        expect(result.data.scenes?.[1].stepIndex).toBe(2);
+      }
+    });
+
+    it("should accept legacy mode with top-level steps and scene stepIndex", () => {
+      const result = demoReelConfigSchema.safeParse({
+        ...baseConfig,
+        steps: [
+          { action: "goto", url: "https://example.com" },
+          { action: "wait", ms: 500 },
+          { action: "click", selector: { strategy: "id", value: "btn" } },
+        ],
+        scenes: [
+          { narration: "Intro", stepIndex: 0, isIntro: true },
+          { narration: "Main", stepIndex: 2 },
+        ],
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.steps).toHaveLength(3);
+        expect(result.data.scenes).toHaveLength(2);
+        expect(result.data.scenes?.[0].stepIndex).toBe(0);
+        expect(result.data.scenes?.[1].stepIndex).toBe(2);
+      }
+    });
+
+    it("should reject mixed mode (top-level steps + scene-owned steps)", () => {
+      const result = demoReelConfigSchema.safeParse({
+        ...baseConfig,
+        steps: [{ action: "goto", url: "https://example.com" }],
+        scenes: [
+          {
+            narration: "Intro",
+            steps: [{ action: "wait", ms: 500 }],
+          },
+        ],
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const messages = result.error.issues.map((i) => i.message);
+        expect(messages.some((m) => m.includes("top-level steps with scene-owned"))).toBe(true);
+      }
+    });
+
+    it("should reject scenes mixing stepIndex and steps formats", () => {
+      const result = demoReelConfigSchema.safeParse({
+        ...baseConfig,
+        scenes: [
+          { narration: "A", stepIndex: 0 },
+          { narration: "B", steps: [{ action: "wait", ms: 100 }] },
+        ],
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const messages = result.error.issues.map((i) => i.message);
+        expect(messages.some((m) => m.includes("same format"))).toBe(true);
+      }
+    });
+
+    it("should reject legacy scenes with non-monotonic stepIndex", () => {
+      const result = demoReelConfigSchema.safeParse({
+        ...baseConfig,
+        steps: [
+          { action: "goto", url: "https://example.com" },
+          { action: "wait", ms: 500 },
+          { action: "click", selector: { strategy: "id", value: "btn" } },
+        ],
+        scenes: [
+          { narration: "A", stepIndex: 2 },
+          { narration: "B", stepIndex: 0 },
+        ],
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const messages = result.error.issues.map((i) => i.message);
+        expect(messages.some((m) => m.includes("strictly increasing"))).toBe(true);
+      }
+    });
+
+    it("should reject legacy stepIndex exceeding top-level steps length", () => {
+      const result = demoReelConfigSchema.safeParse({
+        ...baseConfig,
+        steps: [{ action: "goto", url: "https://example.com" }],
+        scenes: [{ narration: "A", stepIndex: 5 }],
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const messages = result.error.issues.map((i) => i.message);
+        expect(messages.some((m) => m.includes("exceeds top-level steps length"))).toBe(true);
+      }
+    });
+
+    it("should reject config with neither top-level steps nor scenes", () => {
+      const result = demoReelConfigSchema.safeParse({
+        ...baseConfig,
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const messages = result.error.issues.map((i) => i.message);
+        expect(messages.some((m) => m.includes("top-level steps or scenes"))).toBe(true);
+      }
+    });
+  });
 });

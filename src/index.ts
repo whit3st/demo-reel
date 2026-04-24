@@ -193,7 +193,7 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
     }
   }
 
-  const configWithAudio: DemoConfig =
+  const configWithAudio: DemoReelConfig =
     hasNarration && existsSync(audioPath)
       ? {
           ...resolvedConfig,

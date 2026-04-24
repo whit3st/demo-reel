@@ -54,39 +54,42 @@ await generate(
     ],
 
     scenes: [
-      { narration: "Welcome to our app. Let's create a new project.", stepIndex: 0, isIntro: true },
-      { narration: "Fill in the details and click Create.", stepIndex: 2 },
-    ],
-
-    steps: [
-      // Scene 1
       {
-        action: "hover",
-        selector: { strategy: "testId", value: "new-project" },
-        delayAfterMs: 800,
+        narration: "Welcome to our app. Let's create a new project.",
+        isIntro: true,
+        steps: [
+          {
+            action: "hover",
+            selector: { strategy: "testId", value: "new-project" },
+            delayAfterMs: 800,
+          },
+          {
+            action: "click",
+            selector: { strategy: "testId", value: "new-project" },
+            delayAfterMs: 1500,
+          },
+        ],
       },
       {
-        action: "click",
-        selector: { strategy: "testId", value: "new-project" },
-        delayAfterMs: 1500,
-      },
-
-      // Scene 2
-      {
-        action: "type",
-        selector: { strategy: "id", value: "name" },
-        text: "My Project",
-        delayAfterMs: 500,
-      },
-      {
-        action: "hover",
-        selector: { strategy: "custom", value: "button[type='submit']" },
-        delayAfterMs: 600,
-      },
-      {
-        action: "click",
-        selector: { strategy: "custom", value: "button[type='submit']" },
-        delayAfterMs: 2000,
+        narration: "Fill in the details and click Create.",
+        steps: [
+          {
+            action: "type",
+            selector: { strategy: "id", value: "name" },
+            text: "My Project",
+            delayAfterMs: 500,
+          },
+          {
+            action: "hover",
+            selector: { strategy: "custom", value: "button[type='submit']" },
+            delayAfterMs: 600,
+          },
+          {
+            action: "click",
+            selector: { strategy: "custom", value: "button[type='submit']" },
+            delayAfterMs: 2000,
+          },
+        ],
       },
     ],
   },
@@ -225,16 +228,30 @@ Setup and cleanup run in tolerant mode — failed steps are skipped.
 
 ```typescript
 scenes: [
-  { narration: "Welcome to our app.", stepIndex: 0, isIntro: true },
-  { narration: "Let's create something.", stepIndex: 3 },
+  {
+    narration: "Welcome to our app.",
+    isIntro: true,
+    steps: [
+      { action: "goto", url: "https://myapp.com" },
+      { action: "wait", ms: 1500 },
+    ],
+  },
+  {
+    narration: "Let's create something.",
+    steps: [
+      { action: "click", selector: { strategy: "id", value: "create" } },
+    ],
+  },
 ],
 ```
 
 - `narration` — voiceover text (also used for subtitles)
-- `stepIndex` — which step starts this scene
+- `steps` — steps that belong to this scene
 - `isIntro` — marks the intro scene (used by presentation systems to skip context)
 
 Generates `.srt`, `.vtt` (subtitles) and `.meta.json` (scene timestamps for interactive players).
+
+> **Legacy compatibility:** You can also use the older format with a single top-level `steps` array and `scenes` referencing `stepIndex`. The two formats cannot be mixed.
 
 ### Steps
 

@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-04-24
+
+### Added
+
+- **Scene-Owned Steps**: Scenes can now define their own `steps` array, eliminating the need to manually count `stepIndex`
+  - New authoring format: `scenes: [{ narration: "...", steps: [...] }]`
+  - Legacy format with top-level `steps` + `scenes[].stepIndex` still supported
+  - Mixed formats are rejected with clear validation errors
+  - Schema normalizes scene-owned steps into runtime `steps[]` + `scenes[]` with auto-derived `stepIndex`
+- **Legacy Scene Validation**: `stepIndex` values must now be strictly increasing and within bounds
+- **Demo Template**: Added `demos/dictionary-search.demo.ts` — a working 5-scene example using DuckDuckGo and Wiktionary
+
+### Changed
+
+- **Generated `.demo.ts` output**: Script assembler now emits scene-owned steps instead of manual `stepIndex`
+- **`init` command template**: Updated to use scene-owned format by default
+- **README examples**: Updated to canonical scene-owned format with legacy compatibility note
+
+### Fixed
+
+- **Type safety**: Added explicit `RuntimeScene` interface and `DemoReelConfig` output type to reflect normalized post-transform shape
+
+## [0.4.2] - 2026-04-20
+
 ### Added
 
 - **Narration Manifest Pipeline**: Per-scene narration manifests and clip artifacts for exact scene-based audio placement during rendering

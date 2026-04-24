@@ -15,9 +15,14 @@ export default defineConfig({
   typing: 'humanlike',
   timing: 'normal',
 
-  steps: [
-    { action: 'goto', url: 'https://example.com' },
-    { action: 'wait', ms: 1000 },
+  scenes: [
+    {
+      narration: "Welcome to our example demo.",
+      steps: [
+        { action: 'goto', url: 'https://example.com' },
+        { action: 'wait', ms: 1000 },
+      ],
+    },
   ],
 });
 `;

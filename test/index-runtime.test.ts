@@ -129,10 +129,11 @@ describe("index runtime", () => {
     await generate(
       createConfig({
         outputDir: "./output",
+        steps: Array.from({ length: 12 }, () => ({ action: "wait" as const, ms: 100 })),
         scenes: [
-          { narration: "Third scene", stepIndex: 11 },
           { narration: "First scene", stepIndex: 1 },
           { narration: "Second scene", stepIndex: 7 },
+          { narration: "Third scene", stepIndex: 11 },
         ],
         voice: { provider: "piper", voice: "en_US-amy-medium", speed: 1 },
       }),
