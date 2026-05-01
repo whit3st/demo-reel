@@ -3,6 +3,7 @@ import type { DemoReelE2EConfig } from "../schemas.js";
 import type { RuntimeAttemptResult, RuntimeResult } from "./types.js";
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
+import { createE2EReporters } from "./reporters.js";
 import {
   AssertionFailure,
   runCheckpointAssertions,
@@ -198,7 +199,7 @@ export class E2ERuntime {
     const exitCode: 0 | 1 | 2 = ok ? 0 : hasAssertionFailure ? 1 : 2;
     const flaky = ok && attempts.some((attempt) => !attempt.ok);
 
-    return {
+    const summary: RuntimeResult = {
       ok,
       durationMs,
       attempts,
@@ -207,6 +208,11 @@ export class E2ERuntime {
       failure: firstFailure?.failure,
       exitCode,
     };
+
+    const reporters = createE2EReporters(config.report.formats);
+    await Promise.all(reporters.map((reporter) => reporter.writeScenario(config, summary)));
+
+    return summary;
   }
 
   async runSuite(configs: DemoReelE2EConfig[], options: E2ERuntimeOptions = {}): Promise<E2ESuiteResult> {
@@ -253,11 +259,16 @@ export class E2ERuntime {
         ? 2
         : 1;
 
-    return {
+    const suiteResult: E2ESuiteResult = {
       ok,
       durationMs: Date.now() - startedAt,
       results,
       exitCode,
     };
+
+    const reporters = createE2EReporters(configs[0]?.report.formats ?? []);
+    await Promise.all(reporters.map((reporter) => reporter.writeSuite(configs, suiteResult)));
+
+    return suiteResult;
   }
 }

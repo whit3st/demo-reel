@@ -383,6 +383,7 @@ export {
   runCheckpointAssertions,
   selectCheckpointsForStep,
   selectCheckpointsForLabel,
+  createE2EReporters,
 } from "./runtime/index.js";
 export type {
   NarrationClipInfo,
@@ -399,6 +400,7 @@ export type {
   E2ESuiteResult,
   CoreRunOptions,
   AssertionFailureDetails,
+  E2EReporter,
   RuntimeContext,
   RuntimeResult,
 } from "./runtime/index.js";

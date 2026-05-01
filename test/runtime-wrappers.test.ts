@@ -50,6 +50,7 @@ import {
 } from "../src/runtime/assertions.js";
 import { VideoRuntime } from "../src/runtime/video-runtime.js";
 import { E2ERuntime } from "../src/runtime/e2e-runtime.js";
+import { writeFile } from "fs/promises";
 
 describe("runtime wrappers", () => {
   beforeEach(() => {
@@ -311,5 +312,54 @@ describe("runtime wrappers", () => {
     expect(suite.ok).toBe(true);
     expect(suite.results).toHaveLength(2);
     expect(suite.exitCode).toBe(0);
+  });
+
+  it("E2ERuntime writes json and junit reports", async () => {
+    vi.mocked(createRuntimeContext).mockResolvedValue({
+      browser: {} as never,
+      context: {} as never,
+      page: {} as never,
+    });
+    vi.mocked(closeRuntimeContext).mockResolvedValue(undefined);
+    vi.mocked(runStepSequence).mockResolvedValue(undefined);
+    vi.mocked(runCheckpointAssertions).mockResolvedValue(undefined);
+    vi.mocked(selectCheckpointsForStep).mockReturnValue([] as never[]);
+    vi.mocked(selectCheckpointsForLabel).mockReturnValue([] as never[]);
+
+    const runtime = new E2ERuntime();
+    await runtime.run({
+      mode: "e2e",
+      name: "checkout",
+      report: { formats: ["json", "junit"], outputDir: "./artifacts", includeStepLogs: true },
+      steps: [{ action: "goto", url: "https://example.com" }],
+    });
+
+    expect(vi.mocked(writeFile).mock.calls.some((call) => String(call[0]).endsWith("report.json"))).toBe(true);
+    expect(vi.mocked(writeFile).mock.calls.some((call) => String(call[0]).endsWith("junit.xml"))).toBe(true);
+  });
+
+  it("E2ERuntime dot reporter logs concise summary", async () => {
+    vi.mocked(createRuntimeContext).mockResolvedValue({
+      browser: {} as never,
+      context: {} as never,
+      page: {} as never,
+    });
+    vi.mocked(closeRuntimeContext).mockResolvedValue(undefined);
+    vi.mocked(runStepSequence).mockResolvedValue(undefined);
+    vi.mocked(runCheckpointAssertions).mockResolvedValue(undefined);
+    vi.mocked(selectCheckpointsForStep).mockReturnValue([] as never[]);
+    vi.mocked(selectCheckpointsForLabel).mockReturnValue([] as never[]);
+
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const runtime = new E2ERuntime();
+    await runtime.run({
+      mode: "e2e",
+      name: "search",
+      report: { formats: ["dot"], outputDir: "./artifacts", includeStepLogs: true },
+      steps: [{ action: "goto", url: "https://example.com" }],
+    });
+
+    expect(logSpy).toHaveBeenCalled();
+    logSpy.mockRestore();
   });
 });

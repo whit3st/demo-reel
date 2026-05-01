@@ -18,3 +18,4 @@ export {
   selectCheckpointsForLabel,
 } from "./assertions.js";
 export type { AssertionFailureDetails } from "./assertions.js";
+export { createE2EReporters, type E2EReporter } from "./reporters.js";
