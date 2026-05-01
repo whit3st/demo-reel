@@ -1,7 +1,7 @@
 import { execSync, spawn, spawnSync } from "child_process";
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "fs";
 import { basename, dirname, extname, join, relative, resolve } from "path";
-import { demoReelConfigSchema, demoReelConfigInputSchema, } from "./schemas.js";
+import { demoReelConfigSchema, demoReelConfigInputSchema, demoReelVideoOnlySchema, } from "./schemas.js";
 import { getNarrationManifestPath } from "./narration-manifest.js";
 import { narrationManifestSchema, NARRATION_PROCESSING_VERSION } from "./narration-manifest.js";
 import { syncNarration, logSyncReport } from "./narration-sync.js";
@@ -18,7 +18,7 @@ export function defineConfig(config) {
 }
 export const demo = defineConfig;
 export function validateConfig(config) {
-    return demoReelConfigSchema.parse(config);
+    return demoReelVideoOnlySchema.parse(config);
 }
 function isDockerAvailable() {
     try {

@@ -6,7 +6,7 @@ import { access, writeFile } from "fs/promises";
 import { resolve as resolvePath } from "path";
 import { pathToFileURL } from "url";
 import { chromium } from "playwright";
-import type { DemoReelConfig } from "./schemas.js";
+import type { DemoReelVideoConfig } from "./schemas.js";
 import {
   InitCommand,
   ScriptRouterCommand,
@@ -144,7 +144,7 @@ const addTags = (existing: string[] | undefined, value: string | undefined) => {
   return [...(existing ?? []), ...tags];
 };
 
-function shouldGenerateVoice(config: DemoReelConfig): boolean {
+function shouldGenerateVoice(config: DemoReelVideoConfig): boolean {
   const hasVoice = Boolean(config.voice);
   const hasNarration = (config.scenes ?? []).some((scene) => Boolean(scene.narration));
   const hasNarrationAudio = Boolean(config.audio?.narration || config.audio?.narrationManifest);

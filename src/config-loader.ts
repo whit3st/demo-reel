@@ -1,10 +1,10 @@
 import { promises as fs } from "fs";
 import { join, dirname, resolve, extname, basename } from "path";
 import { pathToFileURL } from "url";
-import { demoReelConfigSchema, type DemoReelConfig } from "./schemas.js";
+import { demoReelVideoOnlySchema, type DemoReelVideoConfig } from "./schemas.js";
 
 export interface LoadedConfig {
-  config: DemoReelConfig;
+  config: DemoReelVideoConfig;
   configPath: string;
   outputPath: string;
 }
@@ -18,19 +18,19 @@ async function fileExists(path: string): Promise<boolean> {
   }
 }
 
-async function loadConfigFile(configPath: string): Promise<DemoReelConfig> {
+async function loadConfigFile(configPath: string): Promise<DemoReelVideoConfig> {
   const ext = extname(configPath);
 
   if (ext === ".ts") {
     const module = await import(pathToFileURL(configPath).href);
     const config = module.default || module;
-    return demoReelConfigSchema.parse(config);
+    return demoReelVideoOnlySchema.parse(config);
   }
 
   if (ext === ".json") {
     const content = await fs.readFile(configPath, "utf-8");
     const config = JSON.parse(content);
-    return demoReelConfigSchema.parse(config);
+    return demoReelVideoOnlySchema.parse(config);
   }
 
   throw new Error(`Unsupported config file extension: ${ext}`);
@@ -42,7 +42,7 @@ function formatTimestamp(date: Date): string {
 }
 
 function resolveOutputPath(
-  config: DemoReelConfig,
+  config: DemoReelVideoConfig,
   configPath: string,
   cliOutputDir?: string,
 ): string {

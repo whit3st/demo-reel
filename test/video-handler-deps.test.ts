@@ -544,7 +544,7 @@ describe("runVideoScenario", () => {
     logSpy.mockRestore();
   });
 
-  it("handles full recording with post-steps and verbose", async () => {
+  it("handles full recording with cleanup steps and verbose", async () => {
     browserMock.newContext.mockResolvedValue(contextMock);
     contextMock.newPage.mockResolvedValue(pageMock);
     launchMock.mockResolvedValue(browserMock);
@@ -579,7 +579,7 @@ describe("runVideoScenario", () => {
 
     const config = {
       video: { resolution: { width: 1920, height: 1080 } },
-      postSteps: [{ action: "click", selector: "#done" }],
+      cleanup: [{ action: "click", selector: "#done" }],
     } as any;
 
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
@@ -589,12 +589,12 @@ describe("runVideoScenario", () => {
 
     expect(result).toBe("/out/demo.mp4");
     expect(launchMock).toHaveBeenCalledTimes(2);
-    expect(logSpy).toHaveBeenCalledWith("Running post-steps...");
-    expect(logSpy).toHaveBeenCalledWith("✓ Post-steps complete");
+    expect(logSpy).toHaveBeenCalledWith("Running cleanup steps...");
+    expect(logSpy).toHaveBeenCalledWith("✓ Cleanup steps complete");
     logSpy.mockRestore();
   });
 
-  it("handles recording error with post-step cleanup", async () => {
+  it("handles recording error with cleanup steps", async () => {
     browserMock.newContext.mockResolvedValue(contextMock);
     contextMock.newPage.mockResolvedValue(pageMock);
     launchMock.mockResolvedValue(browserMock);
@@ -618,7 +618,7 @@ describe("runVideoScenario", () => {
 
     const config = {
       video: { resolution: { width: 1920, height: 1080 } },
-      postSteps: [{ action: "click", selector: "#cleanup" }],
+      cleanup: [{ action: "click", selector: "#cleanup" }],
     } as any;
 
     await expect(runVideoScenario(config, "/out/demo.mp4", "/cfg/config.yaml")).rejects.toThrow(
@@ -626,7 +626,7 @@ describe("runVideoScenario", () => {
     );
   });
 
-  it("ignores postSteps error during error cleanup", async () => {
+  it("ignores cleanup step errors during error cleanup", async () => {
     browserMock.newContext.mockResolvedValue(contextMock);
     contextMock.newPage.mockResolvedValue(pageMock);
     launchMock.mockResolvedValue(browserMock);
@@ -644,7 +644,7 @@ describe("runVideoScenario", () => {
 
     const config = {
       video: { resolution: { width: 1920, height: 1080 } },
-      postSteps: [{ action: "click", selector: "#cleanup" }],
+      cleanup: [{ action: "click", selector: "#cleanup" }],
     } as any;
 
     await expect(runVideoScenario(config, "/out/demo.mp4", "/cfg/config.yaml")).rejects.toThrow(

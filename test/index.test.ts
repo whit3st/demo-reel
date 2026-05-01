@@ -3,6 +3,7 @@ import { defineConfig, demo, generate, validateConfig, type DemoConfig } from ".
 
 function createConfig(): DemoConfig {
   return {
+    mode: "video",
     video: { resolution: "FHD" },
     cursor: "dot",
     motion: "smooth",
@@ -38,6 +39,7 @@ describe("getBaseName edge cases", () => {
   it("uses 'demo' as fallback when neither name nor outputPath is provided", () => {
     // This indirectly tests getBaseName via the tmp file naming
     const config = defineConfig({
+      mode: "video",
       video: { resolution: "FHD" },
       cursor: "dot",
       motion: "smooth",
@@ -51,6 +53,7 @@ describe("getBaseName edge cases", () => {
 
   it("uses outputPath basename when name is not provided", () => {
     const config = defineConfig({
+      mode: "video",
       video: { resolution: "FHD" },
       cursor: "dot",
       motion: "smooth",
@@ -64,6 +67,7 @@ describe("getBaseName edge cases", () => {
 
   it("handles outputPath with multiple dots in filename", () => {
     const config = defineConfig({
+      mode: "video",
       video: { resolution: "FHD" },
       cursor: "dot",
       motion: "smooth",

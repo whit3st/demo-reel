@@ -4,8 +4,9 @@ import { basename, dirname, extname, join, relative, resolve } from "path";
 import {
   demoReelConfigSchema,
   demoReelConfigInputSchema,
-  type DemoReelConfig,
-  type DemoReelConfigInput,
+  demoReelVideoOnlySchema,
+  type DemoReelVideoConfig,
+  type DemoReelVideoConfigInput,
 } from "./schemas.js";
 import { getNarrationManifestPath } from "./narration-manifest.js";
 import { narrationManifestSchema, NARRATION_PROCESSING_VERSION } from "./narration-manifest.js";
@@ -20,21 +21,21 @@ const ENV_PASSTHROUGH = [
   "ANTHROPIC_API_KEY",
 ];
 
-export type DemoConfig = DemoReelConfigInput;
+export type DemoConfig = DemoReelVideoConfigInput;
 
 export interface GenerateOptions {
   verbose?: boolean;
   noDocker?: boolean;
 }
 
-export function defineConfig(config: DemoConfig): DemoReelConfig {
+export function defineConfig(config: DemoConfig): DemoReelVideoConfig {
   return validateConfig(config);
 }
 
 export const demo = defineConfig;
 
-export function validateConfig(config: unknown): DemoReelConfig {
-  return demoReelConfigSchema.parse(config);
+export function validateConfig(config: unknown): DemoReelVideoConfig {
+  return demoReelVideoOnlySchema.parse(config);
 }
 
 function isDockerAvailable(): boolean {
@@ -72,7 +73,7 @@ function getDockerUserArgs(): string[] {
   return ["--user", `${process.getuid()}:${process.getgid()}`];
 }
 
-function getBaseName(config: DemoReelConfig): string {
+function getBaseName(config: DemoReelVideoConfig): string {
   if (config.name) {
     return config.name;
   }
@@ -85,7 +86,7 @@ function getBaseName(config: DemoReelConfig): string {
   return "demo";
 }
 
-function getAudioPath(config: DemoReelConfig): string {
+function getAudioPath(config: DemoReelVideoConfig): string {
   if (config.outputPath) {
     const outputPath = config.outputPath.startsWith("/")
       ? config.outputPath
@@ -98,7 +99,7 @@ function getAudioPath(config: DemoReelConfig): string {
   return join(outputDir, `${getBaseName(config)}-narration.mp3`);
 }
 
-function getNarratedScenesInPlaybackOrder(config: DemoReelConfig) {
+function getNarratedScenesInPlaybackOrder(config: DemoReelVideoConfig) {
   return (config.scenes ?? [])
     .map((scene, index) => ({ scene, index }))
     .filter(({ scene }) => Boolean(scene.narration))
@@ -193,7 +194,7 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
     }
   }
 
-  const configWithAudio: DemoReelConfig =
+  const configWithAudio: DemoReelVideoConfig =
     hasNarration && existsSync(audioPath)
       ? {
           ...resolvedConfig,
@@ -246,9 +247,9 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
 
         // Apply synced steps and scene indices
         if (syncOutput.report.appliedPadMs > 0) {
-          (configWithAudio as DemoReelConfigInput).steps = syncOutput.steps;
+          (configWithAudio as DemoReelVideoConfigInput).steps = syncOutput.steps;
           if (resolvedConfig.scenes) {
-            (configWithAudio as DemoReelConfigInput).scenes = resolvedConfig.scenes.map(
+            (configWithAudio as DemoReelVideoConfigInput).scenes = resolvedConfig.scenes.map(
               (scene, i) => ({
                 ...scene,
                 stepIndex: syncOutput.sceneStepIndices[i],

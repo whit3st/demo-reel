@@ -1,7 +1,7 @@
 import type { Locator, Page } from "playwright";
 import type {
   CursorConfig,
-  DemoReelConfig,
+  DemoReelVideoConfig,
   MotionConfig,
   Step,
   SelectorConfig,
@@ -556,7 +556,7 @@ const runWithConfirm = async (
   page: Page,
   step: Step,
   confirmStep: Extract<Step, { action: "confirm" }>,
-  config: DemoReelConfig,
+  config: DemoReelVideoConfig,
   state: MouseState,
   cursorStart: Point,
   resolvedCursor: CursorConfig & { start: Point },
@@ -697,7 +697,7 @@ export const runStepSimple = async (page: Page, step: Step): Promise<void> => {
 const runStep = async (
   page: Page,
   step: Step,
-  config: DemoReelConfig,
+  config: DemoReelVideoConfig,
   state: MouseState,
   cursorStart: Point,
   resolvedCursor: CursorConfig & { start: Point },
@@ -960,7 +960,7 @@ export interface SceneTimestamp {
   endMs: number;
 }
 
-export function buildSceneBoundaries(scenes: DemoReelConfig["scenes"]): Map<number, number> {
+export function buildSceneBoundaries(scenes: DemoReelVideoConfig["scenes"]): Map<number, number> {
   const boundaries = new Map<number, number>();
   if (!scenes) return boundaries;
   for (let i = 0; i < scenes.length; i++) {
@@ -970,9 +970,9 @@ export function buildSceneBoundaries(scenes: DemoReelConfig["scenes"]): Map<numb
 }
 
 export function buildSceneTimestamps(
-  scenes: DemoReelConfig["scenes"],
+  scenes: DemoReelVideoConfig["scenes"],
   sceneBoundaries: Map<number, number>,
-  steps: DemoReelConfig["steps"],
+  steps: DemoReelVideoConfig["steps"],
   nowProvider: () => number,
   recordingStart: number,
 ): SceneTimestamp[] {
@@ -1011,7 +1011,7 @@ export function buildSceneTimestamps(
   return timestamps;
 }
 
-export const runDemo = async (page: Page, config: DemoReelConfig): Promise<SceneTimestamp[]> => {
+export const runDemo = async (page: Page, config: DemoReelVideoConfig): Promise<SceneTimestamp[]> => {
   const resolvedCursor = await installCursorOverlay(page, config.cursor);
   const mouseState: MouseState = {
     initialized: false,

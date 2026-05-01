@@ -28,6 +28,7 @@ import { runVideoScenario } from "../src/video-handler.js";
 
 function createConfig(overrides: Record<string, unknown> = {}) {
   return {
+    mode: "video",
     video: { resolution: "FHD" },
     cursor: "dot",
     motion: "smooth",

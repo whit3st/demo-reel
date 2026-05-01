@@ -24,6 +24,7 @@ async function writeTsConfig(filePath: string, value: unknown): Promise<void> {
 
 function createMinimalConfig(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
+    mode: "video",
     video: { resolution: "FHD" },
     cursor: "dot",
     motion: "smooth",

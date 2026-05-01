@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   demoReelConfigSchema,
+  demoReelVideoOnlySchema,
   stepSchema,
   selectorSchema,
   authConfigSchema,
@@ -309,6 +310,7 @@ describe("Schema Validation", () => {
   describe("Full Config Schema", () => {
     it("should validate minimal valid config", () => {
       const result = demoReelConfigSchema.safeParse({
+        mode: "video",
         video: { resolution: { width: 1920, height: 1080 } },
         cursor: {
           start: { x: 100, y: 100 },
@@ -348,6 +350,7 @@ describe("Schema Validation", () => {
 
     it("should validate config with resolution preset", () => {
       const result = demoReelConfigSchema.safeParse({
+        mode: "video",
         video: { resolution: "FHD" },
         cursor: {
           start: { x: 100, y: 100 },
@@ -387,6 +390,7 @@ describe("Schema Validation", () => {
 
     it("should validate config with tags", () => {
       const result = demoReelConfigSchema.safeParse({
+        mode: "video",
         video: { resolution: "FHD" },
         cursor: {
           start: { x: 100, y: 100 },
@@ -427,6 +431,7 @@ describe("Schema Validation", () => {
 
     it("should validate config with randomization seed", () => {
       const result = demoReelConfigSchema.safeParse({
+        mode: "video",
         video: { resolution: "FHD" },
         cursor: {
           start: { x: 100, y: 100 },
@@ -474,6 +479,7 @@ describe("Schema Validation", () => {
 
     it("should reject config with empty steps array", () => {
       const result = demoReelConfigSchema.safeParse({
+        mode: "video",
         video: { resolution: { width: 1920, height: 1080 } },
         cursor: {
           start: { x: 100, y: 100 },
@@ -513,6 +519,7 @@ describe("Schema Validation", () => {
 
     it("should validate config with outputFormat mp4", () => {
       const result = demoReelConfigSchema.safeParse({
+        mode: "video",
         video: { resolution: { width: 1920, height: 1080 } },
         cursor: {
           start: { x: 100, y: 100 },
@@ -553,6 +560,7 @@ describe("Schema Validation", () => {
 
     it("should validate config with outputFormat webm", () => {
       const result = demoReelConfigSchema.safeParse({
+        mode: "video",
         video: { resolution: { width: 1920, height: 1080 } },
         cursor: {
           start: { x: 100, y: 100 },
@@ -593,6 +601,7 @@ describe("Schema Validation", () => {
 
     it("should reject config with audio and outputFormat webm", () => {
       const result = demoReelConfigSchema.safeParse({
+        mode: "video",
         video: { resolution: { width: 1920, height: 1080 } },
         cursor: {
           start: { x: 100, y: 100 },
@@ -635,6 +644,7 @@ describe("Schema Validation", () => {
 
   describe("Scene Config Modes", () => {
     const baseConfig = {
+      mode: "video",
       video: { resolution: { width: 1920, height: 1080 } },
       cursor: {
         start: { x: 100, y: 100 },
@@ -800,6 +810,79 @@ describe("Schema Validation", () => {
         const messages = result.error.issues.map((i) => i.message);
         expect(messages.some((m) => m.includes("top-level steps or scenes"))).toBe(true);
       }
+    });
+  });
+
+  describe("Explicit Mode Validation", () => {
+    const minimalVideoConfig = {
+      mode: "video" as const,
+      video: { resolution: "FHD" as const },
+      cursor: "dot" as const,
+      motion: "smooth" as const,
+      typing: "humanlike" as const,
+      timing: "normal" as const,
+      steps: [{ action: "goto" as const, url: "https://example.com" }],
+    };
+
+    const minimalE2EConfig = {
+      mode: "e2e" as const,
+      steps: [{ action: "goto" as const, url: "https://example.com" }],
+      report: {
+        formats: ["json" as const],
+        outputDir: "./artifacts",
+      },
+    };
+
+    it("accepts minimal e2e config", () => {
+      const result = demoReelConfigSchema.safeParse(minimalE2EConfig);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.mode).toBe("e2e");
+      }
+    });
+
+    it("rejects e2e config with video-only fields", () => {
+      const result = demoReelConfigSchema.safeParse({
+        ...minimalE2EConfig,
+        voice: { provider: "piper", voice: "en_US-amy-medium" },
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects video config with e2e-only fields", () => {
+      const result = demoReelConfigSchema.safeParse({
+        ...minimalVideoConfig,
+        report: {
+          formats: ["json"],
+          outputDir: "./artifacts",
+        },
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("demoReelVideoOnlySchema rejects non-video mode", () => {
+      const result = demoReelVideoOnlySchema.safeParse(minimalE2EConfig);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const messages = result.error.issues.map((issue) => issue.message);
+        expect(messages.some((message) => message.includes('only supports mode="video"'))).toBe(
+          true,
+        );
+      }
+    });
+
+    it("video config requires mode field", () => {
+      const result = demoReelConfigSchema.safeParse({
+        video: { resolution: "FHD" },
+        cursor: "dot",
+        motion: "smooth",
+        typing: "humanlike",
+        timing: "normal",
+        steps: [{ action: "goto", url: "https://example.com" }],
+      });
+      expect(result.success).toBe(false);
     });
   });
 });

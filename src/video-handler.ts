@@ -1,7 +1,7 @@
 import { mkdir, unlink, rmdir, writeFile as fsWriteFile, readFile } from "fs/promises";
 import { basename, dirname, join, resolve } from "path";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
-import type { DemoReelConfig, AuthConfig, AuthBehaviorConfig } from "./schemas.js";
+import type { DemoReelVideoConfig, AuthConfig, AuthBehaviorConfig } from "./schemas.js";
 import { runDemo, runSteps, runStepSimple, type SceneTimestamp } from "./runner.js";
 import {
   mergeAudioVideo,
@@ -132,7 +132,7 @@ export async function handleAuth(
 const DEFAULT_TIMEOUT_MS = 5000;
 
 export async function startBrowser(
-  config: DemoReelConfig,
+  config: DemoReelVideoConfig,
   headed: boolean = false,
 ): Promise<VideoResult> {
   const browser = await chromium.launch({ headless: !headed });
@@ -157,7 +157,7 @@ export async function startBrowser(
 }
 
 export async function startRecording(
-  config: DemoReelConfig,
+  config: DemoReelVideoConfig,
   headed: boolean = false,
 ): Promise<VideoResult> {
   const browser = await chromium.launch({ headless: !headed });
@@ -312,7 +312,7 @@ export interface SubtitleCue {
  */
 export function buildSubtitleCues(
   sceneTimestamps: SceneTimestamp[],
-  config: DemoReelConfig,
+  config: DemoReelVideoConfig,
 ): SubtitleCue[] {
   // If we have audio with a timed script, compute subtitle timing from audio offsets
   if (config.audio?.narration && config.scenes) {
@@ -348,7 +348,7 @@ export function buildSubtitleCues(
  */
 export function buildSubtitleCuesWithNarrationPlacements(
   sceneTimestamps: SceneTimestamp[],
-  config: DemoReelConfig,
+  config: DemoReelVideoConfig,
   narrationPlacements: NarrationPlacement[],
 ): SubtitleCue[] {
   if (narrationPlacements.length === 0) {
@@ -437,7 +437,7 @@ export function generateMetadata(
 }
 
 export async function runVideoScenario(
-  config: DemoReelConfig,
+  config: DemoReelVideoConfig,
   outputPath: string,
   configPath: string,
   options: {
@@ -455,8 +455,8 @@ export async function runVideoScenario(
 
   const startTime = Date.now();
 
-  // Run auth + preSteps in a separate browser BEFORE recording starts
-  const hasPreWork = config.auth || (config.preSteps && config.preSteps.length > 0);
+  // Run auth + setup in a separate browser BEFORE recording starts
+  const hasPreWork = config.auth || (config.setup && config.setup.length > 0);
   if (hasPreWork) {
     if (verbose) {
       console.log("Starting browser for setup (no recording)...");
@@ -469,11 +469,11 @@ export async function runVideoScenario(
         await handleAuth(setupBrowser.context, setupBrowser.page, config.auth, configPath, verbose);
       }
 
-      if (config.preSteps && config.preSteps.length > 0) {
+      if (config.setup && config.setup.length > 0) {
         if (verbose) {
-          console.log("Running pre-steps...");
+          console.log("Running setup steps...");
         }
-        await runSteps(setupBrowser.page, config.preSteps, {
+        await runSteps(setupBrowser.page, config.setup, {
           tolerant: true,
           verbose,
           label: "setup",
@@ -584,23 +584,23 @@ export async function runVideoScenario(
 
     console.log(`✓ Video created (${duration}s) → ${finalPath}`);
 
-    // Run post-steps (cleanup) in a fresh browser
-    if (config.postSteps && config.postSteps.length > 0) {
+    // Run cleanup steps in a fresh browser
+    if (config.cleanup && config.cleanup.length > 0) {
       if (verbose) {
-        console.log("Running post-steps...");
+        console.log("Running cleanup steps...");
       }
       const postBrowser = await startBrowser(config, headed);
       try {
         if (config.auth) {
           await handleAuth(postBrowser.context, postBrowser.page, config.auth, configPath, verbose);
         }
-        await runSteps(postBrowser.page, config.postSteps, {
+        await runSteps(postBrowser.page, config.cleanup, {
           tolerant: true,
           verbose,
-          label: "post",
+          label: "cleanup",
         });
         if (verbose) {
-          console.log("✓ Post-steps complete");
+          console.log("✓ Cleanup steps complete");
         }
       } finally {
         await postBrowser.context.close().catch(() => {});
@@ -610,14 +610,14 @@ export async function runVideoScenario(
 
     return finalPath;
   } catch (error) {
-    // Clean up on error — still try to run postSteps for cleanup
+    // Clean up on error - still try to run cleanup steps
     await recording.context.close().catch(() => {});
     await recording.browser.close().catch(() => {});
 
-    if (config.postSteps && config.postSteps.length > 0) {
+    if (config.cleanup && config.cleanup.length > 0) {
       try {
         if (verbose) {
-          console.log("Running post-steps (error cleanup)...");
+          console.log("Running cleanup steps (error cleanup)...");
         }
         const postBrowser = await startBrowser(config, headed);
         try {
@@ -630,17 +630,17 @@ export async function runVideoScenario(
               verbose,
             );
           }
-          await runSteps(postBrowser.page, config.postSteps, {
+          await runSteps(postBrowser.page, config.cleanup, {
             tolerant: true,
             verbose,
-            label: "post",
+            label: "cleanup",
           });
         } finally {
           await postBrowser.context.close().catch(() => {});
           await postBrowser.browser.close().catch(() => {});
         }
       } catch {
-        // Ignore post-step errors during error cleanup
+        // Ignore cleanup step errors during error cleanup
       }
     }
 
