@@ -12,6 +12,14 @@ const checkpointSchema = z.object({
   atStep: z.number().int().min(0).optional(),
   label: z.string().min(1).optional(),
   expect: z.array(checkpointAssertionSchema).min(1),
+}).superRefine((value, ctx) => {
+  if (value.atStep === undefined && !value.label) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Checkpoint requires either atStep or label.",
+      path: ["atStep"],
+    });
+  }
 });
 
 const reportSchema = z.object({

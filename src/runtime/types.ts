@@ -11,7 +11,20 @@ export interface RuntimeArtifacts {
 export interface RuntimeFailure {
   message: string;
   stepIndex?: number;
+  target?: string;
+  expected?: string;
+  actual?: string;
+  context?: string;
   stack?: string;
+  type?: "assertion" | "runtime";
+}
+
+export interface RuntimeAttemptResult {
+  attempt: number;
+  ok: boolean;
+  durationMs: number;
+  artifacts?: RuntimeArtifacts;
+  failure?: RuntimeFailure;
 }
 
 export interface RuntimeResult {
@@ -19,6 +32,11 @@ export interface RuntimeResult {
   durationMs: number;
   artifacts?: RuntimeArtifacts;
   failure?: RuntimeFailure;
+  attempts?: RuntimeAttemptResult[];
+  retryCount?: number;
+  iteration?: number;
+  flaky?: boolean;
+  exitCode?: 0 | 1 | 2;
 }
 
 export interface RuntimeContext {

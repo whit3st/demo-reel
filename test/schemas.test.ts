@@ -884,5 +884,96 @@ describe("Schema Validation", () => {
       });
       expect(result.success).toBe(false);
     });
+
+    it("accepts e2e checkpoint scheduled by step index", () => {
+      const result = demoReelConfigSchema.safeParse({
+        ...minimalE2EConfig,
+        checkpoints: [
+          {
+            atStep: 0,
+            expect: [
+              {
+                type: "expectUrl",
+                url: "https://example.com",
+              },
+            ],
+          },
+        ],
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts e2e checkpoint scheduled by label", () => {
+      const result = demoReelConfigSchema.safeParse({
+        ...minimalE2EConfig,
+        checkpoints: [
+          {
+            label: "setup",
+            expect: [
+              {
+                type: "expectVisible",
+                selector: { strategy: "testId", value: "banner" },
+              },
+            ],
+          },
+        ],
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects e2e checkpoint without schedule", () => {
+      const result = demoReelConfigSchema.safeParse({
+        ...minimalE2EConfig,
+        checkpoints: [
+          {
+            expect: [
+              {
+                type: "expectUrl",
+                url: "https://example.com",
+              },
+            ],
+          },
+        ],
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const messages = result.error.issues.map((issue) => issue.message);
+        expect(messages.some((message) => message.includes("requires either atStep or label"))).toBe(
+          true,
+        );
+      }
+    });
+
+    it("accepts e2e execution orchestration settings", () => {
+      const result = demoReelConfigSchema.safeParse({
+        ...minimalE2EConfig,
+        execution: {
+          retries: 2,
+          repeat: 3,
+          failFast: true,
+          parallel: 4,
+        },
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success && result.data.mode === "e2e") {
+        expect(result.data.execution?.retries).toBe(2);
+        expect(result.data.execution?.repeat).toBe(3);
+        expect(result.data.execution?.failFast).toBe(true);
+        expect(result.data.execution?.parallel).toBe(4);
+      }
+    });
+
+    it("applies defaults for e2e execution orchestration settings", () => {
+      const result = demoReelConfigSchema.safeParse(minimalE2EConfig);
+
+      expect(result.success).toBe(true);
+      if (result.success && result.data.mode === "e2e") {
+        expect(result.data.execution).toBeUndefined();
+      }
+    });
   });
 });

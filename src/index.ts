@@ -378,6 +378,11 @@ export {
   runStepSequence,
   runHooks,
   toRuntimeResult,
+  AssertionFailure,
+  evaluateAssertion,
+  runCheckpointAssertions,
+  selectCheckpointsForStep,
+  selectCheckpointsForLabel,
 } from "./runtime/index.js";
 export type {
   NarrationClipInfo,
@@ -391,7 +396,9 @@ export type {
   VideoRuntimeInput,
   VideoRuntimeOptions,
   E2ERuntimeOptions,
+  E2ESuiteResult,
   CoreRunOptions,
+  AssertionFailureDetails,
   RuntimeContext,
   RuntimeResult,
 } from "./runtime/index.js";
