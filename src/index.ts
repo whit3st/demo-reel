@@ -370,6 +370,15 @@ export {
   buildSceneWindows,
   injectPadding,
 } from "./narration-sync.js";
+export {
+  VideoRuntime,
+  E2ERuntime,
+  createRuntimeContext,
+  closeRuntimeContext,
+  runStepSequence,
+  runHooks,
+  toRuntimeResult,
+} from "./runtime/index.js";
 export type {
   NarrationClipInfo,
   SceneWindow,
@@ -378,3 +387,11 @@ export type {
   SyncInput,
   SyncOutput,
 } from "./narration-sync.js";
+export type {
+  VideoRuntimeInput,
+  VideoRuntimeOptions,
+  E2ERuntimeOptions,
+  CoreRunOptions,
+  RuntimeContext,
+  RuntimeResult,
+} from "./runtime/index.js";
