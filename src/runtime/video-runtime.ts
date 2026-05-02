@@ -30,14 +30,16 @@ export class VideoRuntime {
         throw new Error("Video runtime did not return an output path.");
       }
 
+      const basePath = finalPath.slice(0, finalPath.length - extname(finalPath).length);
+
       return {
         ok: true,
         durationMs: Date.now() - startedAt,
         artifacts: {
           videoPath: finalPath,
-          subtitleSrtPath: `${finalPath}.srt`,
-          subtitleVttPath: `${finalPath}.vtt`,
-          metadataPath: `${finalPath.slice(0, finalPath.length - extname(finalPath).length)}.meta.json`,
+          subtitleSrtPath: `${basePath}.srt`,
+          subtitleVttPath: `${basePath}.vtt`,
+          metadataPath: `${basePath}.meta.json`,
         },
       };
     } catch (error) {

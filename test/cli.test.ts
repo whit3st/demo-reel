@@ -172,6 +172,27 @@ describe("cli", () => {
     expect(result.options.grep).toBe("checkout");
   });
 
+  it("ignores invalid numeric execution flags", async () => {
+    process.argv = [
+      "node",
+      "cli",
+      "run",
+      "e2e",
+      "checkout.demo.json",
+      "--retries",
+      "not-a-number",
+      "--repeat=oops",
+      "--parallel",
+    ];
+
+    const { parseArgs } = await import("../src/cli.js");
+    const result = parseArgs();
+
+    expect(result.options.retries).toBeUndefined();
+    expect(result.options.repeat).toBeUndefined();
+    expect(result.options.parallel).toBeUndefined();
+  });
+
   it("runs validate command for explicit config", async () => {
     process.argv = ["node", "cli", "validate", "checkout.demo.json"];
     vi.mocked(loadScenario).mockResolvedValue("/tmp/checkout.demo.json");
@@ -408,6 +429,16 @@ describe("cli", () => {
     await expect(runCli()).resolves.toBe(0);
     expect(findScenarioFiles).toHaveBeenCalledTimes(1);
     expect(runVideoScenario).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps legacy invocation behavior without explicit run command", async () => {
+    process.argv = ["node", "cli", "onboarding"];
+
+    const { runCli } = await import("../src/cli.js");
+
+    await expect(runCli()).resolves.toBe(0);
+    expect(loadScenario).toHaveBeenCalledWith("onboarding");
+    expect(runVideoScenario).toHaveBeenCalledTimes(1);
   });
 
   it("returns error for --all when no scenarios exist", async () => {

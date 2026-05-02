@@ -59,6 +59,23 @@ describe("RunDefaultCommand", () => {
     );
   });
 
+  it("returns grep-specific error when grep removes all scenarios", async () => {
+    const cmd = new RunDefaultCommand();
+    const ctx = createMockContext({
+      findScenarioFiles: vi.fn().mockResolvedValue(["a.demo.ts", "b.demo.ts"]),
+    });
+
+    const exitCode = await cmd.execute([], createGlobalOptions({ grep: "checkout" }), ctx);
+
+    expect(exitCode).toBe(1);
+    expect(ctx.console.error).toHaveBeenCalledWith(
+      "No *.demo.ts files matching grep pattern: checkout",
+    );
+    expect(ctx.console.error).toHaveBeenCalledWith(
+      'Run "demo-reel init" to create an example scenario',
+    );
+  });
+
   it("runs all scenarios when no tag filter", async () => {
     const cmd = new RunDefaultCommand();
     const ctx = createMockContext();

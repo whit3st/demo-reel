@@ -59,6 +59,13 @@ class JsonReporter implements E2EReporter {
       return;
     }
 
+    if (configs.length !== result.results.length) {
+      console.error(
+        `Skipping json suite report: expected ${configs.length} results, got ${result.results.length}`,
+      );
+      return;
+    }
+
     const payload = {
       context: {
         generatedAt: new Date().toISOString(),
@@ -118,6 +125,13 @@ class JunitReporter implements E2EReporter {
       return;
     }
 
+    if (configs.length !== result.results.length) {
+      console.error(
+        `Skipping junit suite report: expected ${configs.length} results, got ${result.results.length}`,
+      );
+      return;
+    }
+
     await mkdir(outputDir, { recursive: true });
     const failures = result.results.filter((entry) => !entry.ok).length;
     const cases = configs.map((config, index) => this.toTestCase(config.name ?? `scenario-${index + 1}`, result.results[index]));
@@ -150,12 +164,7 @@ class DotReporter implements E2EReporter {
   }
 }
 
-class NoopReporter implements E2EReporter {
-  async writeScenario(): Promise<void> {}
-  async writeSuite(): Promise<void> {}
-}
-
-export function createE2EReporters(formats: Array<"dot" | "json" | "junit" | "html">): E2EReporter[] {
+export function createE2EReporters(formats: Array<"dot" | "json" | "junit">): E2EReporter[] {
   return formats.map((format) => {
     if (format === "json") {
       return new JsonReporter();
@@ -167,6 +176,6 @@ export function createE2EReporters(formats: Array<"dot" | "json" | "junit" | "ht
       return new DotReporter();
     }
 
-    return new NoopReporter();
+    throw new Error(`Unknown reporter format: ${format}`);
   });
 }

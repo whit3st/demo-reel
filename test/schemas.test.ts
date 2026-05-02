@@ -967,7 +967,7 @@ describe("Schema Validation", () => {
       }
     });
 
-    it("applies defaults for e2e execution orchestration settings", () => {
+    it("e2e execution is optional and undefined when not provided", () => {
       const result = demoReelConfigSchema.safeParse(minimalE2EConfig);
 
       expect(result.success).toBe(true);

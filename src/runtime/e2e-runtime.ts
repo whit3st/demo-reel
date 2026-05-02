@@ -266,7 +266,9 @@ export class E2ERuntime {
       exitCode,
     };
 
-    const reporters = createE2EReporters(configs[0]?.report.formats ?? []);
+    const reporters = createE2EReporters([
+      ...new Set(configs.flatMap((config) => config.report.formats ?? [])),
+    ]);
     await Promise.all(reporters.map((reporter) => reporter.writeSuite(configs, suiteResult)));
 
     return suiteResult;

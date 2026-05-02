@@ -14,15 +14,20 @@ export interface CoreRunOptions {
 
 export async function createRuntimeContext(options: CoreRunOptions = {}): Promise<RuntimeContext> {
   const browser = await chromium.launch({ headless: !options.headed });
-  const context = await browser.newContext();
-  if (options.timeoutMs && options.timeoutMs > 0) {
-    context.setDefaultTimeout(options.timeoutMs);
+  try {
+    const context = await browser.newContext();
+    if (options.timeoutMs && options.timeoutMs > 0) {
+      context.setDefaultTimeout(options.timeoutMs);
+    }
+    const page = await context.newPage();
+    if (options.baseUrl) {
+      await page.goto(options.baseUrl);
+    }
+    return { browser, context, page };
+  } catch (error) {
+    await browser.close().catch(() => {});
+    throw error;
   }
-  const page = await context.newPage();
-  if (options.baseUrl) {
-    await page.goto(options.baseUrl);
-  }
-  return { browser, context, page };
 }
 
 export async function closeRuntimeContext(runtime: RuntimeContext): Promise<void> {

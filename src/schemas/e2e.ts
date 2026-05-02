@@ -23,7 +23,7 @@ const checkpointSchema = z.object({
 });
 
 const reportSchema = z.object({
-  formats: z.array(z.enum(["dot", "json", "junit", "html"])) .min(1),
+  formats: z.array(z.enum(["dot", "json", "junit"])).min(1),
   outputDir: z.string().min(1),
   includeStepLogs: z.boolean().optional().default(true),
 });

@@ -95,6 +95,19 @@ function createCommandContext(): CommandContext {
   };
 }
 
+function parseIntegerArg(value: string | undefined): number | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed)) {
+    return undefined;
+  }
+
+  return parsed;
+}
+
 let currentBrowser: { browser: any; context: any } | null = null;
 let signalHandlersRegistered = false;
 
@@ -259,17 +272,17 @@ export function parseArgs(): { scenario?: string; options: CliOptions } {
     } else if (arg.startsWith("--grep=")) {
       options.grep = arg.slice("--grep=".length);
     } else if (arg === "--retries") {
-      options.retries = Number.parseInt(args[++i], 10);
+      options.retries = parseIntegerArg(args[++i]);
     } else if (arg.startsWith("--retries=")) {
-      options.retries = Number.parseInt(arg.slice("--retries=".length), 10);
+      options.retries = parseIntegerArg(arg.slice("--retries=".length));
     } else if (arg === "--parallel") {
-      options.parallel = Number.parseInt(args[++i], 10);
+      options.parallel = parseIntegerArg(args[++i]);
     } else if (arg.startsWith("--parallel=")) {
-      options.parallel = Number.parseInt(arg.slice("--parallel=".length), 10);
+      options.parallel = parseIntegerArg(arg.slice("--parallel=".length));
     } else if (arg === "--repeat") {
-      options.repeat = Number.parseInt(args[++i], 10);
+      options.repeat = parseIntegerArg(args[++i]);
     } else if (arg.startsWith("--repeat=")) {
-      options.repeat = Number.parseInt(arg.slice("--repeat=".length), 10);
+      options.repeat = parseIntegerArg(arg.slice("--repeat=".length));
     } else if (arg === "--fail-fast") {
       options.failFast = true;
     } else if (arg === "--url") {
@@ -519,7 +532,7 @@ export async function runCli(): Promise<number> {
       return await cmd.execute(scenario ? [scenario] : [], toGlobalOptions(options), scriptCtx);
     }
 
-    if (options.command !== "run") {
+    if (options.command !== undefined && options.command !== "run") {
       console.error("Usage: demo-reel run <video|e2e> [scenario|path] [options]");
       return 1;
     }

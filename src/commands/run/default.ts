@@ -34,7 +34,11 @@ export class RunDefaultCommand<
       : files;
 
     if (filteredFiles.length === 0) {
-      ctx.console.error("No *.demo.ts files found");
+      if (options.grep && files.length > 0) {
+        ctx.console.error(`No *.demo.ts files matching grep pattern: ${options.grep}`);
+      } else {
+        ctx.console.error("No *.demo.ts files found");
+      }
       ctx.console.error('Run "demo-reel init" to create an example scenario');
       return 1;
     }

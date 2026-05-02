@@ -34,7 +34,11 @@ export class RunAllCommand<
       : files;
 
     if (filteredFiles.length === 0) {
-      ctx.console.error("No *.demo.ts files found");
+      if (options.grep && files.length > 0) {
+        ctx.console.error(`No *.demo.ts files matching grep pattern: ${options.grep}`);
+      } else {
+        ctx.console.error("No *.demo.ts files found");
+      }
       return 1;
     }
 
