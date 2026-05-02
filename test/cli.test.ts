@@ -18,6 +18,13 @@ vi.mock("../src/index.js", () => ({
 vi.mock("fs/promises", () => ({
   writeFile: vi.fn(),
   access: vi.fn(),
+  readFile: vi.fn(),
+}));
+
+vi.mock("../src/runtime/e2e-runtime.js", () => ({
+  E2ERuntime: class {
+    run = vi.fn().mockResolvedValue({ ok: true, exitCode: 0 });
+  },
 }));
 
 vi.mock("../src/script/cli.js", () => ({
@@ -29,7 +36,7 @@ vi.mock("../src/script/cli.js", () => ({
   scriptFullPipeline: vi.fn(),
 }));
 
-import { writeFile, access } from "fs/promises";
+import { writeFile, access, readFile } from "fs/promises";
 import { loadConfig, loadScenario, findScenarioFiles } from "../src/config-loader.js";
 import { runVideoScenario, setOnBrowserCreated } from "../src/video-handler.js";
 import { generate } from "../src/index.js";
@@ -84,8 +91,10 @@ describe("cli", () => {
     vi.mocked(loadConfig).mockResolvedValue(createLoadedConfig() as never);
     vi.mocked(loadScenario).mockResolvedValue("/tmp/example.demo.ts");
     vi.mocked(findScenarioFiles).mockResolvedValue(["/tmp/one.demo.ts", "/tmp/two.demo.ts"]);
+    vi.mocked(runVideoScenario).mockResolvedValue("/tmp/output/demo.webm" as never);
     vi.mocked(scriptValidate).mockResolvedValue(true);
     vi.mocked(access).mockResolvedValue(undefined);
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ mode: "e2e", steps: [{ action: "goto", url: "https://example.com" }], report: { formats: ["json"], outputDir: "./artifacts" } }));
     process.argv = [...ORIGINAL_ARGV];
   });
 
@@ -132,6 +141,58 @@ describe("cli", () => {
     expect(result.options.dryRun).toBe(true);
     expect(result.options.scriptUrl).toBe("https://app.example.com");
     expect(result.options.noCache).toBe(true);
+  });
+
+  it("parses explicit run mode and execution flags", async () => {
+    process.argv = [
+      "node",
+      "cli",
+      "run",
+      "e2e",
+      "checkout.demo.json",
+      "--retries",
+      "2",
+      "--repeat=3",
+      "--parallel",
+      "4",
+      "--fail-fast",
+      "--grep",
+      "checkout",
+    ];
+
+    const { parseArgs } = await import("../src/cli.js");
+    const result = parseArgs();
+
+    expect(result.options.command).toBe("run");
+    expect(result.options.mode).toBe("e2e");
+    expect(result.options.retries).toBe(2);
+    expect(result.options.repeat).toBe(3);
+    expect(result.options.parallel).toBe(4);
+    expect(result.options.failFast).toBe(true);
+    expect(result.options.grep).toBe("checkout");
+  });
+
+  it("runs validate command for explicit config", async () => {
+    process.argv = ["node", "cli", "validate", "checkout.demo.json"];
+    vi.mocked(loadScenario).mockResolvedValue("/tmp/checkout.demo.json");
+
+    const { runCli } = await import("../src/cli.js");
+
+    await expect(runCli()).resolves.toBe(0);
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining("Config is valid"));
+  });
+
+  it("runs list command with grep filter", async () => {
+    process.argv = ["node", "cli", "list", "--grep", "two"];
+    vi.mocked(findScenarioFiles).mockResolvedValue([
+      "/tmp/one.demo.ts",
+      "/tmp/two.demo.ts",
+    ]);
+
+    const { runCli } = await import("../src/cli.js");
+
+    await expect(runCli()).resolves.toBe(0);
+    expect(console.log).toHaveBeenCalledWith("/tmp/two.demo.ts");
   });
 
   it("ignores invalid --tag values", async () => {
@@ -324,7 +385,7 @@ describe("cli", () => {
     vi.mocked(loadConfig)
       .mockResolvedValueOnce(createLoadedConfig(["marketing"]) as never)
       .mockResolvedValueOnce(createLoadedConfig(["sales"]) as never);
-    process.argv = ["node", "cli", "--all", "--tag", "sales", "--verbose"];
+    process.argv = ["node", "cli", "run", "video", "--all", "--tag", "sales", "--verbose"];
 
     const { runCli } = await import("../src/cli.js");
 
@@ -334,13 +395,13 @@ describe("cli", () => {
       expect.objectContaining({ tags: ["sales"] }),
       "/tmp/output/demo.webm",
       "/tmp/example.demo.ts",
-      expect.objectContaining({ verbose: true, tags: ["sales"] }),
+      expect.objectContaining({ verbose: true, dryRun: false }),
     );
     expect(console.log).toHaveBeenCalledWith("  ↳ Skipped (tags)");
   });
 
-  it("runs default no-arg flow across all scenarios", async () => {
-    process.argv = ["node", "cli"];
+  it("runs explicit video all flow across all scenarios", async () => {
+    process.argv = ["node", "cli", "run", "video", "--all"];
 
     const { runCli } = await import("../src/cli.js");
 
@@ -351,7 +412,7 @@ describe("cli", () => {
 
   it("returns error for --all when no scenarios exist", async () => {
     vi.mocked(findScenarioFiles).mockResolvedValue([]);
-    process.argv = ["node", "cli", "--all"];
+    process.argv = ["node", "cli", "run", "video", "--all"];
 
     const { runCli } = await import("../src/cli.js");
 
@@ -360,7 +421,7 @@ describe("cli", () => {
   });
 
   it("accepts a direct scenario file path when it exists", async () => {
-    process.argv = ["node", "cli", "./custom/demo.demo.ts", "--output-dir", "./videos"];
+    process.argv = ["node", "cli", "run", "video", "./custom/demo.demo.ts", "--output-dir", "./videos"];
 
     const { runCli } = await import("../src/cli.js");
 
@@ -375,7 +436,7 @@ describe("cli", () => {
 
   it("fails when the selected scenario does not match the requested tags", async () => {
     vi.mocked(loadConfig).mockResolvedValue(createLoadedConfig(["marketing"]) as never);
-    process.argv = ["node", "cli", "demo", "--tag", "sales"];
+    process.argv = ["node", "cli", "run", "video", "demo", "--tag", "sales"];
 
     const { runCli } = await import("../src/cli.js");
 
@@ -386,7 +447,7 @@ describe("cli", () => {
   it("falls back to scenario lookup when direct path is missing", async () => {
     vi.mocked(access).mockRejectedValueOnce(new Error("missing"));
     vi.mocked(loadScenario).mockResolvedValueOnce(null);
-    process.argv = ["node", "cli", "missing.demo.ts"];
+    process.argv = ["node", "cli", "run", "video", "missing.demo.ts"];
 
     const { runCli } = await import("../src/cli.js");
 
@@ -397,7 +458,7 @@ describe("cli", () => {
   it("formats thrown errors differently based on verbose mode", async () => {
     const error = new Error("boom");
     vi.mocked(findScenarioFiles).mockRejectedValue(error);
-    process.argv = ["node", "cli", "--verbose"];
+    process.argv = ["node", "cli", "run", "video", "--all", "--verbose"];
 
     const { runCli } = await import("../src/cli.js");
 
@@ -407,7 +468,7 @@ describe("cli", () => {
     vi.clearAllMocks();
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.mocked(findScenarioFiles).mockRejectedValue(new Error("boom"));
-    process.argv = ["node", "cli"];
+    process.argv = ["node", "cli", "run", "video", "--all"];
 
     const cli = await import("../src/cli.js");
     await expect(cli.runCli()).resolves.toBe(1);
@@ -415,7 +476,7 @@ describe("cli", () => {
   });
 
   it("registers browser cleanup through the video handler hook", async () => {
-    process.argv = ["node", "cli", "demo"];
+    process.argv = ["node", "cli", "run", "video", "demo"];
 
     const { runCli } = await import("../src/cli.js");
 
@@ -424,7 +485,7 @@ describe("cli", () => {
   });
 
   it("invokes browser-created callback to register cleanup target", async () => {
-    process.argv = ["node", "cli", "demo"];
+    process.argv = ["node", "cli", "run", "video", "demo"];
 
     const { runCli } = await import("../src/cli.js");
 
@@ -440,7 +501,7 @@ describe("cli", () => {
 
   it("executes registered SIGINT cleanup handler", async () => {
     vi.resetModules();
-    process.argv = ["node", "cli", "demo"];
+    process.argv = ["node", "cli", "run", "video", "demo"];
 
     let sigintHandler: (() => void) | undefined;
     vi.spyOn(process, "once").mockImplementation(((event: string, handler: () => void) => {
@@ -484,7 +545,7 @@ describe("cli", () => {
         audio: undefined,
       },
     } as never);
-    process.argv = ["node", "cli", "demo"];
+    process.argv = ["node", "cli", "run", "video", "demo"];
 
     const { runCli } = await import("../src/cli.js");
 

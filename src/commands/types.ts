@@ -6,6 +6,7 @@ export interface GlobalOptions {
   headed?: boolean;
   outputDir?: string;
   tags?: string[];
+  grep?: string;
   // Script-specific options
   scriptUrl?: string;
   scriptOutput?: string;

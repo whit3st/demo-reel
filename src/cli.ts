@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 import { loadConfig, loadScenario, findScenarioFiles } from "./config-loader.js";
-import { runVideoScenario, setOnBrowserCreated } from "./video-handler.js";
+import { setOnBrowserCreated } from "./video-handler.js";
 import { generate } from "./index.js";
-import { access, writeFile } from "fs/promises";
+import { E2ERuntime } from "./runtime/e2e-runtime.js";
+import { VideoRuntime } from "./runtime/video-runtime.js";
+import { access, readFile, writeFile } from "fs/promises";
 import { resolve as resolvePath } from "path";
 import { pathToFileURL } from "url";
 import { chromium } from "playwright";
 import type { DemoReelVideoConfig } from "./schemas.js";
+import { demoReelConfigSchema, demoReelConfigInputSchema } from "./schemas.js";
 import {
   InitCommand,
   ScriptRouterCommand,
@@ -25,9 +28,16 @@ import {
 } from "./commands/index.js";
 
 interface CliOptions {
+  command?: "run" | "validate" | "list";
+  mode?: "video" | "e2e";
   verbose: boolean;
   dryRun: boolean;
   all: boolean;
+  grep?: string;
+  retries?: number;
+  parallel?: number;
+  failFast?: boolean;
+  repeat?: number;
   help?: boolean;
   init?: boolean;
   script?: boolean;
@@ -56,6 +66,7 @@ function toGlobalOptions(options: CliOptions): GlobalOptions {
     headed: options.headed,
     outputDir: options.outputDir,
     tags: options.tags,
+    grep: options.grep,
     scriptUrl: options.scriptUrl,
     scriptOutput: options.scriptOutput,
     scriptVoice: options.scriptVoice,
@@ -163,7 +174,38 @@ async function runScenario(
     return;
   }
 
-  await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
+  const runtime = new VideoRuntime();
+  const result = await runtime.run(
+    {
+      config: loaded.config,
+      outputPath: loaded.outputPath,
+      configPath: loaded.configPath,
+    },
+    {
+      verbose: options.verbose,
+      dryRun: options.dryRun,
+      headed: options.headed,
+    },
+  );
+
+  if (!result.ok) {
+    throw new Error(result.failure?.message ?? "Video runtime failed");
+  }
+}
+
+async function loadAnyConfig(configPath: string): Promise<unknown> {
+  const ext = configPath.split(".").pop();
+
+  if (ext === "ts") {
+    const module = await import(pathToFileURL(resolvePath(configPath)).href);
+    return module.default || module;
+  }
+
+  if (ext === "json") {
+    return JSON.parse(await readFile(configPath, "utf-8"));
+  }
+
+  throw new Error(`Unsupported config file extension: .${ext ?? "unknown"}`);
 }
 
 export function parseArgs(): { scenario?: string; options: CliOptions } {
@@ -178,7 +220,27 @@ export function parseArgs(): { scenario?: string; options: CliOptions } {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
-    if (arg === "--verbose" || arg === "-v") {
+    if (i === 0 && arg === "run") {
+      options.command = "run";
+    } else if (i === 0 && arg === "validate") {
+      options.command = "validate";
+    } else if (i === 0 && arg === "list") {
+      options.command = "list";
+    } else if (arg === "video" && options.command === "run") {
+      options.mode = "video";
+    } else if (arg === "e2e" && options.command === "run") {
+      options.mode = "e2e";
+    } else if (arg === "--mode") {
+      const mode = args[++i];
+      if (mode === "video" || mode === "e2e") {
+        options.mode = mode;
+      }
+    } else if (arg.startsWith("--mode=")) {
+      const mode = arg.slice("--mode=".length);
+      if (mode === "video" || mode === "e2e") {
+        options.mode = mode;
+      }
+    } else if (arg === "--verbose" || arg === "-v") {
       options.verbose = true;
     } else if (arg === "--dry-run") {
       options.dryRun = true;
@@ -192,6 +254,24 @@ export function parseArgs(): { scenario?: string; options: CliOptions } {
       options.tags = addTags(options.tags, args[++i]);
     } else if (arg.startsWith("--tag=")) {
       options.tags = addTags(options.tags, arg.slice("--tag=".length));
+    } else if (arg === "--grep") {
+      options.grep = args[++i];
+    } else if (arg.startsWith("--grep=")) {
+      options.grep = arg.slice("--grep=".length);
+    } else if (arg === "--retries") {
+      options.retries = Number.parseInt(args[++i], 10);
+    } else if (arg.startsWith("--retries=")) {
+      options.retries = Number.parseInt(arg.slice("--retries=".length), 10);
+    } else if (arg === "--parallel") {
+      options.parallel = Number.parseInt(args[++i], 10);
+    } else if (arg.startsWith("--parallel=")) {
+      options.parallel = Number.parseInt(arg.slice("--parallel=".length), 10);
+    } else if (arg === "--repeat") {
+      options.repeat = Number.parseInt(args[++i], 10);
+    } else if (arg.startsWith("--repeat=")) {
+      options.repeat = Number.parseInt(arg.slice("--repeat=".length), 10);
+    } else if (arg === "--fail-fast") {
+      options.failFast = true;
     } else if (arg === "--url") {
       options.scriptUrl = args[++i];
     } else if (arg.startsWith("--url=")) {
@@ -245,8 +325,14 @@ demo-reel - Create demo videos from web apps
 
 Usage:
   demo-reel [command] [options]
+  demo-reel run <video|e2e> [scenario|path] [options]
+  demo-reel validate <scenario|path>
+  demo-reel list [options]
 
 Commands:
+  run <video|e2e>              Run in explicit mode
+  validate <file>              Validate config and mode constraints
+  list                         List discovered scenarios
   init                         Create example .demo.ts scenario file
   track --name <name>          Record browser interactions to a track file
   script <subcommand>          AI-powered script generation
@@ -271,6 +357,11 @@ Options:
   --dry-run                    Validate config without recording
   --headed                     Show browser window (non-headless)
   --tag <tag>[,<tag>]          Run only scenarios with matching tags
+  --grep <text>                Run/list scenarios whose path includes text
+  --retries <n>                E2E retries override
+  --repeat <n>                 E2E repeat override
+  --parallel <n>               E2E parallel override
+  --fail-fast                  E2E fail fast on first failure
   --verbose, -v                Show detailed output
   --help, -h                   Show this help message
 
@@ -306,6 +397,89 @@ export async function runCli(): Promise<number> {
   });
 
   try {
+    if (options.command === "validate") {
+      if (!scenario) {
+        console.error("Usage: demo-reel validate <scenario|path>");
+        return 1;
+      }
+
+      const scenarioPath = await loadScenario(scenario);
+      const configPath = scenarioPath ?? resolvePath(scenario);
+      const raw = await loadAnyConfig(configPath);
+      demoReelConfigInputSchema.parse(raw);
+      demoReelConfigSchema.parse(raw);
+      console.log(`✓ Config is valid: ${configPath}`);
+      return 0;
+    }
+
+    if (options.command === "list") {
+      const files = await findScenarioFiles();
+      const filtered = options.grep
+        ? files.filter((file) => file.toLowerCase().includes(options.grep!.toLowerCase()))
+        : files;
+      for (const file of filtered) {
+        console.log(file);
+      }
+      return 0;
+    }
+
+    if (options.command === "run") {
+      if (!options.mode) {
+        console.error("Usage: demo-reel run <video|e2e> [scenario|path] [options]");
+        return 1;
+      }
+
+      if (options.mode === "e2e") {
+        if (!scenario) {
+          console.error("Usage: demo-reel run e2e <scenario|path>");
+          return 1;
+        }
+
+        const scenarioPath = await loadScenario(scenario);
+        const configPath = scenarioPath ?? resolvePath(scenario);
+        const raw = await loadAnyConfig(configPath);
+        const parsed = demoReelConfigSchema.parse(raw);
+        if (parsed.mode !== "e2e") {
+          console.error("Error: config mode is not e2e");
+          return 1;
+        }
+
+        const execution = parsed.execution
+          ? { ...parsed.execution }
+          : { retries: 0, repeat: 1, parallel: 1, failFast: false };
+
+        if (options.retries !== undefined) {
+          execution.retries = options.retries;
+        }
+        if (options.repeat !== undefined) {
+          execution.repeat = options.repeat;
+        }
+        if (options.parallel !== undefined) {
+          execution.parallel = options.parallel;
+        }
+        if (options.failFast !== undefined) {
+          execution.failFast = options.failFast;
+        }
+
+        const merged = {
+          ...parsed,
+          execution,
+        };
+
+        const runtime = new E2ERuntime();
+        const result = await runtime.run(merged, {
+          verbose: options.verbose,
+          headed: options.headed,
+        });
+        return result.exitCode ?? (result.ok ? 0 : 2);
+      }
+
+      if (options.mode === "video" && !scenario && !options.all) {
+        console.error("Usage: demo-reel run video <scenario|path> [options]");
+        return 1;
+      }
+    }
+
     if (options.help) {
       showHelp();
       return 0;
@@ -343,6 +517,11 @@ export async function runCli(): Promise<number> {
       const cmd = new ScriptRouterCommand();
       const scriptCtx = createDefaultScriptRouterContext(createCommandContext());
       return await cmd.execute(scenario ? [scenario] : [], toGlobalOptions(options), scriptCtx);
+    }
+
+    if (options.command !== "run") {
+      console.error("Usage: demo-reel run <video|e2e> [scenario|path] [options]");
+      return 1;
     }
 
     if (options.all) {

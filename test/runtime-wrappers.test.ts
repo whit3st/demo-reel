@@ -91,6 +91,9 @@ describe("runtime wrappers", () => {
 
     expect(result.ok).toBe(true);
     expect(result.artifacts?.videoPath).toBe("/tmp/out.mp4");
+    expect(result.artifacts?.subtitleSrtPath).toBe("/tmp/out.mp4.srt");
+    expect(result.artifacts?.subtitleVttPath).toBe("/tmp/out.mp4.vtt");
+    expect(result.artifacts?.metadataPath).toBe("/tmp/out.meta.json");
   });
 
   it("E2ERuntime runs setup, steps, and cleanup", async () => {

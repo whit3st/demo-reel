@@ -29,8 +29,11 @@ export class RunAllCommand<
     ctx: RunAllCommandContext<TLoaded>,
   ): Promise<number> {
     const files = await ctx.findScenarioFiles();
+    const filteredFiles = options.grep
+      ? files.filter((file) => file.toLowerCase().includes(options.grep!.toLowerCase()))
+      : files;
 
-    if (files.length === 0) {
+    if (filteredFiles.length === 0) {
       ctx.console.error("No *.demo.ts files found");
       return 1;
     }
@@ -46,14 +49,14 @@ export class RunAllCommand<
       return tags.some((tag) => tagFilter.has(tag));
     };
 
-    ctx.console.log(`Found ${files.length} scenario(s)`);
+    ctx.console.log(`Found ${filteredFiles.length} scenario(s)`);
     if (tagFilter) {
       ctx.console.log(`Filtering by tags: ${options.tags?.join(", ")}`);
     }
 
     let matchedCount = 0;
 
-    for (const file of files) {
+    for (const file of filteredFiles) {
       ctx.console.log(`\n▶ ${file}`);
       const loaded = await ctx.loadConfig(file, options.outputDir);
       if (!matchesTags(loaded.config.tags)) {
