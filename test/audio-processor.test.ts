@@ -92,6 +92,7 @@ describe("buildFfmpegArgs", () => {
 
     const fcIdx = args.indexOf("-filter_complex");
     expect(args[fcIdx + 1]).toContain("amix=inputs=2");
+    expect(args[fcIdx + 1]).toContain("normalize=0");
   });
 
   it("handles narration placements", () => {
@@ -106,6 +107,8 @@ describe("buildFfmpegArgs", () => {
     expect(args).toContain("/clips/0.mp3");
     expect(args).toContain("/clips/1.mp3");
     expect(args).toContain("-filter_complex");
+    const fcIdx = args.indexOf("-filter_complex");
+    expect(args[fcIdx + 1]).toContain("normalize=0");
   });
 
   it("handles single narration placement", () => {
@@ -130,6 +133,7 @@ describe("buildFfmpegArgs", () => {
 
     const fcIdx = args.indexOf("-filter_complex");
     expect(args[fcIdx + 1]).toContain("amix=inputs=2");
+    expect(args[fcIdx + 1]).toContain("normalize=0");
   });
 
   it("maps video and audio correctly with placements", () => {

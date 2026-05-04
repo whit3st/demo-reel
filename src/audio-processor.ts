@@ -125,12 +125,12 @@ export function buildFfmpegArgs(
     const narrationMix =
       mixAudio.narrationPlacements.length === 1
         ? `${narrationInputs}anull[narr]`
-        : `${narrationInputs}amix=inputs=${mixAudio.narrationPlacements.length}:duration=longest:dropout_transition=0[narr]`;
+        : `${narrationInputs}amix=inputs=${mixAudio.narrationPlacements.length}:duration=longest:dropout_transition=0:normalize=0[narr]`;
 
     if (audio.background) {
       const backgroundInputIndex = mixAudio.narrationPlacements.length + 1;
       const bgVolume = audio.backgroundVolume ?? 0.3;
-      filterComplex = `${narrationFilters.join(";")};${narrationMix};[${backgroundInputIndex}:a]volume=${bgVolume}[bg];[narr][bg]amix=inputs=2:duration=longest:dropout_transition=0[out]`;
+      filterComplex = `${narrationFilters.join(";")};${narrationMix};[${backgroundInputIndex}:a]volume=${bgVolume}[bg];[narr][bg]amix=inputs=2:duration=longest:dropout_transition=0:normalize=0[out]`;
       args.push("-filter_complex", filterComplex, "-map", "0:v", "-map", "[out]");
     } else {
       filterComplex = `${narrationFilters.join(";")};${narrationMix}`;
@@ -174,9 +174,9 @@ export function buildFfmpegArgs(
     if (narrationDelay > 0) {
       // Delay the narration
       const delayMs = narrationDelay;
-      filterComplex = `[1:a]adelay=${delayMs}|${delayMs}[delayed];[delayed]volume=1[narr];[2:a]volume=${bgVolume}[bg];[narr][bg]amix=inputs=2:duration=first:dropout_transition=0[out]`;
+      filterComplex = `[1:a]adelay=${delayMs}|${delayMs}[delayed];[delayed]volume=1[narr];[2:a]volume=${bgVolume}[bg];[narr][bg]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[out]`;
     } else {
-      filterComplex = `[1:a]volume=1[narr];[2:a]volume=${bgVolume}[bg];[narr][bg]amix=inputs=2:duration=first:dropout_transition=0[out]`;
+      filterComplex = `[1:a]volume=1[narr];[2:a]volume=${bgVolume}[bg];[narr][bg]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[out]`;
     }
 
     args.push(

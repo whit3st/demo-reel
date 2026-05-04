@@ -1,23 +1,23 @@
 import { defineConfig } from "demo-reel";
 
 /**
- * Dictionary Search Demo
+ * Woordenboek Zoekdemo (Nederlands)
  *
- * A simple 5-scene demo that searches Wikipedia directly using stable selectors.
+ * Een eenvoudige demo met 5 scenes die rechtstreeks op Wikipedia zoekt met stabiele selectors.
  *
  * Run with:
- *   pnpm demo-reel demos/dictionary-search --verbose
+ *   pnpm demo-reel demos/dictionary-search-nl --verbose
  *
  * Requirements:
- *   - Docker (for recording and voice generation)
- *   - No API keys needed (uses Piper, a free local TTS engine inside Docker)
+ *   - Docker (voor opnemen en voice generation)
+ *   - Geen API-keys nodig (Piper draait lokaal in Docker)
  */
 export default defineConfig({
   video: {
     resolution: "FHD",
   },
 
-  name: "dictionary-search",
+  name: "dictionary-search-nl",
   outputDir: "./output",
 
   cursor: "dot",
@@ -28,20 +28,20 @@ export default defineConfig({
 
   voice: {
     provider: "piper",
-    voice: "en_US-amy-medium",
+    voice: "nl_NL-pim-medium",
     speed: 1.0,
   },
 
   scenes: [
     {
-      narration: "Let's open Wikipedia and search for a word definition.",
+      narration: "Laten we Wikipedia openen en een woordbetekenis opzoeken.",
       steps: [
-        { action: "goto", url: "https://en.wikipedia.org/wiki/Main_Page" },
+        { action: "goto", url: "https://nl.wikipedia.org/wiki/Hoofdpagina" },
         { action: "wait", ms: 2000 },
       ],
     },
     {
-      narration: "Typing the search query in Wikipedia.",
+      narration: "We typen nu de zoekopdracht in Wikipedia.",
       steps: [
         {
           action: "click",
@@ -51,13 +51,13 @@ export default defineConfig({
         {
           action: "type",
           selector: { strategy: "custom", value: "input[type='search']" },
-          text: "serendipity",
+          text: "serendipiteit",
           delayAfterMs: 800,
         },
       ],
     },
     {
-      narration: "Pressing Enter to search.",
+      narration: "We drukken op Enter om te zoeken.",
       steps: [
         {
           action: "press",
@@ -68,13 +68,13 @@ export default defineConfig({
       ],
     },
     {
-      narration: "Here are the search results page.",
+      narration: "Hier zien we de zoekresultatenpagina.",
       steps: [{ action: "wait", ms: 2000 }],
     },
     {
-      narration: "Now we open the article page for the final definition view.",
+      narration: "Nu openen we de artikelpagina voor de definitieve betekenis.",
       steps: [
-        { action: "goto", url: "https://en.wikipedia.org/wiki/Serendipity" },
+        { action: "goto", url: "https://nl.wikipedia.org/wiki/Serendipiteit" },
         { action: "wait", ms: 4000 },
       ],
     },

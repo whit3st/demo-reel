@@ -142,7 +142,7 @@ Key points:
 - `setup` = steps before recording (off-screen), `cleanup` = steps after recording
 - `voice` config inline — voiceover is auto-generated during recording
 - `voice` values are provider-specific:
-- `piper`: `nl_NL-mls-medium`, `en_US-amy-medium`
+- `piper`: `nl_NL-mls-medium`, `nl_NL-pim-medium`, `en_US-amy-medium`
 - `openai`: `alloy`, `echo`, `fable`, `onyx`, `nova`, `shimmer`
 - `elevenlabs`: `21m00Tcm4TlvDq8ikWAM`, `5zhopMftSdRGaPYVcwKK`
 - for a custom Piper model, use `voicePath` instead of `voice`

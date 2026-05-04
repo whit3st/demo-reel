@@ -27,6 +27,8 @@ ARG PIPER_VERSION=2023.11.14-2
 ARG PIPER_TARBALL_SHA256=a50cb45f355b7af1f6d758c1b360717877ba0a398cc8cbe6d2a7a3a26e225992
 ARG PIPER_NL_MODEL_SHA256=88312e0fbf505b87caf2373d94c1384892e86b1bf2ee482cf65dc8ba179cc7d3
 ARG PIPER_NL_MODEL_JSON_SHA256=6ddb215d38f1392ab935ad45441b82ada1eeae0452a2d6849ed71ea4f2e0aa63
+ARG PIPER_NL_PIM_MODEL_SHA256=403e58c3675c394f505c2428117bf34cc56e9542dcf6eadbdd3a84706c12e048
+ARG PIPER_NL_PIM_MODEL_JSON_SHA256=08b58456ca00cf77123826b1712758f99d5fd19ddfb7ec7da8e1a715b047f642
 ARG PIPER_EN_MODEL_SHA256=b3a6e47b57b8c7fbe6a0ce2518161a50f59a9cdd8a50835c02cb02bdd6206c18
 ARG PIPER_EN_MODEL_JSON_SHA256=95a23eb4d42909d38df73bb9ac7f45f597dbfcde2d1bf9526fdeaf5466977d77
 
@@ -45,6 +47,10 @@ RUN set -eux; \
     echo "${PIPER_NL_MODEL_SHA256}  /piper-voices/nl_NL-mls-medium.onnx" | sha256sum -c -; \
     curl -fsSL "https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_NL/mls/medium/nl_NL-mls-medium.onnx.json" -o /piper-voices/nl_NL-mls-medium.onnx.json; \
     echo "${PIPER_NL_MODEL_JSON_SHA256}  /piper-voices/nl_NL-mls-medium.onnx.json" | sha256sum -c -; \
+    curl -fsSL "https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_NL/pim/medium/nl_NL-pim-medium.onnx" -o /piper-voices/nl_NL-pim-medium.onnx; \
+    echo "${PIPER_NL_PIM_MODEL_SHA256}  /piper-voices/nl_NL-pim-medium.onnx" | sha256sum -c -; \
+    curl -fsSL "https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_NL/pim/medium/nl_NL-pim-medium.onnx.json" -o /piper-voices/nl_NL-pim-medium.onnx.json; \
+    echo "${PIPER_NL_PIM_MODEL_JSON_SHA256}  /piper-voices/nl_NL-pim-medium.onnx.json" | sha256sum -c -; \
     curl -fsSL "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx" -o /piper-voices/en_US-amy-medium.onnx; \
     echo "${PIPER_EN_MODEL_SHA256}  /piper-voices/en_US-amy-medium.onnx" | sha256sum -c -; \
     curl -fsSL "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx.json" -o /piper-voices/en_US-amy-medium.onnx.json; \

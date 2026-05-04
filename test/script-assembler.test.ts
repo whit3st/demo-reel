@@ -178,7 +178,7 @@ describe("script assembler", () => {
     expect(source).toContain('resolution: "4K"');
     expect(source).toContain('outputFormat: "webm"');
     expect(source).toContain('narration: "/tmp/audio/final-narration.mp3"');
-    expect(source).toContain('scenes: [');
+    expect(source).toContain("scenes: [");
     expect(source).toContain('narration: "Open the template page and click the create button."');
     expect(source).toContain(
       '{ action: "goto", url: "https://example.com/templates", waitUntil: "networkidle" },',
@@ -202,12 +202,12 @@ describe("script assembler", () => {
     // First scene has gap wait (400ms) as its final step
     // We verify by checking the gap wait appears and second scene follows
     expect(source).toContain('{ action: "wait", ms: 400 },');
-    expect(source).not.toContain('stepIndex');
+    expect(source).not.toContain("stepIndex");
     // There should be no top-level steps array; scene-owned steps are inside each scene
     const topLevelStepsMatch = source.match(/export default defineConfig\(\{[\s\S]*?scenes:/);
     expect(topLevelStepsMatch).toBeDefined();
-    const beforeScenes = source.slice(0, source.indexOf('scenes:'));
-    expect(beforeScenes).not.toContain('steps:');
+    const beforeScenes = source.slice(0, source.indexOf("scenes:"));
+    expect(beforeScenes).not.toContain("steps:");
   });
 
   it("writes demo config with narration path relative to the output file", async () => {

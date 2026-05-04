@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const PIPER_VOICES = ["nl_NL-mls-medium", "en_US-amy-medium"] as const;
+export const PIPER_VOICES = ["nl_NL-mls-medium", "en_US-amy-medium", "nl_NL-pim-medium"] as const;
 export const OPENAI_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"] as const;
 export const ELEVENLABS_VOICES = [
   "21m00Tcm4TlvDq8ikWAM",

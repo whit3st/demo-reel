@@ -591,9 +591,12 @@ export interface RuntimeScene {
   isIntro?: boolean;
 }
 
-export type DemoReelConfigInput = z.infer<typeof demoReelConfigInputSchema>;
+export type DemoReelConfigInput = z.input<typeof demoReelConfigInputSchema>;
 
-export interface DemoReelConfig extends Omit<DemoReelConfigInput, "steps" | "scenes" | "video" | "cursor" | "motion" | "typing" | "timing"> {
+export interface DemoReelConfig extends Omit<
+  DemoReelConfigInput,
+  "steps" | "scenes" | "video" | "cursor" | "motion" | "typing" | "timing"
+> {
   steps: Step[];
   scenes?: RuntimeScene[];
   video: { resolution: SizeConfig };

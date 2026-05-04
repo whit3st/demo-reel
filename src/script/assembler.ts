@@ -102,9 +102,7 @@ export function generateDemoConfig(
     }
 
     const stepsBlock =
-      stepLines.length > 0
-        ? `\n    steps: [\n${stepLines.join("\n")}\n    ],`
-        : "";
+      stepLines.length > 0 ? `\n    steps: [\n${stepLines.join("\n")}\n    ],` : "";
 
     sceneBlocks.push(
       `    {\n      narration: ${JSON.stringify(scene.narration)},${stepsBlock}\n    },`,

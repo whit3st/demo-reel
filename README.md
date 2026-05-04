@@ -190,7 +190,7 @@ voice: {
 
 Built-in voice values:
 
-- `piper`: `"nl_NL-mls-medium"`, `"en_US-amy-medium"`
+- `piper`: `"nl_NL-mls-medium"`, `"nl_NL-pim-medium"`, `"en_US-amy-medium"`
 - `openai`: `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`
 - `elevenlabs`: `"21m00Tcm4TlvDq8ikWAM"`, `"5zhopMftSdRGaPYVcwKK"`, `CwhRBWXzGAHq8TQ4Fs17`, `60CwgZt94Yf7yYIXMDDe`
 
