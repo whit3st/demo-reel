@@ -189,6 +189,84 @@ describe("Schema Validation", () => {
       });
       expect(result.success).toBe(false);
     });
+
+    it("should validate assertText step with a string", () => {
+      const result = stepSchema.safeParse({
+        action: "assertText",
+        selector: { strategy: "id", value: "h1" },
+        text: "Welcome",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should validate assertText step with a regex", () => {
+      const result = stepSchema.safeParse({
+        action: "assertText",
+        selector: { strategy: "id", value: "h1" },
+        text: /Welcome, \w+/,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should validate assertVisible step", () => {
+      const result = stepSchema.safeParse({
+        action: "assertVisible",
+        selector: { strategy: "testId", value: "toast" },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should validate assertVisible with visible: false", () => {
+      const result = stepSchema.safeParse({
+        action: "assertVisible",
+        selector: { strategy: "testId", value: "spinner" },
+        visible: false,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should validate assertUrl step with a string", () => {
+      const result = stepSchema.safeParse({
+        action: "assertUrl",
+        url: "/tenants/abc/templates",
+        exact: false,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should validate assertUrl with a regex", () => {
+      const result = stepSchema.safeParse({
+        action: "assertUrl",
+        url: /tenants\/\w+\/home/,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should validate assertCount step", () => {
+      const result = stepSchema.safeParse({
+        action: "assertCount",
+        selector: { strategy: "testId", value: "row" },
+        count: 5,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should reject assertCount with negative count", () => {
+      const result = stepSchema.safeParse({
+        action: "assertCount",
+        selector: { strategy: "testId", value: "row" },
+        count: -1,
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("should reject assertText without text field", () => {
+      const result = stepSchema.safeParse({
+        action: "assertText",
+        selector: { strategy: "id", value: "h1" },
+      });
+      expect(result.success).toBe(false);
+    });
   });
 
   describe("Auth Config Schema", () => {

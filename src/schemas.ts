@@ -325,6 +325,49 @@ const waitForStepUnion = z.union([
   waitForFunctionStepSchema,
 ]);
 
+// Assertion step schemas — fail loudly when the page state doesn't match
+// expectations. Suited for test-mode runs (see runScenarioForTest); they
+// also work in demo mode but typically don't add value to a video.
+// All four share stepDelaySchema so they can be paced if they do appear
+// in demo runs.
+
+export const assertTextStepSchema = stepDelaySchema.extend({
+  action: z.literal("assertText").describe("Assert element text matches expected"),
+  selector: selectorSchema.describe("Element whose text is checked"),
+  text: z.union([z.string(), z.instanceof(RegExp)]).describe("Expected text (string) or regex"),
+  exact: z
+    .boolean()
+    .optional()
+    .describe("When true, require exact match; otherwise substring (default false)"),
+  timeoutMs: z.number().int().min(0).optional().describe("Timeout in ms (default: 5000)"),
+});
+
+export const assertVisibleStepSchema = stepDelaySchema.extend({
+  action: z.literal("assertVisible").describe("Assert element is visible (or hidden)"),
+  selector: selectorSchema.describe("Element to check"),
+  visible: z.boolean().optional().describe("Expected visibility — true (default) or false"),
+  timeoutMs: z.number().int().min(0).optional().describe("Timeout in ms (default: 5000)"),
+});
+
+export const assertUrlStepSchema = stepDelaySchema.extend({
+  action: z.literal("assertUrl").describe("Assert the page URL matches expected"),
+  url: z
+    .union([z.string().min(1), z.instanceof(RegExp)])
+    .describe("Expected URL substring or regex"),
+  exact: z
+    .boolean()
+    .optional()
+    .describe("When true, require exact match; otherwise substring (default true)"),
+  timeoutMs: z.number().int().min(0).optional().describe("Timeout in ms (default: 5000)"),
+});
+
+export const assertCountStepSchema = stepDelaySchema.extend({
+  action: z.literal("assertCount").describe("Assert the number of matching elements"),
+  selector: selectorSchema.describe("Selector to count"),
+  count: z.number().int().min(0).describe("Expected number of matching elements"),
+  timeoutMs: z.number().int().min(0).optional().describe("Timeout in ms (default: 5000)"),
+});
+
 export const stepSchema = z
   .discriminatedUnion("action", [
     gotoStepSchema,
@@ -339,6 +382,10 @@ export const stepSchema = z
     dragStepSchema,
     waitStepSchema,
     confirmStepSchema,
+    assertTextStepSchema,
+    assertVisibleStepSchema,
+    assertUrlStepSchema,
+    assertCountStepSchema,
   ])
   .or(waitForStepUnion);
 

@@ -18,6 +18,8 @@ const { locatorMock, pageMock } = vi.hoisted(() => {
     setInputFiles: vi.fn().mockResolvedValue(undefined),
     dragTo: vi.fn().mockResolvedValue(undefined),
     focus: vi.fn().mockResolvedValue(undefined),
+    textContent: vi.fn().mockResolvedValue(""),
+    count: vi.fn().mockResolvedValue(0),
   };
   const pageMock = {
     getByTestId: vi.fn(() => locatorMock),
@@ -58,8 +60,19 @@ vi.mock("playwright", () => ({
   chromium: { launch: vi.fn() },
 }));
 
-import { runStepSimple, runSteps } from "../src/runner.js";
+import { runScenarioForTest, runStepSimple, runSteps } from "../src/runner.js";
+import type { DemoConfig } from "../src/index.js";
 import type { Page } from "playwright";
+
+const baseTestConfig = (overrides: Partial<DemoConfig> = {}): DemoConfig => ({
+  video: { resolution: "HD" },
+  cursor: "dot",
+  motion: "instant",
+  typing: "instant",
+  timing: "instant",
+  steps: [{ action: "wait", ms: 0 }],
+  ...overrides,
+});
 
 const makePage = (overrides: Partial<Page> = {}): Page =>
   ({ ...pageMock, ...overrides }) as unknown as Page;
@@ -315,6 +328,178 @@ describe("runStepSimple", () => {
   });
 });
 
+describe("assertion steps", () => {
+  let page: Page;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    page = makePage();
+  });
+
+  describe("assertText", () => {
+    it("passes on substring match (default)", async () => {
+      locatorMock.textContent.mockResolvedValueOnce("Welcome, Anna van der Berg");
+      await runStepSimple(page, {
+        action: "assertText",
+        selector: { strategy: "testId", value: "salutation" },
+        text: "Anna",
+      });
+      expect(locatorMock.waitFor).toHaveBeenCalledWith(
+        expect.objectContaining({ state: "visible" }),
+      );
+      expect(locatorMock.textContent).toHaveBeenCalled();
+    });
+
+    it("passes on exact match when exact: true", async () => {
+      locatorMock.textContent.mockResolvedValueOnce("Welcome");
+      await runStepSimple(page, {
+        action: "assertText",
+        selector: { strategy: "id", value: "h" },
+        text: "Welcome",
+        exact: true,
+      });
+    });
+
+    it("fails when exact match required but only substring matches", async () => {
+      locatorMock.textContent.mockResolvedValueOnce("Welcome, Anna");
+      await expect(
+        runStepSimple(page, {
+          action: "assertText",
+          selector: { strategy: "id", value: "h" },
+          text: "Welcome",
+          exact: true,
+        }),
+      ).rejects.toThrow(/assertText failed/);
+    });
+
+    it("supports a regex pattern", async () => {
+      locatorMock.textContent.mockResolvedValueOnce("Case VS-2025-0042 opened");
+      await runStepSimple(page, {
+        action: "assertText",
+        selector: { strategy: "id", value: "case" },
+        text: /VS-\d{4}-\d{4}/,
+      });
+    });
+
+    it("fails when text doesn't include expected substring", async () => {
+      locatorMock.textContent.mockResolvedValueOnce("Goodbye");
+      await expect(
+        runStepSimple(page, {
+          action: "assertText",
+          selector: { strategy: "id", value: "h" },
+          text: "Welcome",
+        }),
+      ).rejects.toThrow(/assertText failed.*contain "Welcome".*got "Goodbye"/);
+    });
+
+    it("trims whitespace from actual text", async () => {
+      locatorMock.textContent.mockResolvedValueOnce("  Welcome  ");
+      await runStepSimple(page, {
+        action: "assertText",
+        selector: { strategy: "id", value: "h" },
+        text: "Welcome",
+        exact: true,
+      });
+    });
+  });
+
+  describe("assertVisible", () => {
+    it("waits for visible state by default", async () => {
+      await runStepSimple(page, {
+        action: "assertVisible",
+        selector: { strategy: "testId", value: "toast" },
+      });
+      expect(locatorMock.waitFor).toHaveBeenCalledWith(
+        expect.objectContaining({ state: "visible" }),
+      );
+    });
+
+    it("waits for hidden state when visible: false", async () => {
+      await runStepSimple(page, {
+        action: "assertVisible",
+        selector: { strategy: "testId", value: "spinner" },
+        visible: false,
+      });
+      expect(locatorMock.waitFor).toHaveBeenCalledWith(
+        expect.objectContaining({ state: "hidden" }),
+      );
+    });
+
+    it("wraps the Playwright waitFor error with a descriptive message", async () => {
+      locatorMock.waitFor.mockRejectedValueOnce(new Error("Timeout 5000ms exceeded"));
+      await expect(
+        runStepSimple(page, {
+          action: "assertVisible",
+          selector: { strategy: "id", value: "missing" },
+        }),
+      ).rejects.toThrow(/assertVisible failed.*expected visible.*Timeout/);
+    });
+  });
+
+  describe("assertUrl", () => {
+    it("passes when URL contains the expected substring (exact: false)", async () => {
+      (page.url as ReturnType<typeof vi.fn>).mockReturnValue("https://app/tenants/abc/templates");
+      await runStepSimple(page, {
+        action: "assertUrl",
+        url: "/templates",
+        exact: false,
+      });
+    });
+
+    it("passes on regex match", async () => {
+      (page.url as ReturnType<typeof vi.fn>).mockReturnValue("https://app/tenants/abc-123/home");
+      await runStepSimple(page, {
+        action: "assertUrl",
+        url: /tenants\/abc-\d+\/home/,
+      });
+    });
+
+    it("fails when URL doesn't match within timeout", async () => {
+      (page.url as ReturnType<typeof vi.fn>).mockReturnValue("https://app/wrong-page");
+      await expect(
+        runStepSimple(page, {
+          action: "assertUrl",
+          url: "https://app/expected",
+          timeoutMs: 200,
+        }),
+      ).rejects.toThrow(/assertUrl failed.*got "https:\/\/app\/wrong-page"/);
+    });
+  });
+
+  describe("assertCount", () => {
+    it("passes when count matches", async () => {
+      locatorMock.count.mockResolvedValueOnce(3);
+      await runStepSimple(page, {
+        action: "assertCount",
+        selector: { strategy: "testId", value: "row" },
+        count: 3,
+      });
+    });
+
+    it("retries until count matches within timeout", async () => {
+      locatorMock.count.mockResolvedValueOnce(0).mockResolvedValueOnce(1).mockResolvedValueOnce(2);
+      await runStepSimple(page, {
+        action: "assertCount",
+        selector: { strategy: "testId", value: "row" },
+        count: 2,
+        timeoutMs: 1000,
+      });
+    });
+
+    it("fails when count never matches within timeout", async () => {
+      locatorMock.count.mockResolvedValue(1);
+      await expect(
+        runStepSimple(page, {
+          action: "assertCount",
+          selector: { strategy: "testId", value: "row" },
+          count: 5,
+          timeoutMs: 200,
+        }),
+      ).rejects.toThrow(/assertCount failed.*expected 5.*got 1/);
+    });
+  });
+});
+
 describe("runSteps", () => {
   let page: Page;
 
@@ -399,5 +584,127 @@ describe("runSteps", () => {
     });
     expect(spy).toHaveBeenCalledWith("  ↳ pre step 1/1: goto http://example.com/");
     spy.mockRestore();
+  });
+});
+
+describe("runScenarioForTest", () => {
+  let page: Page;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    page = makePage();
+  });
+
+  it("executes top-level steps", async () => {
+    await runScenarioForTest(
+      page,
+      baseTestConfig({
+        steps: [
+          { action: "goto", url: "http://example.com/a" },
+          { action: "goto", url: "http://example.com/b" },
+        ],
+      }),
+    );
+    expect(page.goto).toHaveBeenCalledTimes(2);
+    expect(page.goto).toHaveBeenNthCalledWith(1, "http://example.com/a", undefined);
+    expect(page.goto).toHaveBeenNthCalledWith(2, "http://example.com/b", undefined);
+  });
+
+  it("runs setup steps before main steps", async () => {
+    const calls: string[] = [];
+    page.goto = vi.fn().mockImplementation(async (url: string) => {
+      calls.push(url);
+    });
+    await runScenarioForTest(
+      page,
+      baseTestConfig({
+        setup: [{ action: "goto", url: "http://example.com/setup" }],
+        steps: [{ action: "goto", url: "http://example.com/main" }],
+      }),
+    );
+    expect(calls).toEqual(["http://example.com/setup", "http://example.com/main"]);
+  });
+
+  it("runs cleanup steps after main steps in tolerant mode", async () => {
+    const calls: string[] = [];
+    page.goto = vi.fn().mockImplementation(async (url: string) => {
+      calls.push(url);
+      if (url.includes("cleanup")) throw new Error("cleanup boom");
+    });
+    await runScenarioForTest(
+      page,
+      baseTestConfig({
+        steps: [{ action: "goto", url: "http://example.com/main" }],
+        cleanup: [{ action: "goto", url: "http://example.com/cleanup" }],
+      }),
+    );
+    expect(calls).toEqual(["http://example.com/main", "http://example.com/cleanup"]);
+  });
+
+  it("throws if a main step fails", async () => {
+    page.goto = vi.fn().mockRejectedValueOnce(new Error("nav failed"));
+    await expect(
+      runScenarioForTest(
+        page,
+        baseTestConfig({
+          steps: [{ action: "goto", url: "http://example.com/" }],
+        }),
+      ),
+    ).rejects.toThrow("nav failed");
+  });
+
+  it("skips cleanup when skipCleanup is true", async () => {
+    const cleanupSpy = vi.fn().mockResolvedValue(undefined);
+    page.waitForTimeout = vi.fn().mockImplementation(async () => {
+      cleanupSpy();
+    });
+    await runScenarioForTest(
+      page,
+      baseTestConfig({
+        steps: [{ action: "goto", url: "http://example.com/" }],
+        cleanup: [{ action: "wait", ms: 1 }],
+      }),
+      { skipCleanup: true },
+    );
+    expect(cleanupSpy).not.toHaveBeenCalled();
+  });
+
+  it("runs auth login steps when runAuth is true", async () => {
+    await runScenarioForTest(
+      page,
+      baseTestConfig({
+        auth: {
+          loginSteps: [{ action: "goto", url: "http://example.com/login" }],
+          validate: {
+            protectedUrl: "http://example.com/home",
+            successIndicator: { strategy: "id", value: "ok" },
+          },
+          storage: { name: "test", types: ["cookies"] },
+        },
+        steps: [{ action: "goto", url: "http://example.com/home" }],
+      }),
+      { runAuth: true },
+    );
+    expect(page.goto).toHaveBeenCalledTimes(2);
+    expect(page.goto).toHaveBeenNthCalledWith(1, "http://example.com/login", undefined);
+  });
+
+  it("skips auth login steps when runAuth is omitted", async () => {
+    await runScenarioForTest(
+      page,
+      baseTestConfig({
+        auth: {
+          loginSteps: [{ action: "goto", url: "http://example.com/login" }],
+          validate: {
+            protectedUrl: "http://example.com/home",
+            successIndicator: { strategy: "id", value: "ok" },
+          },
+          storage: { name: "test", types: ["cookies"] },
+        },
+        steps: [{ action: "goto", url: "http://example.com/home" }],
+      }),
+    );
+    expect(page.goto).toHaveBeenCalledTimes(1);
+    expect(page.goto).toHaveBeenCalledWith("http://example.com/home", undefined);
   });
 });
