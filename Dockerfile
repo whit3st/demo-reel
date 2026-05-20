@@ -1,5 +1,5 @@
 # Stage 1: Install production dependencies
-FROM node:25-slim AS deps
+FROM node:26-slim AS deps
 
 RUN npm install -g pnpm@10.32.1
 
@@ -8,7 +8,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # Stage 2: Build TypeScript
-FROM node:25-slim AS builder
+FROM node:26-slim AS builder
 
 RUN npm install -g pnpm@10.32.1
 
@@ -68,7 +68,7 @@ RUN set -eux; \
     echo "${PIPER_EN_MODEL_JSON_SHA256}  /piper-voices/en_US-amy-medium.onnx.json" | sha256sum -c -
 
 # Stage 4: Install Playwright browser in isolation
-FROM node:25-slim AS playwright-browser
+FROM node:26-slim AS playwright-browser
 
 # Must be set before `playwright install` so the browser lands in the shared cache path.
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
@@ -81,7 +81,7 @@ COPY --from=deps /build/node_modules node_modules/
 RUN mkdir -p /ms-playwright && npx playwright install chromium && chmod -R a+rX /ms-playwright
 
 # Stage 5: Lean runtime
-FROM node:25-slim AS runtime
+FROM node:26-slim AS runtime
 
 LABEL org.opencontainers.image.title="demo-reel" \
       org.opencontainers.image.description="Create demo videos from web apps using Playwright" \
