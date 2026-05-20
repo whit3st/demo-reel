@@ -334,9 +334,7 @@ const waitForStepUnion = z.union([
 export const assertTextStepSchema = stepDelaySchema.extend({
   action: z.literal("assertText").describe("Assert element text matches expected"),
   selector: selectorSchema.describe("Element whose text is checked"),
-  text: z
-    .union([z.string(), z.instanceof(RegExp)])
-    .describe("Expected text (string) or regex"),
+  text: z.union([z.string(), z.instanceof(RegExp)]).describe("Expected text (string) or regex"),
   exact: z
     .boolean()
     .optional()
@@ -347,10 +345,7 @@ export const assertTextStepSchema = stepDelaySchema.extend({
 export const assertVisibleStepSchema = stepDelaySchema.extend({
   action: z.literal("assertVisible").describe("Assert element is visible (or hidden)"),
   selector: selectorSchema.describe("Element to check"),
-  visible: z
-    .boolean()
-    .optional()
-    .describe("Expected visibility — true (default) or false"),
+  visible: z.boolean().optional().describe("Expected visibility — true (default) or false"),
   timeoutMs: z.number().int().min(0).optional().describe("Timeout in ms (default: 5000)"),
 });
 
