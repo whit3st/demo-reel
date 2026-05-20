@@ -364,6 +364,14 @@ export { demoReelConfigSchema, demoReelConfigInputSchema };
 export type { DemoReelConfig, DemoReelConfigInput } from "./schemas.js";
 export type * from "./types.js";
 export {
+  runScenarioForTest,
+  runSteps,
+  runStepSimple,
+  runAssertion,
+  formatStepForLog,
+  type RunScenarioForTestOptions,
+} from "./runner.js";
+export {
   syncNarration,
   logSyncReport,
   buildSceneWindows,

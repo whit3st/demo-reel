@@ -1,12 +1,14 @@
 import type { Locator, Page } from "playwright";
-import type {
-  CursorConfig,
-  DemoReelConfig,
-  MotionConfig,
-  Step,
-  SelectorConfig,
-  TimingConfig,
-  TypingConfig,
+import {
+  demoReelConfigSchema,
+  type CursorConfig,
+  type DemoReelConfig,
+  type DemoReelConfigInput,
+  type MotionConfig,
+  type Step,
+  type SelectorConfig,
+  type TimingConfig,
+  type TypingConfig,
 } from "./schemas.js";
 import { createRandom, type RandomSource } from "./random.js";
 
@@ -692,6 +694,100 @@ export const runStepSimple = async (page: Page, step: Step): Promise<void> => {
     await source.dragTo(target);
     return;
   }
+
+  if (
+    step.action === "assertText" ||
+    step.action === "assertVisible" ||
+    step.action === "assertUrl" ||
+    step.action === "assertCount"
+  ) {
+    await runAssertion(page, step);
+    return;
+  }
+};
+
+const DEFAULT_ASSERTION_TIMEOUT_MS = 5000;
+
+const matchText = (actual: string, expected: string | RegExp, exact: boolean): boolean => {
+  if (expected instanceof RegExp) return expected.test(actual);
+  return exact ? actual === expected : actual.includes(expected);
+};
+
+const formatExpected = (expected: string | RegExp, modeExact?: boolean): string => {
+  if (expected instanceof RegExp) return `match ${expected.toString()}`;
+  return modeExact ? `equal ${JSON.stringify(expected)}` : `contain ${JSON.stringify(expected)}`;
+};
+
+type AssertionStep = Extract<
+  Step,
+  { action: "assertText" | "assertVisible" | "assertUrl" | "assertCount" }
+>;
+
+export const runAssertion = async (page: Page, step: AssertionStep): Promise<void> => {
+  if (step.action === "assertText") {
+    const target = resolveLocator(page, step.selector);
+    await target.waitFor({
+      state: "visible",
+      ...buildTimeoutOption(step.timeoutMs ?? DEFAULT_ASSERTION_TIMEOUT_MS),
+    });
+    const actual = ((await target.textContent()) ?? "").trim();
+    if (!matchText(actual, step.text, step.exact ?? false)) {
+      throw new Error(
+        `assertText failed: selector=${JSON.stringify(step.selector)} expected to ${formatExpected(step.text, step.exact)}, got ${JSON.stringify(actual)}`,
+      );
+    }
+    return;
+  }
+
+  if (step.action === "assertVisible") {
+    const target = resolveLocator(page, step.selector);
+    const expectVisible = step.visible ?? true;
+    const state = expectVisible ? "visible" : "hidden";
+    try {
+      await target.waitFor({
+        state,
+        ...buildTimeoutOption(step.timeoutMs ?? DEFAULT_ASSERTION_TIMEOUT_MS),
+      });
+    } catch (error) {
+      throw new Error(
+        `assertVisible failed: selector=${JSON.stringify(step.selector)} expected ${expectVisible ? "visible" : "hidden"} — ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+    return;
+  }
+
+  if (step.action === "assertUrl") {
+    const timeoutMs = step.timeoutMs ?? DEFAULT_ASSERTION_TIMEOUT_MS;
+    const exact = step.exact ?? true;
+    const deadline = Date.now() + timeoutMs;
+    let lastUrl = page.url();
+    while (Date.now() < deadline) {
+      lastUrl = page.url();
+      if (step.url instanceof RegExp) {
+        if (step.url.test(lastUrl)) return;
+      } else if (exact ? lastUrl === step.url : lastUrl.includes(step.url)) {
+        return;
+      }
+      await page.waitForTimeout(100);
+    }
+    throw new Error(
+      `assertUrl failed: expected URL to ${formatExpected(step.url, exact)}, got ${JSON.stringify(lastUrl)}`,
+    );
+  }
+
+  if (step.action === "assertCount") {
+    const timeoutMs = step.timeoutMs ?? DEFAULT_ASSERTION_TIMEOUT_MS;
+    const deadline = Date.now() + timeoutMs;
+    let lastCount = 0;
+    while (Date.now() < deadline) {
+      lastCount = await resolveLocator(page, step.selector).count();
+      if (lastCount === step.count) return;
+      await page.waitForTimeout(100);
+    }
+    throw new Error(
+      `assertCount failed: selector=${JSON.stringify(step.selector)} expected ${step.count}, got ${lastCount}`,
+    );
+  }
 };
 
 const runStep = async (
@@ -872,6 +968,21 @@ const runStep = async (
     return delayApplied;
   }
 
+  if (
+    step.action === "assertText" ||
+    step.action === "assertVisible" ||
+    step.action === "assertUrl" ||
+    step.action === "assertCount"
+  ) {
+    // Assertions don't move the cursor or interact with the page in a way
+    // worth animating — they just verify. We still honour delayBeforeMs /
+    // delayAfterMs so they can be paced if they ever appear in a demo run.
+    await applyStepDelay(page, step.delayBeforeMs);
+    await runAssertion(page, step);
+    await applyStepDelay(page, step.delayAfterMs);
+    return startDelayApplied;
+  }
+
   return startDelayApplied;
 };
 
@@ -895,7 +1006,73 @@ export const formatStepForLog = (step: Step): string => {
   if (step.action === "drag") {
     return `drag ${JSON.stringify(step.source)} -> ${JSON.stringify(step.target)}`;
   }
+  if (step.action === "assertText") {
+    return `assertText ${JSON.stringify(step.selector)} ${step.text instanceof RegExp ? step.text.toString() : JSON.stringify(step.text)}`;
+  }
+  if (step.action === "assertVisible") {
+    return `assertVisible ${JSON.stringify(step.selector)} ${step.visible === false ? "hidden" : "visible"}`;
+  }
+  if (step.action === "assertUrl") {
+    return `assertUrl ${step.url instanceof RegExp ? step.url.toString() : JSON.stringify(step.url)}`;
+  }
+  if (step.action === "assertCount") {
+    return `assertCount ${JSON.stringify(step.selector)} ${step.count}`;
+  }
   return "unknown-step";
+};
+
+/**
+ * Run a demo-reel config as a test: no video recording, no cursor polish,
+ * fast execution via runStepSimple. Setup runs strictly, main steps run
+ * strictly (throwing on first failure — that's the test failure signal),
+ * cleanup runs in tolerant mode so cleanup failures don't mask the real
+ * cause.
+ *
+ * The caller owns the Page lifecycle. Use Playwright's fixtures (in
+ * @playwright/test) or your own browser launcher.
+ *
+ * Auth's loginSteps run before setup if `runAuth: true` is passed (default
+ * false — most test runners want to handle auth themselves via fixtures).
+ */
+export interface RunScenarioForTestOptions {
+  verbose?: boolean;
+  runAuth?: boolean;
+  skipCleanup?: boolean;
+}
+
+export const runScenarioForTest = async (
+  page: Page,
+  config: DemoReelConfig | DemoReelConfigInput,
+  options: RunScenarioForTestOptions = {},
+): Promise<void> => {
+  const { verbose = false, runAuth = false, skipCleanup = false } = options;
+  const parsed = demoReelConfigSchema.parse(config);
+
+  if (runAuth && parsed.auth) {
+    await runSteps(page, parsed.auth.loginSteps, { verbose, label: "auth" });
+  }
+
+  const setup = parsed.setup ?? parsed.preSteps;
+  if (setup && setup.length > 0) {
+    await runSteps(page, setup, { verbose, label: "setup" });
+  }
+
+  const mainSteps = collectMainSteps(parsed);
+  if (mainSteps.length > 0) {
+    await runSteps(page, mainSteps, { verbose, label: "main" });
+  }
+
+  const cleanup = parsed.cleanup ?? parsed.postSteps;
+  if (!skipCleanup && cleanup && cleanup.length > 0) {
+    await runSteps(page, cleanup, { tolerant: true, verbose, label: "cleanup" });
+  }
+};
+
+const collectMainSteps = (config: DemoReelConfig): Step[] => {
+  // After validation, scene-owned scenes are flattened into config.steps,
+  // so the parsed shape always exposes the canonical step list at the top
+  // level.
+  return config.steps ?? [];
 };
 
 export const runSteps = async (
