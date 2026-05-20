@@ -23,8 +23,14 @@ RUN pnpm run build
 # Stage 3: Piper TTS binary + voice models
 FROM debian:bookworm-slim@sha256:4724b8cc51e33e398f0e2e15e18d5ec2851ff0c2280647e1310bc1642182655d AS piper
 
+# Multi-arch: TARGETARCH is auto-populated by BuildKit when building for
+# a specific platform (--platform=linux/amd64 or linux/arm64). It maps
+# to Piper release naming as amd64 -> x86_64, arm64 -> aarch64.
+ARG TARGETARCH
+
 ARG PIPER_VERSION=2023.11.14-2
-ARG PIPER_TARBALL_SHA256=a50cb45f355b7af1f6d758c1b360717877ba0a398cc8cbe6d2a7a3a26e225992
+ARG PIPER_TARBALL_X86_64_SHA256=a50cb45f355b7af1f6d758c1b360717877ba0a398cc8cbe6d2a7a3a26e225992
+ARG PIPER_TARBALL_AARCH64_SHA256=fea0fd2d87c54dbc7078d0f878289f404bd4d6eea6e7444a77835d1537ab88eb
 ARG PIPER_NL_MODEL_SHA256=88312e0fbf505b87caf2373d94c1384892e86b1bf2ee482cf65dc8ba179cc7d3
 ARG PIPER_NL_MODEL_JSON_SHA256=6ddb215d38f1392ab935ad45441b82ada1eeae0452a2d6849ed71ea4f2e0aa63
 ARG PIPER_NL_PIM_MODEL_SHA256=403e58c3675c394f505c2428117bf34cc56e9542dcf6eadbdd3a84706c12e048
@@ -35,9 +41,14 @@ ARG PIPER_EN_MODEL_JSON_SHA256=95a23eb4d42909d38df73bb9ac7f45f597dbfcde2d1bf9526
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 RUN set -eux; \
+    case "${TARGETARCH:-amd64}" in \
+      amd64) piper_arch="x86_64"; piper_sha="${PIPER_TARBALL_X86_64_SHA256}";; \
+      arm64) piper_arch="aarch64"; piper_sha="${PIPER_TARBALL_AARCH64_SHA256}";; \
+      *) echo "Unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1;; \
+    esac; \
     archive="$(mktemp)"; \
-    curl -fsSL "https://github.com/rhasspy/piper/releases/download/${PIPER_VERSION}/piper_linux_x86_64.tar.gz" -o "$archive"; \
-    echo "${PIPER_TARBALL_SHA256}  $archive" | sha256sum -c -; \
+    curl -fsSL "https://github.com/rhasspy/piper/releases/download/${PIPER_VERSION}/piper_linux_${piper_arch}.tar.gz" -o "$archive"; \
+    echo "${piper_sha}  $archive" | sha256sum -c -; \
     tar -xzf "$archive" -C /opt; \
     rm -f "$archive"
 
