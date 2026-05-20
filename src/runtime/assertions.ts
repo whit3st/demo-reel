@@ -1,5 +1,5 @@
 import type { Page } from "playwright";
-import { resolveLocator } from "../runner.js";
+import { resolveLocator, resolveLocatorAll } from "../runner.js";
 import type { E2EAssertion, E2ECheckpoint } from "../schemas.js";
 
 export interface AssertionFailureDetails {
@@ -84,26 +84,43 @@ export const evaluateAssertion = async (
     return;
   }
 
-  const actualUrl = page.url();
-  if (typeof assertion.url === "string") {
-    if (actualUrl !== assertion.url) {
+  if (assertion.type === "expectUrl") {
+    const actualUrl = page.url();
+    if (typeof assertion.url === "string") {
+      if (actualUrl !== assertion.url) {
+        throw new AssertionFailure({
+          assertion,
+          target: selectorToTarget(assertion),
+          expected: `url \"${assertion.url}\"`,
+          actual: `url \"${actualUrl}\"`,
+        });
+      }
+      return;
+    }
+
+    if (!assertion.url.test(actualUrl)) {
       throw new AssertionFailure({
         assertion,
         target: selectorToTarget(assertion),
-        expected: `url \"${assertion.url}\"`,
+        expected: `url matching ${assertion.url.toString()}`,
         actual: `url \"${actualUrl}\"`,
       });
     }
     return;
   }
 
-  if (!assertion.url.test(actualUrl)) {
-    throw new AssertionFailure({
-      assertion,
-      target: selectorToTarget(assertion),
-      expected: `url matching ${assertion.url.toString()}`,
-      actual: `url \"${actualUrl}\"`,
-    });
+  if (assertion.type === "expectCount") {
+    const locator = resolveLocatorAll(page, assertion.selector);
+    const actualCount = await locator.count();
+    if (actualCount !== assertion.count) {
+      throw new AssertionFailure({
+        assertion,
+        target: selectorToTarget(assertion),
+        expected: `count ${assertion.count}`,
+        actual: `count ${actualCount}`,
+      });
+    }
+    return;
   }
 };
 

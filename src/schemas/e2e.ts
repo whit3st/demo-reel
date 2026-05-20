@@ -6,6 +6,7 @@ const checkpointAssertionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("expectHidden"), selector: selectorSchema }),
   z.object({ type: z.literal("expectText"), selector: selectorSchema, text: z.string(), contains: z.boolean().optional().default(true) }),
   z.object({ type: z.literal("expectUrl"), url: z.union([z.string().url(), z.instanceof(RegExp)]) }),
+  z.object({ type: z.literal("expectCount"), selector: selectorSchema, count: z.number().int().min(0) }),
 ]);
 
 const checkpointSchema = z.object({

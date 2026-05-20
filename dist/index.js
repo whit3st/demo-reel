@@ -14,7 +14,7 @@ const ENV_PASSTHROUGH = [
     "ANTHROPIC_API_KEY",
 ];
 export function defineConfig(config) {
-    return validateConfig(config);
+    return demoReelConfigSchema.parse(config);
 }
 export const demo = defineConfig;
 export function validateConfig(config) {

@@ -1,12 +1,13 @@
-import { demoReelConfigSchema, demoReelConfigInputSchema, type DemoReelVideoConfig, type DemoReelVideoConfigInput } from "./schemas.js";
-export type DemoConfig = DemoReelVideoConfigInput;
+import { demoReelConfigSchema, demoReelConfigInputSchema, type DemoReelConfig, type DemoReelConfigInput, type DemoReelVideoConfig } from "./schemas.js";
+export type DemoConfig = DemoReelConfigInput;
 export interface GenerateOptions {
     verbose?: boolean;
     noDocker?: boolean;
 }
-export declare function defineConfig(config: DemoConfig): DemoReelVideoConfig;
+export declare function defineConfig(config: DemoConfig): DemoReelConfig;
 export declare const demo: typeof defineConfig;
 export declare function validateConfig(config: unknown): DemoReelVideoConfig;
+export type { DemoReelE2EConfig, DemoReelE2EConfigInput } from "./schemas.js";
 export declare function generate(config: DemoConfig, options?: GenerateOptions): Promise<void>;
 export { demoReelConfigSchema, demoReelConfigInputSchema };
 export type { DemoReelConfig, DemoReelConfigInput } from "./schemas.js";

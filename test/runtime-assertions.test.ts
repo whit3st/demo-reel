@@ -2,9 +2,10 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 vi.mock("../src/runner.js", () => ({
   resolveLocator: vi.fn(),
+  resolveLocatorAll: vi.fn(),
 }));
 
-import { resolveLocator } from "../src/runner.js";
+import { resolveLocator, resolveLocatorAll } from "../src/runner.js";
 import {
   AssertionFailure,
   evaluateAssertion,
@@ -76,6 +77,30 @@ describe("runtime assertions", () => {
         url: /orders\/\d+$/,
       }),
     ).resolves.toBeUndefined();
+  });
+
+  it("passes expectCount when count matches", async () => {
+    vi.mocked(resolveLocatorAll).mockReturnValue({ count: vi.fn().mockResolvedValue(3) } as never);
+
+    await expect(
+      evaluateAssertion({} as never, {
+        type: "expectCount",
+        selector: { strategy: "testId", value: "items" },
+        count: 3,
+      }),
+    ).resolves.toBeUndefined();
+  });
+
+  it("fails expectCount when count does not match", async () => {
+    vi.mocked(resolveLocatorAll).mockReturnValue({ count: vi.fn().mockResolvedValue(1) } as never);
+
+    await expect(
+      evaluateAssertion({} as never, {
+        type: "expectCount",
+        selector: { strategy: "testId", value: "items" },
+        count: 3,
+      }),
+    ).rejects.toBeInstanceOf(AssertionFailure);
   });
 
   it("selects checkpoints by step and label", () => {

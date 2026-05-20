@@ -5,6 +5,8 @@ import {
   demoReelConfigSchema,
   demoReelConfigInputSchema,
   demoReelVideoOnlySchema,
+  type DemoReelConfig,
+  type DemoReelConfigInput,
   type DemoReelVideoConfig,
   type DemoReelVideoConfigInput,
 } from "./schemas.js";
@@ -21,15 +23,15 @@ const ENV_PASSTHROUGH = [
   "ANTHROPIC_API_KEY",
 ];
 
-export type DemoConfig = DemoReelVideoConfigInput;
+export type DemoConfig = DemoReelConfigInput;
 
 export interface GenerateOptions {
   verbose?: boolean;
   noDocker?: boolean;
 }
 
-export function defineConfig(config: DemoConfig): DemoReelVideoConfig {
-  return validateConfig(config);
+export function defineConfig(config: DemoConfig): DemoReelConfig {
+  return demoReelConfigSchema.parse(config);
 }
 
 export const demo = defineConfig;
@@ -37,6 +39,9 @@ export const demo = defineConfig;
 export function validateConfig(config: unknown): DemoReelVideoConfig {
   return demoReelVideoOnlySchema.parse(config);
 }
+
+// Re-export e2e-specific types so demo files can use them
+export type { DemoReelE2EConfig, DemoReelE2EConfigInput } from "./schemas.js";
 
 function isDockerAvailable(): boolean {
   try {

@@ -48,6 +48,7 @@
     "format": "oxfmt . --write",
     "format:ci": "oxfmt . --check",
     "demo": "node --import tsx/esm src/cli.ts",
+    "demo:e2e:all": "for f in demos/*.e2e.demo.ts; do node --import tsx/esm src/cli.ts run e2e \"$f\"; done",
     "demo:voice": "node --import tsx/esm src/script/voice-cli.ts",
     "prepublishOnly": "pnpm run build && pnpm test"
   },
