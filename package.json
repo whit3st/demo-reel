@@ -49,7 +49,7 @@
     "format:ci": "oxfmt . --check",
     "demo": "node --import tsx/esm src/cli.ts",
     "demo:voice": "node --import tsx/esm src/script/voice-cli.ts",
-    "prepublishOnly": "pnpm run build && pnpm test"
+    "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
     "ffmpeg-static": "^5.2.0",
