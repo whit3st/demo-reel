@@ -8,6 +8,7 @@ on:
       - .github/badges/coverage.json
   pull_request:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
