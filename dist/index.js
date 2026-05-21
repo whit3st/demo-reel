@@ -293,5 +293,6 @@ export async function generate(config, options = {}) {
     }
 }
 export { demoReelConfigSchema, demoReelConfigInputSchema };
+export { runScenarioForTest, runSteps, runStepSimple, runAssertion, formatStepForLog, } from "./runner.js";
 export { syncNarration, logSyncReport, buildSceneWindows, injectPadding, } from "./narration-sync.js";
 //# sourceMappingURL=index.js.map
