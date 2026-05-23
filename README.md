@@ -321,14 +321,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-      - run: pnpm install
-      - run: npx tsx demos/01-signup/signup.demo.ts
-        env:
-          ELEVENLABS_KEY: ${{ secrets.ELEVENLABS_KEY }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm ci
+      - run: pnpm exec playwright install chromium
+      - run: pnpm build
+      - run: pnpm demo-reel demos/the-internet-login
       - uses: actions/upload-artifact@v4
         with:
           name: demo-videos
           path: ./output/*.mp4
+```
+
+Piper binary and voice models download automatically on first run — no secrets needed for the built-in demos. For cloud TTS, add secrets in your repo settings and pass them as env:
+
+```yaml
+      - run: pnpm demo-reel demos/my-demo
+        env:
+          ELEVENLABS_KEY: ${{ secrets.ELEVENLABS_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 ```
 
 ## License
