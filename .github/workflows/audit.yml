@@ -1,0 +1,34 @@
+name: Security Audit
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - audit.json
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Run audit
+        run: pnpm run security:audit
+
+      - name: Generate security badge data
+        run: pnpm run security:badge
+
+      - name: Commit audit + badge
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update security audit"
+          file_pattern: audit.json .github/badges/security.json

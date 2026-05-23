@@ -199,31 +199,19 @@ describe("runStepSimple", () => {
   });
 
   it("handles drag step", async () => {
-    const targetLocator = {
-      first: vi.fn(() => targetLocator),
-      nth: vi.fn(() => targetLocator),
-      waitFor: vi.fn().mockResolvedValue(undefined),
-      scrollIntoViewIfNeeded: vi.fn().mockResolvedValue(undefined),
-      boundingBox: vi.fn().mockResolvedValue({ x: 200, y: 300, width: 50, height: 30 }),
-      click: vi.fn().mockResolvedValue(undefined),
-      hover: vi.fn().mockResolvedValue(undefined),
-      fill: vi.fn().mockResolvedValue(undefined),
-      type: vi.fn().mockResolvedValue(undefined),
-      press: vi.fn().mockResolvedValue(undefined),
-      evaluate: vi.fn().mockResolvedValue(undefined),
-      selectOption: vi.fn().mockResolvedValue(undefined),
-      setChecked: vi.fn().mockResolvedValue(undefined),
-      setInputFiles: vi.fn().mockResolvedValue(undefined),
-      dragTo: vi.fn().mockResolvedValue(undefined),
-      focus: vi.fn().mockResolvedValue(undefined),
+    const mockElementHandle = { __brand: "elementHandle" };
+    const dragLocator = {
+      ...locatorMock,
+      elementHandle: vi.fn().mockResolvedValue(mockElementHandle),
     };
-    page.locator = vi.fn((sel: string) => (sel === "#src" ? locatorMock : targetLocator));
+    dragLocator.first = vi.fn(() => dragLocator);
+    page.locator = vi.fn(() => dragLocator);
     await runStepSimple(page, {
       action: "drag",
       source: { strategy: "id", value: "src" },
       target: { strategy: "id", value: "tgt" },
     });
-    expect(locatorMock.dragTo).toHaveBeenCalledWith(targetLocator);
+    expect(page.evaluate).toHaveBeenCalled();
   });
 
   it("handles waitFor selector", async () => {

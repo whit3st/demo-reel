@@ -1,15 +1,5 @@
 import { z } from "zod";
 
-export const PIPER_VOICES = ["nl_NL-mls-medium", "en_US-amy-medium", "nl_NL-pim-medium"] as const;
-export const OPENAI_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"] as const;
-export const ELEVENLABS_VOICES = [
-  "21m00Tcm4TlvDq8ikWAM",
-  "5zhopMftSdRGaPYVcwKK",
-  "CwhRBWXzGAHq8TQ4Fs17",
-  "21m00Tcm4TlvDq8ikWAM", // Native Dutch
-  "Cz0K1kOv9tD8l0b5Qu53", // Native English
-] as const;
-
 const pronunciationSchema = z
   .record(z.string(), z.string())
   .optional()
@@ -34,10 +24,7 @@ export const piperVoiceConfigSchema = z
     // voice schema has defaults, so it will match if voicePath is not present
     z.object({
       provider: z.literal("piper").default("piper").describe("TTS provider (piper = local/free)"),
-      voice: z
-        .enum(PIPER_VOICES)
-        .default("nl_NL-mls-medium")
-        .describe("Built-in Piper voice model"),
+      voice: z.string().default("nl_NL-mls-medium").describe("Piper voice model name"),
       speed: speedSchema,
       pronunciation: pronunciationSchema,
     }),
@@ -47,7 +34,7 @@ export const piperVoiceConfigSchema = z
 export const openaiVoiceConfigSchema = z
   .object({
     provider: z.literal("openai").describe("TTS provider (OpenAI cloud voices)"),
-    voice: z.enum(OPENAI_VOICES).default("alloy").describe("OpenAI voice name"),
+    voice: z.string().default("alloy").describe("OpenAI voice name"),
     speed: speedSchema,
     pronunciation: pronunciationSchema,
   })
@@ -56,10 +43,7 @@ export const openaiVoiceConfigSchema = z
 export const elevenLabsVoiceConfigSchema = z
   .object({
     provider: z.literal("elevenlabs").describe("TTS provider (ElevenLabs cloud voices)"),
-    voice: z
-      .enum(ELEVENLABS_VOICES)
-      .default("21m00Tcm4TlvDq8ikWAM")
-      .describe("Curated ElevenLabs voice ID"),
+    voice: z.string().default("21m00Tcm4TlvDq8ikWAM").describe("Curated ElevenLabs voice ID"),
     speed: speedSchema,
     pronunciation: pronunciationSchema,
   })
@@ -69,9 +53,6 @@ export const voiceConfigSchema = z
   .union([piperVoiceConfigSchema, openaiVoiceConfigSchema, elevenLabsVoiceConfigSchema])
   .default({ provider: "piper", voice: "nl_NL-mls-medium", speed: 1.0 });
 
-export type PiperVoiceName = (typeof PIPER_VOICES)[number];
-export type OpenAIVoiceName = (typeof OPENAI_VOICES)[number];
-export type ElevenLabsVoiceName = (typeof ELEVENLABS_VOICES)[number];
 export type VoiceConfig = z.infer<typeof voiceConfigSchema>;
 
 export const DEFAULT_VOICE_CONFIG = {

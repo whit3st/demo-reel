@@ -697,7 +697,33 @@ export const runStepSimple = async (page: Page, step: Step): Promise<void> => {
   if (step.action === "drag") {
     const source = resolveLocator(page, step.source);
     const target = resolveLocator(page, step.target);
-    await source.dragTo(target);
+
+    const sourceElement = await source.elementHandle();
+    const targetElement = await target.elementHandle();
+    if (!sourceElement || !targetElement) {
+      throw new Error("Drag source or target element not found");
+    }
+
+    await page.evaluate(
+      ([src, tgt]) => {
+        const dataTransfer = new DataTransfer();
+
+        src.dispatchEvent(
+          new DragEvent("dragstart", { dataTransfer, bubbles: true, cancelable: true }),
+        );
+
+        tgt.dispatchEvent(
+          new DragEvent("dragover", { dataTransfer, bubbles: true, cancelable: true }),
+        );
+
+        tgt.dispatchEvent(new DragEvent("drop", { dataTransfer, bubbles: true, cancelable: true }));
+
+        src.dispatchEvent(
+          new DragEvent("dragend", { dataTransfer, bubbles: true, cancelable: true }),
+        );
+      },
+      [sourceElement, targetElement],
+    );
     return;
   }
 
@@ -962,14 +988,55 @@ const runStep = async (
     await applyStepDelay(page, step.delayBeforeMs);
     const source = resolveLocator(page, step.source);
     const target = resolveLocator(page, step.target);
+
     await humanMoveToLocator(page, source, state, config.motion, cursorStart, rng);
     await page.waitForTimeout(config.motion.clickDelayMs);
     await page.mouse.down();
 
+    const sourceElement = await source.elementHandle();
+    const targetElement = await target.elementHandle();
+    if (sourceElement) {
+      await page.evaluate((src) => {
+        src.dispatchEvent(
+          new DragEvent("dragstart", {
+            dataTransfer: new DataTransfer(),
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      }, sourceElement);
+    }
+
     const targetPoint = await getLocatorCenter(target);
     await moveMouseBezier(page, state, targetPoint.x, targetPoint.y, config.motion, rng);
     await page.waitForTimeout(config.motion.clickDelayMs);
+
+    if (targetElement) {
+      await page.evaluate((tgt) => {
+        tgt.dispatchEvent(
+          new DragEvent("drop", {
+            dataTransfer: new DataTransfer(),
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      }, targetElement);
+    }
+
     await page.mouse.up();
+
+    if (sourceElement) {
+      await page.evaluate((src) => {
+        src.dispatchEvent(
+          new DragEvent("dragend", {
+            dataTransfer: new DataTransfer(),
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      }, sourceElement);
+    }
+
     await applyStepDelay(page, step.delayAfterMs);
     return delayApplied;
   }
