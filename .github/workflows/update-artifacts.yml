@@ -1,0 +1,95 @@
+name: Update Artifacts
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - audit.json
+      - sbom.json
+      - .github/badges/**
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Run audit
+        run: pnpm run security:audit
+
+      - name: Generate security badge data
+        run: pnpm run security:badge
+
+      - name: Commit audit + badge
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update security audit"
+          file_pattern: audit.json .github/badges/security.json
+
+  sbom:
+    needs: audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Generate SBOM
+        run: pnpm sbom --prod --sbom-format cyclonedx > sbom.json
+
+      - name: Commit updated SBOM
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update sbom"
+          file_pattern: sbom.json
+
+  coverage:
+    needs: sbom
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm ci
+
+      - name: Install Playwright browser
+        run: pnpm exec playwright install chromium
+
+      - name: Run coverage
+        run: pnpm test:coverage
+
+      - name: Generate coverage badge data
+        run: pnpm run coverage:badge
+
+      - name: Commit updated badge
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update coverage badge"
+          file_pattern: .github/badges/coverage.json
