@@ -1,57 +1,15 @@
-import { execSync, spawn, spawnSync } from "child_process";
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "fs";
 import { basename, dirname, extname, join, relative, resolve } from "path";
 import { demoReelConfigSchema, demoReelConfigInputSchema, } from "./schemas.js";
 import { getNarrationManifestPath } from "./narration-manifest.js";
 import { narrationManifestSchema, NARRATION_PROCESSING_VERSION } from "./narration-manifest.js";
 import { syncNarration, logSyncReport } from "./narration-sync.js";
-const DEFAULT_IMAGE = "ghcr.io/whit3st/demo-reel:latest";
-const LOCAL_IMAGE = "demo-reel:latest";
-const ENV_PASSTHROUGH = [
-    "ELEVENLABS_KEY",
-    "ELEVENLABS_API_KEY",
-    "OPENAI_API_KEY",
-    "ANTHROPIC_API_KEY",
-];
 export function defineConfig(config) {
     return validateConfig(config);
 }
 export const demo = defineConfig;
 export function validateConfig(config) {
     return demoReelConfigSchema.parse(config);
-}
-function isDockerAvailable() {
-    try {
-        execSync("docker info", { stdio: "ignore" });
-        return true;
-    }
-    catch {
-        return false;
-    }
-}
-function getImage() {
-    try {
-        execSync(`docker image inspect ${LOCAL_IMAGE}`, { stdio: "ignore" });
-        return LOCAL_IMAGE;
-    }
-    catch {
-        // No local image, fall through to the published image.
-    }
-    try {
-        execSync(`docker image inspect ${DEFAULT_IMAGE}`, { stdio: "ignore" });
-        return DEFAULT_IMAGE;
-    }
-    catch {
-        console.log(`Pulling ${DEFAULT_IMAGE}...`);
-        execSync(`docker pull ${DEFAULT_IMAGE}`, { stdio: "inherit" });
-        return DEFAULT_IMAGE;
-    }
-}
-function getDockerUserArgs() {
-    if (typeof process.getuid !== "function" || typeof process.getgid !== "function") {
-        return [];
-    }
-    return ["--user", `${process.getuid()}:${process.getgid()}`];
 }
 function getBaseName(config) {
     if (config.name) {
@@ -97,7 +55,7 @@ function shouldRegenerateNarrationArtifacts(audioPath, manifestPath) {
     }
 }
 export async function generate(config, options = {}) {
-    const { verbose = false, noDocker = false } = options;
+    const { verbose = false } = options;
     const resolvedConfig = validateConfig(config);
     const name = getBaseName(resolvedConfig);
     const narratedScenes = getNarratedScenesInPlaybackOrder(resolvedConfig);
@@ -105,16 +63,18 @@ export async function generate(config, options = {}) {
     const hasVoice = resolvedConfig.voice;
     const audioPath = getAudioPath(resolvedConfig);
     const narrationManifestPath = getNarrationManifestPath(audioPath);
-    const voiceScriptPath = `.${name}.voice.tmp.json`;
-    const shouldRegenerateNarration = hasNarration && hasVoice
+    const shouldRegenerate = hasNarration && hasVoice
         ? shouldRegenerateNarrationArtifacts(audioPath, narrationManifestPath)
         : false;
     mkdirSync(dirname(audioPath), { recursive: true });
-    if (hasNarration && hasVoice && shouldRegenerateNarration) {
+    if (hasNarration && hasVoice && shouldRegenerate) {
         if (verbose) {
-            console.log("Generating voiceover via Docker...");
+            console.log("Generating voiceover...");
         }
-        const scriptJson = {
+        const { generateVoiceSegments, generateNarrationAudio } = await import("./script/tts.js");
+        const { resolveVoiceConfig } = await import("./voice-config.js");
+        const resolvedVoice = resolveVoiceConfig(resolvedConfig.voice);
+        const script = {
             title: name,
             description: "auto-generated",
             url: "https://placeholder.local",
@@ -124,32 +84,10 @@ export async function generate(config, options = {}) {
                 sourceSceneIndex: index,
                 steps: [{ action: "wait", ms: 0 }],
             })),
-            voice: resolvedConfig.voice,
+            voice: resolvedVoice,
         };
-        writeFileSync(voiceScriptPath, JSON.stringify(scriptJson, null, 2), "utf-8");
-        const image = getImage();
-        const voiceArgs = [
-            "run",
-            "--rm",
-            ...getDockerUserArgs(),
-            "-v",
-            `${process.cwd()}:/work:z`,
-            "-w",
-            "/work",
-        ];
-        for (const envVar of ENV_PASSTHROUGH) {
-            if (process.env[envVar]) {
-                voiceArgs.push("-e", `${envVar}=${process.env[envVar]}`);
-            }
-        }
-        voiceArgs.push("--entrypoint", "node", image, "/app/dist/script/voice-cli.js", voiceScriptPath, "--output", relative(process.cwd(), audioPath));
-        const voiceResult = spawnSync("docker", voiceArgs, { stdio: "inherit", env: process.env });
-        if (voiceResult.status !== 0) {
-            throw new Error(`Docker voice generation exited with code ${voiceResult.status}`);
-        }
-        if (voiceResult.error) {
-            throw voiceResult.error;
-        }
+        const segments = await generateVoiceSegments(script, resolvedVoice, { verbose });
+        await generateNarrationAudio(segments, audioPath, { verbose });
     }
     const configWithAudio = hasNarration && existsSync(audioPath)
         ? {
@@ -163,7 +101,6 @@ export async function generate(config, options = {}) {
             outputFormat: "mp4",
         }
         : resolvedConfig;
-    // --- Narration auto-sync ---
     if (hasNarration && existsSync(narrationManifestPath) && resolvedConfig.scenes) {
         try {
             const syncMode = resolvedConfig.timing.narrationSyncMode ?? "auto";
@@ -193,7 +130,6 @@ export async function generate(config, options = {}) {
                 if (verbose) {
                     logSyncReport(syncOutput.report, verbose);
                 }
-                // Apply synced steps and scene indices
                 if (syncOutput.report.appliedPadMs > 0) {
                     configWithAudio.steps = syncOutput.steps;
                     if (resolvedConfig.scenes) {
@@ -212,7 +148,6 @@ export async function generate(config, options = {}) {
             if (verbose) {
                 console.warn(`Narration sync skipped: ${error instanceof Error ? error.message : String(error)}`);
             }
-            // Re-throw strict mode errors
             if (error instanceof Error &&
                 error.message.startsWith("Narration sync") &&
                 error.message.includes("strict")) {
@@ -227,51 +162,7 @@ export async function generate(config, options = {}) {
     catch (error) {
         throw new Error(`Failed to write config: ${error instanceof Error ? error.message : error}`);
     }
-    const relJsonPath = relative(process.cwd(), jsonPath);
-    const cliArgs = [relJsonPath];
-    if (verbose) {
-        cliArgs.push("--verbose");
-    }
     try {
-        if (!noDocker && isDockerAvailable()) {
-            const image = getImage();
-            if (verbose) {
-                console.log(`Using Docker image: ${image}`);
-            }
-            const dockerArgs = [
-                "run",
-                "--rm",
-                ...getDockerUserArgs(),
-                "-v",
-                `${process.cwd()}:/work:z`,
-                "-w",
-                "/work",
-            ];
-            for (const envVar of ENV_PASSTHROUGH) {
-                if (process.env[envVar]) {
-                    dockerArgs.push("-e", `${envVar}=${process.env[envVar]}`);
-                }
-            }
-            dockerArgs.push(image, ...cliArgs);
-            await new Promise((resolvePromise, reject) => {
-                const proc = spawn("docker", dockerArgs, {
-                    stdio: "inherit",
-                    env: process.env,
-                });
-                proc.on("close", (code) => {
-                    if (code === 0) {
-                        resolvePromise();
-                        return;
-                    }
-                    reject(new Error(`Docker exited with code ${code}`));
-                });
-                proc.on("error", reject);
-            });
-            return;
-        }
-        if (!noDocker) {
-            console.log("Docker not available, running locally (requires Playwright, FFmpeg, etc.)");
-        }
         const { loadConfig } = await import("./config-loader.js");
         const { runVideoScenario } = await import("./video-handler.js");
         const loaded = await loadConfig(resolve(jsonPath));
@@ -281,15 +172,7 @@ export async function generate(config, options = {}) {
         try {
             unlinkSync(jsonPath);
         }
-        catch {
-            // Best-effort cleanup for temp files.
-        }
-        try {
-            unlinkSync(voiceScriptPath);
-        }
-        catch {
-            // Best-effort cleanup for temp files.
-        }
+        catch { }
     }
 }
 export { demoReelConfigSchema, demoReelConfigInputSchema };

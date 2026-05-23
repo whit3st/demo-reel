@@ -2,7 +2,7 @@
 
 ![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/whit3st/demo-reel/main/.github/badges/coverage.json)
 
-Create professional demo videos from web apps. Code your demos in TypeScript, record via Docker, with automatic voiceover and subtitles.
+Create professional demo videos from web apps. Code your demos in TypeScript, with automatic voiceover and subtitles.
 
 ## Quick Start
 
@@ -106,13 +106,14 @@ Output: `output/signup.mp4` + `.srt` + `.vtt` + `.meta.json`
 ## How It Works
 
 1. **You write a `.demo.ts`** — TypeScript config with steps, scenes, and narration
-2. **`generate()` handles everything** — compiles config, generates voiceover (via Docker), records the video (via Docker), outputs subtitles and metadata
-3. **Docker runs the heavy stuff** — Chromium, FFmpeg, Piper TTS are in the Docker image, not on your machine
+2. **`generate()` handles everything** — compiles config, generates voiceover, records the video, outputs subtitles and metadata
 
 ### Requirements
 
-- **Docker** — for recording and voice generation
 - **Node.js 18+** — for running your demo scripts
+- **Playwright** — `pnpm exec playwright install chromium` (peer dependency)
+- **FFmpeg** — for video/audio processing (installed via `ffmpeg-static` or system package)
+- **Piper** (optional) — for local TTS voiceover (`pip install piper-tts` or download from https://github.com/rhasspy/piper)
 - **API keys** (optional) — `ELEVENLABS_KEY` or `OPENAI_API_KEY` for cloud TTS
 
 ## Claude Code Integration
@@ -179,32 +180,32 @@ See `TRACKING.md` for the raw file format and guidance for AI tools that consume
 
 ```typescript
 voice: {
-  provider: "elevenlabs",           // "piper" | "openai" | "elevenlabs"
-  voice: "5zhopMftSdRGaPYVcwKK",     // provider-specific autocomplete
+  provider: "piper",             // "piper" | "openai" | "elevenlabs"
+  voice: "en_US-amy-medium",      // any voice name or ID supported by the provider
   speed: 1.0,
-  pronunciation: {                  // word replacements before TTS
-    "template": "template",         // prevent Dutch pronunciation of English words
+  pronunciation: {                // word replacements before TTS
+    "template": "template",       // prevent Dutch pronunciation of English words
   },
 },
 ```
 
-Built-in voice values:
+Voiceover is auto-generated when `scenes` have `narration` text and `voice` is configured. Cached by content hash — only regenerates when narration changes.
 
-- `piper`: `"nl_NL-mls-medium"`, `"nl_NL-pim-medium"`, `"en_US-amy-medium"`
-- `openai`: `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`
-- `elevenlabs`: `"21m00Tcm4TlvDq8ikWAM"`, `"5zhopMftSdRGaPYVcwKK"`, `CwhRBWXzGAHq8TQ4Fs17`, `60CwgZt94Yf7yYIXMDDe`
+#### Provider Details
 
-For a custom Piper `.onnx` model, use `voicePath` instead of `voice`:
+**Piper** (local, free) — voice is a model name like `en_US-amy-medium`. Models are loaded from `$PIPER_VOICE_DIR` (defaults to `~/.local/share/piper-voices`). Must match an `.onnx` file in that directory. For custom models, use `voicePath` instead of `voice`:
 
 ```typescript
 voice: {
   provider: "piper",
-  voicePath: "/models/custom-voice.onnx",
+  voicePath: "/path/to/custom-voice.onnx",
   speed: 1.0,
 }
 ```
 
-Voiceover is auto-generated when `scenes` have `narration` text and `voice` is configured. Cached by content hash — only regenerates when narration changes.
+**OpenAI** — voice is an OpenAI TTS voice name (e.g. `alloy`, `nova`, `shimmer`). Requires `OPENAI_API_KEY` env var.
+
+**ElevenLabs** — voice is an ElevenLabs voice ID string. Requires `ELEVENLABS_KEY` or `ELEVENLABS_API_KEY` env var.
 
 ### Setup & Cleanup
 

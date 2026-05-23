@@ -4,6 +4,7 @@ import { createHash } from "crypto";
 import { spawn } from "child_process";
 import type { DemoScript, TimedScene } from "./types.js";
 import { getVoiceName, type VoiceConfig } from "../voice-config.js";
+import { ensurePiperBinary, ensurePiperModel } from "../piper.js";
 import {
   getNarrationClipDir,
   getNarrationClipFileName,
@@ -146,12 +147,11 @@ export async function wavToMp3(wavBuffer: Buffer): Promise<Buffer> {
 
 // --- Piper TTS Provider (local, free) ---
 
-const PIPER_DEFAULT_MODEL_DIR =
-  process.env.PIPER_VOICE_DIR ||
-  join(process.env.HOME || process.env.USERPROFILE || ".", ".local", "share", "piper-voices");
-
 async function findPiperBinary(): Promise<string> {
-  // Check common locations
+  try {
+    return await ensurePiperBinary();
+  } catch {}
+
   for (const name of ["piper", "piper-tts"]) {
     try {
       const result = await new Promise<string>((resolve, reject) => {
@@ -164,27 +164,44 @@ async function findPiperBinary(): Promise<string> {
         proc.on("error", reject);
       });
       if (result) return result;
-    } catch {
-      /* continue */
-    }
+    } catch {}
   }
   throw new Error("Piper not found. Install with: pip install piper-tts");
 }
 
-function resolvePiperModel(voice: string): string {
-  // If it's an absolute path, use it directly
+function getPiperModelDir(voice: string): string {
   if (voice.startsWith("/") || voice.includes(".onnx")) {
-    return voice;
+    return dirname(voice);
   }
-  // Otherwise look in the default model directory
-  return join(PIPER_DEFAULT_MODEL_DIR, `${voice}.onnx`);
+  return (
+    process.env.PIPER_VOICE_DIR ||
+    join(process.env.HOME || process.env.USERPROFILE || ".", ".local", "share", "piper-voices")
+  );
 }
 
-function getPiperModelPath(options: VoiceConfig): string {
+async function getPiperModelPath(options: VoiceConfig): Promise<string> {
   if ("voicePath" in options) {
-    return resolvePiperModel(options.voicePath);
+    const voice = options.voicePath;
+    if (voice.startsWith("/") || voice.includes(".onnx")) {
+      return voice;
+    }
   }
-  return resolvePiperModel(options.voice);
+
+  const voiceDir = getPiperModelDir("voicePath" in options ? options.voicePath : options.voice);
+  const voiceName = "voicePath" in options ? options.voicePath : options.voice;
+
+  if ("voicePath" in options) {
+    return join(voiceDir, `${voiceName}.onnx`);
+  }
+
+  try {
+    return await ensurePiperModel(voiceName, voiceDir);
+  } catch (error) {
+    throw new Error(
+      `Piper voice model not found: ${voiceName}\n` +
+        `${error instanceof Error ? error.message : error}`,
+    );
+  }
 }
 
 async function generatePiper(
@@ -192,17 +209,7 @@ async function generatePiper(
   options: Extract<VoiceConfig, { provider: "piper" }>,
 ): Promise<{ audio: Buffer; durationMs: number }> {
   const piperPath = await findPiperBinary();
-  const modelPath = getPiperModelPath(options);
-
-  // Verify model exists
-  try {
-    await stat(modelPath);
-  } catch {
-    throw new Error(
-      `Piper voice model not found: ${modelPath}\n` +
-        `Download Dutch voice: curl -sL https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_NL/mls/medium/nl_NL-mls-medium.onnx -o ${PIPER_DEFAULT_MODEL_DIR}/nl_NL-mls-medium.onnx`,
-    );
-  }
+  const modelPath = await getPiperModelPath(options);
 
   const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
   await mkdir(tempDir, { recursive: true });

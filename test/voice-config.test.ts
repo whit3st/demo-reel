@@ -81,16 +81,12 @@ describe("voice-config", () => {
   });
 
   it("accepts any voice name string per provider", () => {
-    expect(
-      resolveVoiceConfig({ provider: "openai", voice: "custom-voice" }),
-    ).toEqual({
+    expect(resolveVoiceConfig({ provider: "openai", voice: "custom-voice" })).toEqual({
       provider: "openai",
       voice: "custom-voice",
       speed: 1,
     });
-    expect(
-      resolveVoiceConfig({ provider: "elevenlabs", voice: "custom-id" }),
-    ).toEqual({
+    expect(resolveVoiceConfig({ provider: "elevenlabs", voice: "custom-id" })).toEqual({
       provider: "elevenlabs",
       voice: "custom-id",
       speed: 1,

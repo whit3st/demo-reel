@@ -2,7 +2,6 @@ import { demoReelConfigSchema, demoReelConfigInputSchema, type DemoReelConfig, t
 export type DemoConfig = DemoReelConfigInput;
 export interface GenerateOptions {
     verbose?: boolean;
-    noDocker?: boolean;
 }
 export declare function defineConfig(config: DemoConfig): DemoReelConfig;
 export declare const demo: typeof defineConfig;

@@ -11,6 +11,12 @@ vi.mock("fs", () => ({
   mkdirSync: vi.fn(),
   unlinkSync: vi.fn(),
   writeFileSync: vi.fn(),
+  readFileSync: vi.fn(),
+}));
+
+vi.mock("../src/script/tts.js", () => ({
+  generateVoiceSegments: vi.fn(),
+  generateNarrationAudio: vi.fn(),
 }));
 
 vi.mock("../src/config-loader.js", () => ({
@@ -21,10 +27,10 @@ vi.mock("../src/video-handler.js", () => ({
   runVideoScenario: vi.fn(),
 }));
 
-import { execSync, spawn, spawnSync } from "child_process";
 import { existsSync, mkdirSync, unlinkSync, writeFileSync } from "fs";
 import { loadConfig } from "../src/config-loader.js";
 import { runVideoScenario } from "../src/video-handler.js";
+import { generateVoiceSegments, generateNarrationAudio } from "../src/script/tts.js";
 
 function createConfig(overrides: Record<string, unknown> = {}) {
   return {
@@ -38,50 +44,33 @@ function createConfig(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function createSpawnProcess(exitCode = 0) {
-  return {
-    on(event: string, handler: (value?: number | Error) => void) {
-      if (event === "close") {
-        queueMicrotask(() => handler(exitCode));
-      }
-      return this;
-    },
-  };
-}
-
 describe("index runtime", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
     vi.spyOn(process, "cwd").mockReturnValue("/workspace/project");
     vi.mocked(existsSync).mockReturnValue(false);
-    vi.mocked(execSync).mockImplementation((command: string) => {
-      if (command === "docker info") {
-        return "ok";
-      }
-      if (command.includes("docker image inspect demo-reel:latest")) {
-        return "ok";
-      }
-      return "ok";
-    });
-    vi.mocked(spawn).mockReturnValue(createSpawnProcess() as never);
-    vi.mocked(spawnSync).mockReturnValue({ status: 0, error: undefined } as never);
     vi.mocked(loadConfig).mockResolvedValue({
       config: createConfig(),
       outputPath: "/workspace/project/output/demo.webm",
       configPath: "/workspace/project/.demo.tmp.json",
     });
     vi.mocked(runVideoScenario).mockResolvedValue(undefined);
+    vi.mocked(generateVoiceSegments).mockResolvedValue([]);
+    vi.mocked(generateNarrationAudio).mockResolvedValue({
+      timedScenes: [],
+      narrationManifestPath: "/workspace/project/output/demo-narration-manifest.json",
+    });
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("runs locally when docker is disabled", async () => {
+  it("runs locally and calls video handler", async () => {
     const { generate } = await import("../src/index.js");
 
-    await generate(createConfig(), { noDocker: true, verbose: true });
+    await generate(createConfig(), { verbose: true });
 
     expect(mkdirSync).toHaveBeenCalledWith("/workspace/project/output", { recursive: true });
     expect(writeFileSync).toHaveBeenCalledWith(
@@ -96,25 +85,10 @@ describe("index runtime", () => {
       "/workspace/project/.demo.tmp.json",
       { verbose: true },
     );
-    expect(spawn).not.toHaveBeenCalled();
     expect(unlinkSync).toHaveBeenCalledWith(".demo.tmp.json");
   });
 
-  it("runs through docker when available", async () => {
-    const { generate } = await import("../src/index.js");
-
-    await generate(createConfig(), { verbose: true });
-
-    expect(spawn).toHaveBeenCalledWith(
-      "docker",
-      expect.arrayContaining(["run", "--rm", "demo-reel:latest", ".demo.tmp.json", "--verbose"]),
-      expect.objectContaining({ stdio: "inherit", env: process.env }),
-    );
-    expect(loadConfig).not.toHaveBeenCalled();
-    expect(unlinkSync).toHaveBeenCalledWith(".demo.tmp.json");
-  });
-
-  it("generates narration audio in stepIndex order and injects mp4 audio config", async () => {
+  it("generates narration audio via local TTS and injects mp4 audio config", async () => {
     let audioChecks = 0;
     vi.mocked(existsSync).mockImplementation((path: string) => {
       if (path.endsWith("demo-narration.mp3")) {
@@ -123,6 +97,21 @@ describe("index runtime", () => {
       }
       return false;
     });
+
+    vi.mocked(generateVoiceSegments).mockResolvedValue([
+      {
+        sceneIndex: 0,
+        narration: "First scene",
+        audio: Buffer.from("fake-audio"),
+        durationMs: 1000,
+      },
+      {
+        sceneIndex: 1,
+        narration: "Second scene",
+        audio: Buffer.from("fake-audio"),
+        durationMs: 2000,
+      },
+    ]);
 
     const { generate } = await import("../src/index.js");
 
@@ -137,40 +126,20 @@ describe("index runtime", () => {
         ],
         voice: { provider: "piper", voice: "en_US-amy-medium", speed: 1 },
       }),
-      { noDocker: true },
     );
 
-    expect(writeFileSync).toHaveBeenCalledWith(
-      ".demo.voice.tmp.json",
-      expect.stringContaining('"First scene"'),
-      "utf-8",
+    expect(generateVoiceSegments).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scenes: expect.arrayContaining([
+          expect.objectContaining({ narration: "First scene" }),
+          expect.objectContaining({ narration: "Second scene" }),
+          expect.objectContaining({ narration: "Third scene" }),
+        ]),
+      }),
+      expect.objectContaining({ provider: "piper" }),
+      expect.any(Object),
     );
-    const voiceScriptCall = vi
-      .mocked(writeFileSync)
-      .mock.calls.find(([path]) => path === ".demo.voice.tmp.json");
-    expect(voiceScriptCall).toBeDefined();
-    const voiceScriptContents = voiceScriptCall?.[1] as string;
-    expect(voiceScriptContents).toContain('"First scene"');
-    expect(voiceScriptContents).toContain('"Second scene"');
-    expect(voiceScriptContents).toContain('"Third scene"');
-    expect(voiceScriptContents.indexOf('"First scene"')).toBeLessThan(
-      voiceScriptContents.indexOf('"Second scene"'),
-    );
-    expect(voiceScriptContents.indexOf('"Second scene"')).toBeLessThan(
-      voiceScriptContents.indexOf('"Third scene"'),
-    );
-    expect(spawnSync).toHaveBeenCalledWith(
-      "docker",
-      expect.arrayContaining([
-        "--entrypoint",
-        "node",
-        "/app/dist/script/voice-cli.js",
-        ".demo.voice.tmp.json",
-        "--output",
-        "output/demo-narration.mp3",
-      ]),
-      expect.objectContaining({ stdio: "inherit", env: process.env }),
-    );
+    expect(generateNarrationAudio).toHaveBeenCalled();
     expect(writeFileSync).toHaveBeenCalledWith(
       ".demo.tmp.json",
       expect.stringContaining('"outputFormat": "mp4"'),
@@ -181,10 +150,6 @@ describe("index runtime", () => {
       expect.stringContaining('"narration": "output/demo-narration.mp3"'),
       "utf-8",
     );
-    expect(unlinkSync).toHaveBeenCalledWith(".demo.voice.tmp.json");
-    const unlinkOrder = vi.mocked(unlinkSync).mock.invocationCallOrder[0];
-    const runOrder = vi.mocked(runVideoScenario).mock.invocationCallOrder[0];
-    expect(unlinkOrder).toBeGreaterThan(runOrder);
   });
 
   it("uses outputPath to derive the narration filename", async () => {
@@ -209,11 +174,6 @@ describe("index runtime", () => {
 
     expect(mkdirSync).toHaveBeenCalledWith("/workspace/project/videos", { recursive: true });
     expect(writeFileSync).toHaveBeenCalledWith(
-      ".custom-name.voice.tmp.json",
-      expect.any(String),
-      "utf-8",
-    );
-    expect(writeFileSync).toHaveBeenCalledWith(
       ".custom-name.tmp.json",
       expect.stringContaining('"narration": "videos/custom-name-narration.mp3"'),
       "utf-8",
@@ -229,9 +189,7 @@ describe("index runtime", () => {
 
     const { generate } = await import("../src/index.js");
 
-    await expect(generate(createConfig(), { noDocker: true })).rejects.toThrow(
-      "Failed to write config: disk full",
-    );
+    await expect(generate(createConfig())).rejects.toThrow("Failed to write config: disk full");
     expect(unlinkSync).not.toHaveBeenCalled();
   });
 });

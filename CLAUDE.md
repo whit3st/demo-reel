@@ -28,7 +28,7 @@ pnpm demo             # run CLI from source (via tsx)
 - **Testing:** Vitest with v8 coverage
 - **Lint/Format:** oxlint + oxfmt (Oxc Rust-based tools, not ESLint/Prettier)
 - **Browser Automation:** Playwright (peer dependency)
-- **Audio/Video:** FFmpeg (via ffmpeg-static + Docker)
+- **Audio/Video:** FFmpeg (via ffmpeg-static)
 - **Validation:** Zod v4
 - **Optional peers:** @anthropic-ai/sdk (Claude API), openai (OpenAI TTS)
 
@@ -47,15 +47,14 @@ All config flows through two Zod schema phases:
 
 Scene-owned steps (`scenes[].steps[]`) are normalized into the runtime format (flat `steps[]` + `scenes[]` with `stepIndex`). Legacy format (top-level `steps[]` + `scenes[].stepIndex`) is still supported but mixed formats are rejected.
 
-### Docker-First Execution (`src/index.ts`)
+### Execution Flow (`src/index.ts`)
 
 `generate()` flow:
 
 1. Validate and normalize config
-2. Generate voiceover via Docker (invokes `voice-cli.js`)
+2. Generate voiceover via local TTS (Piper, OpenAI, or ElevenLabs)
 3. Narration auto-sync to audio timing
-4. Serialize config → execute recording via Docker (invokes `cli.js`)
-5. Fallback to local execution with `--no-docker` if Docker unavailable
+4. Serialize config → execute recording via Playwright locally
 
 ### Key Source Files
 

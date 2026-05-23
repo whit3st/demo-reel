@@ -157,7 +157,7 @@ One command does everything (compile, voice, record, subtitles, cleanup):
 pnpm demo-reel <name> --verbose
 ```
 
-This compiles the .demo.ts, generates voiceover (if voice config + narration present), runs the recording in Docker, and outputs video + subtitles + metadata.
+This compiles the .demo.ts, generates voiceover (if voice config + narration present), records the video, and outputs video + subtitles + metadata.
 
 For local debugging with a visible browser:
 

@@ -9,8 +9,10 @@ import { defineConfig } from "demo-reel";
  *   pnpm demo-reel demos/dictionary-search-nl --verbose
  *
  * Requirements:
- *   - Docker (voor opnemen en voice generation)
- *   - Geen API-keys nodig (Piper draait lokaal in Docker)
+ *   - Playwright + Chromium (npx playwright install chromium)
+ *   - FFmpeg (voor video/audio verwerking)
+ *   - Piper voor lokale TTS (pip install piper-tts)
+ *   - Geen API-keys nodig (gebruikt Piper, een gratis lokale TTS engine)
  */
 export default defineConfig({
   video: {

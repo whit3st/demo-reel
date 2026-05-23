@@ -24,10 +24,7 @@ export const piperVoiceConfigSchema = z
     // voice schema has defaults, so it will match if voicePath is not present
     z.object({
       provider: z.literal("piper").default("piper").describe("TTS provider (piper = local/free)"),
-      voice: z
-        .string()
-        .default("nl_NL-mls-medium")
-        .describe("Piper voice model name"),
+      voice: z.string().default("nl_NL-mls-medium").describe("Piper voice model name"),
       speed: speedSchema,
       pronunciation: pronunciationSchema,
     }),
@@ -46,10 +43,7 @@ export const openaiVoiceConfigSchema = z
 export const elevenLabsVoiceConfigSchema = z
   .object({
     provider: z.literal("elevenlabs").describe("TTS provider (ElevenLabs cloud voices)"),
-    voice: z
-      .string()
-      .default("21m00Tcm4TlvDq8ikWAM")
-      .describe("Curated ElevenLabs voice ID"),
+    voice: z.string().default("21m00Tcm4TlvDq8ikWAM").describe("Curated ElevenLabs voice ID"),
     speed: speedSchema,
     pronunciation: pronunciationSchema,
   })
