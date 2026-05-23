@@ -1,0 +1,1655 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.7",
+  "serialNumber": "urn:uuid:22e30cb1-ec91-46ed-92af-67e8967f69aa",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-05-23T20:33:16.249Z",
+    "lifecycles": [
+      {
+        "phase": "build"
+      }
+    ],
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "pnpm",
+          "version": "11.2.2"
+        }
+      ]
+    },
+    "component": {
+      "type": "library",
+      "name": "demo-reel",
+      "version": "0.7.0",
+      "purl": "pkg:npm/demo-reel@0.7.0",
+      "bom-ref": "pkg:npm/demo-reel@0.7.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "description": "Create demo videos from web apps using Playwright"
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "sdk",
+      "version": "0.80.0",
+      "purl": "pkg:npm/%40anthropic-ai/sdk@0.80.0",
+      "bom-ref": "pkg:npm/%40anthropic-ai/sdk@0.80.0",
+      "group": "@anthropic-ai",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@anthropic-ai/sdk/-/sdk-0.80.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "59e5cb9fbccd564df28deb219fec591ef95de80a0550e47749ea7aa52a07868e586d28ba1f0722aea80f03971c16e5bc41354900053b37cb90402e966bd4c6fa"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "ffmpeg-static",
+      "version": "5.3.0",
+      "purl": "pkg:npm/ffmpeg-static@5.3.0",
+      "bom-ref": "pkg:npm/ffmpeg-static@5.3.0",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ffmpeg-static/-/ffmpeg-static-5.3.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "1fe2bab16e938885fa5467a7774290c2d85efa469c79e1ff96e13c74867238fdf98a4eda858a230eeaa54d5d5b3abb44c25d35b32d8714d1907e2e480c9be8b6"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "glob",
+      "version": "13.0.6",
+      "purl": "pkg:npm/glob@13.0.6",
+      "bom-ref": "pkg:npm/glob@13.0.6",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/glob/-/glob-13.0.6.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "5a3972ae89669bcb83a66fe8806c976576f567e09ad81f0d6c9c2a0558346b12bd19b05ea12ef2195eaf8d79d87469ba5f9de27a112ec716f288aa7c42637857"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "openai",
+      "version": "5.23.2",
+      "purl": "pkg:npm/openai@5.23.2",
+      "bom-ref": "pkg:npm/openai@5.23.2",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/openai/-/openai-5.23.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "310073993ba58fe30ce4ef1228493f80bf1aeece6692d4bdcd4b40914db9ed68efa1b19cf6729c06e5708f210471bf5223c6bc6361bf9b39f7be6f67d499657a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "playwright",
+      "version": "1.60.0",
+      "purl": "pkg:npm/playwright@1.60.0",
+      "bom-ref": "pkg:npm/playwright@1.60.0",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/playwright/-/playwright-1.60.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "86178776890cf1c76a09bd25704decfb34f8b785bebef8e91b1b199439e291aaf3c7cb52ccc79b87752216d82ac05c274e78d841cb32305f1e8b69823bfb6978"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "tsx",
+      "version": "4.22.3",
+      "purl": "pkg:npm/tsx@4.22.3",
+      "bom-ref": "pkg:npm/tsx@4.22.3",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/tsx/-/tsx-4.22.3.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "99da0dc410bf71240e6c61954390699f98becafee3ebc824dcd7e6df0163709837674322c7d8f30057cfd76a6b9a6e5e5469832ada74cb202baecd10fbc8191e"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "zod",
+      "version": "4.4.3",
+      "purl": "pkg:npm/zod@4.4.3",
+      "bom-ref": "pkg:npm/zod@4.4.3",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/zod/-/zod-4.4.3.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "cad10d163209165d94c1882575eda37215b61f09b818914b0e249759d4eb25004837d15cca9ee7e0387124489634024c575fc1a967d6fe4920ef55037072724d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "json-schema-to-ts",
+      "version": "3.1.1",
+      "purl": "pkg:npm/json-schema-to-ts@3.1.1",
+      "bom-ref": "pkg:npm/json-schema-to-ts@3.1.1",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/json-schema-to-ts/-/json-schema-to-ts-3.1.1.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "f835a0f230891b64c49e9cbb90e9bfeff031698a1a45b8d50782c564bc926655a7f1ec46b3703838b251f7ae9c56f536e8ded7f535b197e26cc3b77302a293ea"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "http-basic",
+      "version": "8.2.4",
+      "purl": "pkg:npm/%40derhuerst/http-basic@8.2.4",
+      "bom-ref": "pkg:npm/%40derhuerst/http-basic@8.2.4",
+      "group": "@derhuerst",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@derhuerst/http-basic/-/http-basic-8.2.4.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "17dacbf64f578dfe5b942cfc1ec2513b8762cb5d7571ac8bdaf918d97138af8b779f4c8f5d5632dca0f79c9d6a6eb4a7f7be375164971f8230b826bf1d694617"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "env-paths",
+      "version": "2.2.1",
+      "purl": "pkg:npm/env-paths@2.2.1",
+      "bom-ref": "pkg:npm/env-paths@2.2.1",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/env-paths/-/env-paths-2.2.1.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "fa1d6590b2a164c4d88e8835544a49346ecd64959cb9cd830e4feab2a49345108e5e22e3790d5dd7fb9dad41a1a8cc5480097028d67471fdaea9a9f918bb92d8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "https-proxy-agent",
+      "version": "5.0.1",
+      "purl": "pkg:npm/https-proxy-agent@5.0.1",
+      "bom-ref": "pkg:npm/https-proxy-agent@5.0.1",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/https-proxy-agent/-/https-proxy-agent-5.0.1.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "7457008e94d0160a0b3330b657053e0bf09b4bbb912f49569b10c84e6aa6ec2fbb17439d9a3eacf65e9a95973a0042d786b9e080cd827964971c639d5f662dc0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "progress",
+      "version": "2.0.3",
+      "purl": "pkg:npm/progress@2.0.3",
+      "bom-ref": "pkg:npm/progress@2.0.3",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/progress/-/progress-2.0.3.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "ecf887b4b965e4b767288330d74d08fbcc495d1e605b6430598913ea226f6b46d78ad64a6bf5ccad26dd9a0debd979da89dcfd42e99dd153da32b66517d57db0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "minimatch",
+      "version": "10.2.5",
+      "purl": "pkg:npm/minimatch@10.2.5",
+      "bom-ref": "pkg:npm/minimatch@10.2.5",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/minimatch/-/minimatch-10.2.5.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "3142e454b7ca1980c561e8cfd3b40ebab0cb2d0a5c8e4ec5c3eee35d2d91d9ccd1433479eb21d1bde5393432443af887fa111364a4a4224e5cf93db71a315432"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "minipass",
+      "version": "7.1.3",
+      "purl": "pkg:npm/minipass@7.1.3",
+      "bom-ref": "pkg:npm/minipass@7.1.3",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/minipass/-/minipass-7.1.3.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "b44047a839c8a0cff5ad7304d738246bd83a43695ca029311cbb9cece0c9e41c5b3f977873667970682d5c092ee7ddb4d02c7b762b874ce61f4810fc9fa9a6f0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "path-scurry",
+      "version": "2.0.2",
+      "purl": "pkg:npm/path-scurry@2.0.2",
+      "bom-ref": "pkg:npm/path-scurry@2.0.2",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/path-scurry/-/path-scurry-2.0.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "dcefe2555b0900fb0e9e9c1621e0fe77acffecf9aa029c9078f52d0a77636ad8fff48e4bca51efb79aa5b856814f7239877af57a37d1d39e9cf850aff8d9cd5e"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "playwright-core",
+      "version": "1.60.0",
+      "purl": "pkg:npm/playwright-core@1.60.0",
+      "bom-ref": "pkg:npm/playwright-core@1.60.0",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.60.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "f5b5bacef5ff9b49446e04ca27a629a4e2b1f07dd538f04c382161da2ad714e4f805b1e0af1e613e3c0960b4f8d0bbbee2ab43dfaa8a73f1e7e7a4ad516e7b20"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "fsevents",
+      "version": "2.3.2",
+      "purl": "pkg:npm/fsevents@2.3.2",
+      "bom-ref": "pkg:npm/fsevents@2.3.2",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "c62a8c411e3101e1d3b81f6e5a6f9f1517083a02813223813fe7978b24fb8ec8150aad5b915ca0b74d28012a3007b11db6938769a3e02adf35d8ff5a6fe0c328"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "esbuild",
+      "version": "0.28.0",
+      "purl": "pkg:npm/esbuild@0.28.0",
+      "bom-ref": "pkg:npm/esbuild@0.28.0",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/esbuild/-/esbuild-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "b0d47d307a5749457f5c1e339ac14a37e420546f3609cefefda6b127c01d8bc87239a73e117a6d229e394013da5725f737bd3aeb8c116d370b4ce7a60809f2ab"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "fsevents",
+      "version": "2.3.3",
+      "purl": "pkg:npm/fsevents@2.3.3",
+      "bom-ref": "pkg:npm/fsevents@2.3.3",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "e71a037d7f9f2fb7da0139da82658fa5b16dc21fd1efb5a630caaa1c64bae42defbc1d181eb805f81d58999df8e35b4c8f99fade4d36d765cda09c339617df43"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "runtime",
+      "version": "7.29.2",
+      "purl": "pkg:npm/%40babel/runtime@7.29.2",
+      "bom-ref": "pkg:npm/%40babel/runtime@7.29.2",
+      "group": "@babel",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/runtime/-/runtime-7.29.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "2620d2847e39cca1d6c867b864d551ac28c1cfc361f53326646d648784132bc8420535818bc0dafa2eecd5f270eff958a4ce1c71ea5235fab367f42f001062e6"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "ts-algebra",
+      "version": "2.0.0",
+      "purl": "pkg:npm/ts-algebra@2.0.0",
+      "bom-ref": "pkg:npm/ts-algebra@2.0.0",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ts-algebra/-/ts-algebra-2.0.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "14f02134f14cae4c33efa3fb71d8dd9a24a1c0cca765837a4a03ae8c3d6ead8e28366f343aef6831d99b478e4ba2d70a397a32ef04a61e444513a3316eb85e7f"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "caseless",
+      "version": "0.12.0",
+      "purl": "pkg:npm/caseless@0.12.0",
+      "bom-ref": "pkg:npm/caseless@0.12.0",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/caseless/-/caseless-0.12.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "e2d605ca27da15f19a72888e6e325e828964c12538c503466d581488d6155316d0db1da552c16f638855815cc68887ba58b38fab27165c0e3497e3d6b31b6153"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "concat-stream",
+      "version": "2.0.0",
+      "purl": "pkg:npm/concat-stream@2.0.0",
+      "bom-ref": "pkg:npm/concat-stream@2.0.0",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/concat-stream/-/concat-stream-2.0.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "316b9f61d170e7771c1a3080f8e97b5c96290255bafe9ad2333b8f393467246706cee84b9f849caf3eea7faa3c6d1399e75e25b5acdc2052597af71f6e8d31ec"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "http-response-object",
+      "version": "3.0.2",
+      "purl": "pkg:npm/http-response-object@3.0.2",
+      "bom-ref": "pkg:npm/http-response-object@3.0.2",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/http-response-object/-/http-response-object-3.0.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "6ea5f45d317a7e75d241c109d88bb2afbe7255a9328c80c2aaba0943f6877d276533be370b0aa88b69c360cccb19651cb935865b2f0002f38a5d37e2bfaabd44"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "parse-cache-control",
+      "version": "1.0.1",
+      "purl": "pkg:npm/parse-cache-control@1.0.1",
+      "bom-ref": "pkg:npm/parse-cache-control@1.0.1",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/parse-cache-control/-/parse-cache-control-1.0.1.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "eb4cefb0945e40f5f9fd03f42b37ddfd5ae98d270843b487056e9b14261f10ff9fa74129a6bd521e120ee677753e366dbdc9734b3112f43fe9e67149babc1f5a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "agent-base",
+      "version": "6.0.2",
+      "purl": "pkg:npm/agent-base@6.0.2",
+      "bom-ref": "pkg:npm/agent-base@6.0.2",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/agent-base/-/agent-base-6.0.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "45937035c945efe312ffc6c383bd1a9a0df6772799199c620ee42667128b025423af78c6c8bc7ee0a924e7c50eec3d90760148402a2fb92b991129dee911ba5d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "debug",
+      "version": "4.4.3",
+      "purl": "pkg:npm/debug@4.4.3",
+      "bom-ref": "pkg:npm/debug@4.4.3",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "446c305a7c10be455f6af295b76d8518bc3ec5849dcc04709b4aeee83853540dee994e6165cdbc57790ee2cb6062bcab4e52e9baf808f468a28e5b408cd6dca8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "brace-expansion",
+      "version": "5.0.6",
+      "purl": "pkg:npm/brace-expansion@5.0.6",
+      "bom-ref": "pkg:npm/brace-expansion@5.0.6",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.6.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "90ba71bab638678afdb2032cc86d19f6ecec06582253f1052a18ff87dd7ff321eed1e768ed7ba2c4e207dd5709f24931b3afe33f3a08e94f558f75aa6cc43de2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "lru-cache",
+      "version": "11.5.0",
+      "purl": "pkg:npm/lru-cache@11.5.0",
+      "bom-ref": "pkg:npm/lru-cache@11.5.0",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/lru-cache/-/lru-cache-11.5.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "e58807f5425def055bf61228b88d9a756a60aabac80a4b74ef40e78fc114635f81e01d8ff5e44b3c0900028e8d20203b08484e21e047978eaef7348da4dbbbcc"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "aix-ppc64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/aix-ppc64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/aix-ppc64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/aix-ppc64/-/aix-ppc64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "96145409eb8ec894144614f19785a4a454e322c6c36b22478a1e64642d608b013e32123301bee612c40ca8c7f5f2b1cbb2b6f9a88d6d69f1b6d262f111671694"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "android-arm",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/android-arm@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/android-arm@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "c2a87407296369b5cb2877965d82eaa09e63282e1705ac3a1e4d3c39f32b0917769cfd994397a5783642e355c7c8236092d04660c6ea9eb24aabf2bf9733cc49"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "android-arm64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/android-arm64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/android-arm64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/android-arm64/-/android-arm64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "f96cc85d0392686b37ded2c48183d87bfc901dfd164d4d17e3625c6b7cbc35631b515869eeb527c3ebc0b110bf4220eb743df522ccccad9cbeab03ce3e377eaf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "android-x64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/android-x64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/android-x64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/android-x64/-/android-x64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "f9526082868a864d9534da952fb7fa4b5f3d5334a11c2fe647d104f2b0dd4a476937429f952c1663f8168c3acdc718ac83c169d59083f632cca389b43947de50"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "darwin-arm64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/darwin-arm64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/darwin-arm64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "d13f80f56666f9b67ce27641b64d5c918b0ebf2037c7b7b601c8f529d55f578ff6b5d1b87f3529f75607c7e180ad62edc2aa7bee90575423e7d967bb2deb6bd1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "darwin-x64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/darwin-x64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/darwin-x64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/darwin-x64/-/darwin-x64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "7f2ccb9bf0cb0e5ffce0e09fa767ff5d0e1f966391b2353b54ab7c1cb8ef2170a12681453882faa4b24f1f86217759f5806145f663f0b6537959ff360d9b3e2d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "freebsd-arm64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/freebsd-arm64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/freebsd-arm64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/freebsd-arm64/-/freebsd-arm64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "97d19e5b9519053f64f5bac1608fb45837df711c601d00fc4a137652be315aafcd17350a9b793996c1f83dd69181bdb0ee623dbbad67af6808da62c8dbb361dd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "freebsd-x64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/freebsd-x64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/freebsd-x64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/freebsd-x64/-/freebsd-x64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "057a106a2fc0d303cee84b37c8527b00f0a2286735b5d0043a0793372dd2b01e3dd52dda1e7e12e2bddef7be9e5273dd53e35b76d981b8b9dc622af6b4c53d37"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "linux-arm",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/linux-arm@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/linux-arm@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-arm/-/linux-arm-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "0a369a44425a82a269ee24da3508e389d68d6c229871de080e4cdbc30c6d4af8c8ecd666efdaa21dcf07a9c88c75d43a08abc94fa68177c94ef6437f66e74b97"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "linux-arm64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/linux-arm64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/linux-arm64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-arm64/-/linux-arm64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "455cb37dbdc55ac180e799fa598d0c10810f5112f515c6e1144e817df6443047a47c2cc220cb41e72c837059d56d39f093e08b0204ee8e657f2e0be2879e96f8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "linux-ia32",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/linux-ia32@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/linux-ia32@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-ia32/-/linux-ia32-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "2819d24edd64c65f71ef4abec9db5ead5765f829f41f5f2781131108441fadba9d52e9ed410d0ba0c66fe3bb81f7b3658d917363a1dc7ea119d920322144d005"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "linux-loong64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/linux-loong64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/linux-loong64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "ce94a551c7b59a7c73801003bf12975f9b25f1a6101e8d9ecef30d23c23495b6e526da7c578a1d966dd8ce58fb80fcaddd3f117a4b04e9b2bea53dd60fe68946"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "linux-mips64el",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/linux-mips64el@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/linux-mips64el@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-mips64el/-/linux-mips64el-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "da321f3fa9a68e476679396c5fff6f99d9a10662800eb5aa37bcdc76d1c878d4821f54aa228348eb7718b23411f09fb019ae18e62cd17121d29bc2b74169a4df"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "linux-ppc64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/linux-ppc64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/linux-ppc64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-ppc64/-/linux-ppc64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "6dcd0513dc16782d16066e3d21030f48f20b4687064d0b778f928f080f28b3a569adfb89eca0fee4fcc4492ac9e8698f20f24af7ae592474d495203a18d60486"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "linux-riscv64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/linux-riscv64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/linux-riscv64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-riscv64/-/linux-riscv64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "4903d93b0a134d3fc75c55d0246fef057f2c3856a01aabd9c977202c0dcd848a9c06fd41254d5de3a734ac672b8a3d81e7a676acd8922da64e616e5c524ef22d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "linux-s390x",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/linux-s390x@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/linux-s390x@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-s390x/-/linux-s390x-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "4827d1d0737c0841239d89f24894ddd9cc3493d38707f605cede738091306bec0bfd3feb686598301ab00cd002e9da852a625866840145f1e38302c7192ae7dd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "linux-x64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/linux-x64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/linux-x64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "bacd1d49bf62171222f2cae7a65f77d4dbeceb98adfc97766b62b7aacedfcf659f18f1eacdfcd94df79cee8c5925134f5cf9cd619b5a9e645ce002ff2705731d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "netbsd-arm64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/netbsd-arm64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/netbsd-arm64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/netbsd-arm64/-/netbsd-arm64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "091fd1628b60b422b0b5fb4cc0995453bc4254d83794c619d11cd39801d27cb097c3736d66d369b302c48ff2a47fa9042f71b0f81a4e7a4457d01602b6496153"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "netbsd-x64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/netbsd-x64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/netbsd-x64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/netbsd-x64/-/netbsd-x64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "9d4d7286662eb4bf9f43bd4ac67860f2e10e742d29c045bd7a7b47ca44e011b9dada9c367646c548c7aa8e3c876680a6b7c48190e4af57ec8d9a6f78694aebab"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "openbsd-arm64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/openbsd-arm64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/openbsd-arm64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/openbsd-arm64/-/openbsd-arm64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "7176f9bc0a4eb11b31b0497899c6755d8dc3e03cdca0cc51fe79dce08caa62cd2b4c8f192a65ba932ca0fb5d59f32be031f00495d2b33fb01d3fae079d20bfea"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "openbsd-x64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/openbsd-x64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/openbsd-x64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/openbsd-x64/-/openbsd-x64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "f3064cdaaaadbfd50fde6cf2ec788660d1ffce34c0df9e66a5eb80fbce7d4f247e7be4dcd3c2076292c9b8cb1fa43270a0ba358a420923c8c2dc61639d10a5cc"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "openharmony-arm64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/openharmony-arm64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/openharmony-arm64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/openharmony-arm64/-/openharmony-arm64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "14b19fca2ceccdc79fe42dd8b68c900c00b283de7e76776fefd8b611e9082c1a1f879c2909ad4ab81a8e58aac41d9837ceb2f7b79a2e1398e0afde2f03e59bdb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sunos-x64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/sunos-x64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/sunos-x64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/sunos-x64/-/sunos-x64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "d5982352811d1d9665fd8955efa4d20b3f47aa3f61f5898c1808003d877eab84a2716357dc6e460b2c7dba141648b71bbcf5bc362ee58f88036b54f8d1a91d97"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "win32-arm64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/win32-arm64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/win32-arm64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/win32-arm64/-/win32-arm64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "43d4ad9c3990fde9f19e9c4208b4a0d28a38fb7e01f53757a6ec8f79379d37febe897049e09fb3c1f408dbcbbf265e349ce600c46a0d8bb9853f8d1152d92650"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "win32-ia32",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/win32-ia32@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/win32-ia32@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/win32-ia32/-/win32-ia32-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "cc5dda83f81f8827ba53689ccdc47349824a1f50c223e072cd210d1e533615c0db11ea3965dd82f3a02ad2d294600249d686d13fce329b120092c65471dced1c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "win32-x64",
+      "version": "0.28.0",
+      "purl": "pkg:npm/%40esbuild/win32-x64@0.28.0",
+      "bom-ref": "pkg:npm/%40esbuild/win32-x64@0.28.0",
+      "group": "@esbuild",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.28.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "a449756cef667c09880beb56e5bb539ab29aba3837cc6b5499635d0b0ff1b3bd05063c002f7a3d38428d1ef3669f2ca50fab9bc5411188485db0bd31050f5e7f"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "buffer-from",
+      "version": "1.1.2",
+      "purl": "pkg:npm/buffer-from@1.1.2",
+      "bom-ref": "pkg:npm/buffer-from@1.1.2",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/buffer-from/-/buffer-from-1.1.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "13e5d0091c126da6a20a1b6fea4e83c2073e6f1f81b3abee2891c7979928c7f05a29b8625f3a903b02b870edb6c84946a763829a3c15853dc79b18323c69c97d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "inherits",
+      "version": "2.0.4",
+      "purl": "pkg:npm/inherits@2.0.4",
+      "bom-ref": "pkg:npm/inherits@2.0.4",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "93fbc6697e3f6256b75b3c8c0af4d039761e207bea38ab67a8176ecd31e9ce9419cc0b2428c859d8af849c189233dcc64a820578ca572b16b8758799210a9ec1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "readable-stream",
+      "version": "3.6.2",
+      "purl": "pkg:npm/readable-stream@3.6.2",
+      "bom-ref": "pkg:npm/readable-stream@3.6.2",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/readable-stream/-/readable-stream-3.6.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "f6efec9e20ab6370f959db04447cc71381b66025eaa06e454c7522082e1221bafa5dc2d9058d39c9af442a361e93d3b9c4e0308c6abed497460404bb43d49ca0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "typedarray",
+      "version": "0.0.6",
+      "purl": "pkg:npm/typedarray@0.0.6",
+      "bom-ref": "pkg:npm/typedarray@0.0.6",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/typedarray/-/typedarray-0.0.6.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "fda0831066ad1af67604893e1e62dfe227c2245c2f28535bf7f25e64f32e95f805ada727f5015c01fe463bc07f9b07948d2a1b952e489f471686aa5fb3fe4f40"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "node",
+      "version": "10.17.60",
+      "purl": "pkg:npm/%40types/node@10.17.60",
+      "bom-ref": "pkg:npm/%40types/node@10.17.60",
+      "group": "@types",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/node/-/node-10.17.60.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "17428880325fcb69c0df330b99618ac5c1f665512d0995c71dd390b36812690dbbfa535e11f1b1ce4230f74697b300135fb019df7b5a84f6f3cba2807d4ade57"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "ms",
+      "version": "2.1.3",
+      "purl": "pkg:npm/ms@2.1.3",
+      "bom-ref": "pkg:npm/ms@2.1.3",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "e85973b9b4cb646dc9d9afcd542025784863ceae68c601f268253dc985ef70bb2fa1568726afece715c8ebf5d73fab73ed1f7100eb479d23bfb57b45dd645394"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "balanced-match",
+      "version": "4.0.4",
+      "purl": "pkg:npm/balanced-match@4.0.4",
+      "bom-ref": "pkg:npm/balanced-match@4.0.4",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/balanced-match/-/balanced-match-4.0.4.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "04bae011c453c17da8ea01b118e08dc8cbc64a9df96287ee633c3d87520c4d198aaadb40659554ebb6dd6fd3ebdaf50703cfa3de2dad25f8cee82ebee26c864c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "string_decoder",
+      "version": "1.3.0",
+      "purl": "pkg:npm/string_decoder@1.3.0",
+      "bom-ref": "pkg:npm/string_decoder@1.3.0",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/string_decoder/-/string_decoder-1.3.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "864457f14d568c915df0bb03276c90ff0596c5aa2912c0015355df90cf00fa3d3ef392401a9a6dd7a72bd56860e8a21b6f8a2453a32a97a04e8febaea7fc0a78"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "util-deprecate",
+      "version": "1.0.2",
+      "purl": "pkg:npm/util-deprecate@1.0.2",
+      "bom-ref": "pkg:npm/util-deprecate@1.0.2",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/util-deprecate/-/util-deprecate-1.0.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "10f0f9ab5b97c85c49a42acb9c27359c79eade039ae83641a1c008888d93692080ed5089d5424331a802cc891736c5187c3d5d68afff2d3110f318886eb1ed73"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "safe-buffer",
+      "version": "5.2.1",
+      "purl": "pkg:npm/safe-buffer@5.2.1",
+      "bom-ref": "pkg:npm/safe-buffer@5.2.1",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.2.1.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "ae9dd2a34eca71d9a629b1af81a37141226bedb1954959394bd12ad45fa9a5b468ef4f9879a0f1930e4377c34f37e183e9b8e7626d95b8fb825e6a6e62f9825d"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "pkg:npm/demo-reel@0.7.0",
+      "dependsOn": [
+        "pkg:npm/%40anthropic-ai/sdk@0.80.0",
+        "pkg:npm/ffmpeg-static@5.3.0",
+        "pkg:npm/glob@13.0.6",
+        "pkg:npm/openai@5.23.2",
+        "pkg:npm/playwright@1.60.0",
+        "pkg:npm/tsx@4.22.3",
+        "pkg:npm/zod@4.4.3"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40anthropic-ai/sdk@0.80.0",
+      "dependsOn": [
+        "pkg:npm/json-schema-to-ts@3.1.1"
+      ]
+    },
+    {
+      "ref": "pkg:npm/ffmpeg-static@5.3.0",
+      "dependsOn": [
+        "pkg:npm/%40derhuerst/http-basic@8.2.4",
+        "pkg:npm/env-paths@2.2.1",
+        "pkg:npm/https-proxy-agent@5.0.1",
+        "pkg:npm/progress@2.0.3"
+      ]
+    },
+    {
+      "ref": "pkg:npm/glob@13.0.6",
+      "dependsOn": [
+        "pkg:npm/minimatch@10.2.5",
+        "pkg:npm/minipass@7.1.3",
+        "pkg:npm/path-scurry@2.0.2"
+      ]
+    },
+    {
+      "ref": "pkg:npm/openai@5.23.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/playwright@1.60.0",
+      "dependsOn": [
+        "pkg:npm/playwright-core@1.60.0",
+        "pkg:npm/fsevents@2.3.2"
+      ]
+    },
+    {
+      "ref": "pkg:npm/tsx@4.22.3",
+      "dependsOn": [
+        "pkg:npm/esbuild@0.28.0",
+        "pkg:npm/fsevents@2.3.3"
+      ]
+    },
+    {
+      "ref": "pkg:npm/zod@4.4.3",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/json-schema-to-ts@3.1.1",
+      "dependsOn": [
+        "pkg:npm/%40babel/runtime@7.29.2",
+        "pkg:npm/ts-algebra@2.0.0"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40derhuerst/http-basic@8.2.4",
+      "dependsOn": [
+        "pkg:npm/caseless@0.12.0",
+        "pkg:npm/concat-stream@2.0.0",
+        "pkg:npm/http-response-object@3.0.2",
+        "pkg:npm/parse-cache-control@1.0.1"
+      ]
+    },
+    {
+      "ref": "pkg:npm/env-paths@2.2.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/https-proxy-agent@5.0.1",
+      "dependsOn": [
+        "pkg:npm/agent-base@6.0.2",
+        "pkg:npm/debug@4.4.3"
+      ]
+    },
+    {
+      "ref": "pkg:npm/progress@2.0.3",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/minimatch@10.2.5",
+      "dependsOn": [
+        "pkg:npm/brace-expansion@5.0.6"
+      ]
+    },
+    {
+      "ref": "pkg:npm/minipass@7.1.3",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/path-scurry@2.0.2",
+      "dependsOn": [
+        "pkg:npm/lru-cache@11.5.0"
+      ]
+    },
+    {
+      "ref": "pkg:npm/playwright-core@1.60.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/fsevents@2.3.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/esbuild@0.28.0",
+      "dependsOn": [
+        "pkg:npm/%40esbuild/aix-ppc64@0.28.0",
+        "pkg:npm/%40esbuild/android-arm@0.28.0",
+        "pkg:npm/%40esbuild/android-arm64@0.28.0",
+        "pkg:npm/%40esbuild/android-x64@0.28.0",
+        "pkg:npm/%40esbuild/darwin-arm64@0.28.0",
+        "pkg:npm/%40esbuild/darwin-x64@0.28.0",
+        "pkg:npm/%40esbuild/freebsd-arm64@0.28.0",
+        "pkg:npm/%40esbuild/freebsd-x64@0.28.0",
+        "pkg:npm/%40esbuild/linux-arm@0.28.0",
+        "pkg:npm/%40esbuild/linux-arm64@0.28.0",
+        "pkg:npm/%40esbuild/linux-ia32@0.28.0",
+        "pkg:npm/%40esbuild/linux-loong64@0.28.0",
+        "pkg:npm/%40esbuild/linux-mips64el@0.28.0",
+        "pkg:npm/%40esbuild/linux-ppc64@0.28.0",
+        "pkg:npm/%40esbuild/linux-riscv64@0.28.0",
+        "pkg:npm/%40esbuild/linux-s390x@0.28.0",
+        "pkg:npm/%40esbuild/linux-x64@0.28.0",
+        "pkg:npm/%40esbuild/netbsd-arm64@0.28.0",
+        "pkg:npm/%40esbuild/netbsd-x64@0.28.0",
+        "pkg:npm/%40esbuild/openbsd-arm64@0.28.0",
+        "pkg:npm/%40esbuild/openbsd-x64@0.28.0",
+        "pkg:npm/%40esbuild/openharmony-arm64@0.28.0",
+        "pkg:npm/%40esbuild/sunos-x64@0.28.0",
+        "pkg:npm/%40esbuild/win32-arm64@0.28.0",
+        "pkg:npm/%40esbuild/win32-ia32@0.28.0",
+        "pkg:npm/%40esbuild/win32-x64@0.28.0"
+      ]
+    },
+    {
+      "ref": "pkg:npm/fsevents@2.3.3",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40babel/runtime@7.29.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/ts-algebra@2.0.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/caseless@0.12.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/concat-stream@2.0.0",
+      "dependsOn": [
+        "pkg:npm/buffer-from@1.1.2",
+        "pkg:npm/inherits@2.0.4",
+        "pkg:npm/readable-stream@3.6.2",
+        "pkg:npm/typedarray@0.0.6"
+      ]
+    },
+    {
+      "ref": "pkg:npm/http-response-object@3.0.2",
+      "dependsOn": [
+        "pkg:npm/%40types/node@10.17.60"
+      ]
+    },
+    {
+      "ref": "pkg:npm/parse-cache-control@1.0.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/agent-base@6.0.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/debug@4.4.3",
+      "dependsOn": [
+        "pkg:npm/ms@2.1.3"
+      ]
+    },
+    {
+      "ref": "pkg:npm/brace-expansion@5.0.6",
+      "dependsOn": [
+        "pkg:npm/balanced-match@4.0.4"
+      ]
+    },
+    {
+      "ref": "pkg:npm/lru-cache@11.5.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/aix-ppc64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/android-arm@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/android-arm64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/android-x64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/darwin-arm64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/darwin-x64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/freebsd-arm64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/freebsd-x64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/linux-arm@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/linux-arm64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/linux-ia32@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/linux-loong64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/linux-mips64el@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/linux-ppc64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/linux-riscv64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/linux-s390x@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/linux-x64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/netbsd-arm64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/netbsd-x64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/openbsd-arm64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/openbsd-x64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/openharmony-arm64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/sunos-x64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/win32-arm64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/win32-ia32@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40esbuild/win32-x64@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/buffer-from@1.1.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/inherits@2.0.4",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/readable-stream@3.6.2",
+      "dependsOn": [
+        "pkg:npm/string_decoder@1.3.0",
+        "pkg:npm/util-deprecate@1.0.2"
+      ]
+    },
+    {
+      "ref": "pkg:npm/typedarray@0.0.6",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40types/node@10.17.60",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/ms@2.1.3",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/balanced-match@4.0.4",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/string_decoder@1.3.0",
+      "dependsOn": [
+        "pkg:npm/safe-buffer@5.2.1"
+      ]
+    },
+    {
+      "ref": "pkg:npm/util-deprecate@1.0.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/safe-buffer@5.2.1",
+      "dependsOn": []
+    }
+  ]
+}
