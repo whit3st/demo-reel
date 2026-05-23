@@ -36,8 +36,7 @@ export default defineConfig({
 
   scenes: [
     {
-      narration:
-        "Let's log into the-internet, a demo application used for testing web automation.",
+      narration: "Let's log into the-internet, a demo application used for testing web automation.",
       isIntro: true,
       steps: [
         { action: "goto", url: "https://the-internet.herokuapp.com/login" },
@@ -45,8 +44,7 @@ export default defineConfig({
       ],
     },
     {
-      narration:
-        "We enter the username and password, then click the Login button.",
+      narration: "We enter the username and password, then click the Login button.",
       steps: [
         {
           action: "hover",
@@ -93,8 +91,7 @@ export default defineConfig({
       ],
     },
     {
-      narration:
-        "Success. We're now on the secure area. Let's log out to complete the flow.",
+      narration: "Success. We're now on the secure area. Let's log out to complete the flow.",
       steps: [
         {
           action: "hover",
