@@ -19,7 +19,6 @@
     "dist",
     "src",
     "helpers",
-    "templates",
     ".claude-plugin"
   ],
   "type": "module",
