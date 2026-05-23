@@ -42,6 +42,8 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "coverage:badge": "node scripts/write-coverage-badge.mjs coverage/coverage-summary.json .github/badges/coverage.json",
+    "security:audit": "pnpm audit --json --prod > audit.json || true",
+    "security:badge": "node scripts/write-security-badge.mjs audit.json .github/badges/security.json",
     "lint": "oxlint .",
     "lint:ci": "oxlint .",
     "format": "oxfmt . --write",
