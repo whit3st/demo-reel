@@ -1,8 +1,5 @@
 allowBuilds:
   esbuild: true
   ffmpeg-static: true
-onlyBuiltDependencies:
-  - ffmpeg-static
-  - esbuild
 overrides:
   demo-reel: link:../../.local/share/pnpm/global/5/node_modules/demo-reel
