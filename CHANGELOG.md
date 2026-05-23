@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Piper Auto-Download**: Piper binary and voice models are downloaded automatically on first use
+  - Binary fetched from GitHub releases, cached in `~/.demo-reel/piper/`
+  - Voice models fetched from HuggingFace when not found locally
+  - No `pip install` or manual model downloads required
+  - Supports all OS/arch combos (Linux x86_64/arm64/armv7l, macOS x64/arm64, Windows x64)
+- **6 the-internet Demos**: Comprehensive demo suite using the-internet.herokuapp.com, the standard Playwright/Selenium test playground
+  - `the-internet-login` — goto, type, click, hover
+  - `the-internet-dynamic-controls` — waitFor, click, type (async UI changes)
+  - `the-internet-checkboxes-dropdown` — check, select (form controls)
+  - `the-internet-file-upload` — upload (file input)
+  - `the-internet-hovers` — hover with index (hover reveals)
+  - `the-internet-drag-drop` — drag (column swap)
+  - All 12 step types covered across 6 demos, no bot detection issues
+
+### Changed
+
+- **Unbundled voice lists**: Removed hard-coded voice enum constants (PIPER_VOICES, OPENAI_VOICES, ELEVENLABS_VOICES). All TTS providers now accept any voice name/ID string. Defaults preserved.
+- **Removed pnpm version spec from workflows**: CI workflows no longer specify a pnpm version explicitly. The `pnpm/action-setup` action reads `packageManager` from `package.json` as the single source of truth.
+
+### Removed
+
+- **Docker**: Removed entirely — no Dockerfile, no Docker image publishing, no Docker spawns in the codebase
+  - Voice generation runs directly in-process via local TTS (Piper, OpenAI, or ElevenLabs)
+  - Recording always runs locally via Playwright + FFmpeg
+  - `--no-docker` flag removed (local is the only mode)
+- **`templates/` directory**: Removed stale template files. The `init` command is self-contained with an inline template.
+- **`pnpm demo` and `pnpm demo:voice` scripts**: `pnpm demo-reel` (the bin entry) is the correct CLI path using tsgo-compiled dist.
+- **Dictionary search demos**: Replaced with the-internet demo suite (no bot detection, purpose-built for automation).
+
+### Fixed
+
+- **Drag and drop**: Replaced naive `DragTo`/mouse-event approach with proper HTML5 DragEvent + DataTransfer dispatch. Cursor now shows human bezier drag animation from source to target with visual click-down and release.
+
 ## [0.5.0] - 2026-04-24
 
 ### Added
