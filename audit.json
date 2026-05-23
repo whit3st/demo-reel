@@ -4,9 +4,7 @@
       "findings": [
         {
           "version": "0.80.0",
-          "paths": [
-            ".>@anthropic-ai/sdk"
-          ],
+          "paths": [".>@anthropic-ai/sdk"],
           "dev": false,
           "optional": false,
           "bundled": false
@@ -26,9 +24,7 @@
       "findings": [
         {
           "version": "0.80.0",
-          "paths": [
-            ".>@anthropic-ai/sdk"
-          ],
+          "paths": [".>@anthropic-ai/sdk"],
           "dev": false,
           "optional": false,
           "bundled": false

@@ -12,7 +12,7 @@ pnpm add -D demo-reel
 ```
 
 ```typescript
-// demos/signup.demo.ts
+// demos/my-feature.demo.ts
 import { generate } from "demo-reel";
 
 await generate(
@@ -27,8 +27,8 @@ await generate(
     outputFormat: "mp4",
 
     voice: {
-      provider: "elevenlabs", // or "piper" (local/free) or "openai"
-      voice: "5zhopMftSdRGaPYVcwKK",
+      provider: "piper", // "piper" (local/free) | "openai" | "elevenlabs"
+      voice: "en_US-amy-medium", // auto-downloaded on first use
     },
 
     auth: {
@@ -99,7 +99,7 @@ await generate(
 ```
 
 ```bash
-npx tsx demos/signup.demo.ts
+pnpm build && pnpm demo-reel demos/my-feature
 ```
 
 Output: `output/signup.mp4` + `.srt` + `.vtt` + `.meta.json`
@@ -114,7 +114,7 @@ Output: `output/signup.mp4` + `.srt` + `.vtt` + `.meta.json`
 - **Node.js 18+** — for running your demo scripts
 - **Playwright** — `pnpm exec playwright install chromium` (peer dependency)
 - **FFmpeg** — for video/audio processing (installed via `ffmpeg-static` or system package)
-- **Piper** (optional) — for local TTS voiceover (`pip install piper-tts` or download from https://github.com/rhasspy/piper)
+- **Piper** (optional) — for local TTS voiceover (auto-downloaded on first use, no setup needed)
 - **API keys** (optional) — `ELEVENLABS_KEY` or `OPENAI_API_KEY` for cloud TTS
 
 ## Claude Code Integration
@@ -194,7 +194,7 @@ Voiceover is auto-generated when `scenes` have `narration` text and `voice` is c
 
 #### Provider Details
 
-**Piper** (local, free) — voice is a model name like `en_US-amy-medium`. Models are loaded from `$PIPER_VOICE_DIR` (defaults to `~/.local/share/piper-voices`). Must match an `.onnx` file in that directory. For custom models, use `voicePath` instead of `voice`:
+**Piper** (local, free) — voice is a model name like `en_US-amy-medium`. Auto-downloaded from HuggingFace on first use. Models are cached in `$PIPER_VOICE_DIR` (defaults to `~/.local/share/piper-voices`). For custom models, use `voicePath` instead of `voice`:
 
 ```typescript
 voice: {
@@ -301,13 +301,15 @@ Demo videos are designed as standalone segments that also work as a series:
 
 ```
 demos/
-└── my-app/
-    ├── 01-signup/signup.demo.ts          # setup: create workspace
-    ├── 02-create-project/project.demo.ts # setup: create workspace + template
-    └── 03-editor/editor.demo.ts          # setup: create workspace + template + project
+├── the-internet-login.demo.ts               # login flow (goto, type, click, hover)
+├── the-internet-dynamic-controls.demo.ts    # async UI changes (waitFor)
+├── the-internet-checkboxes-dropdown.demo.ts # form controls (check, select)
+├── the-internet-file-upload.demo.ts         # file input (upload)
+├── the-internet-hovers.demo.ts              # hover reveals (hover)
+└── the-internet-drag-drop.demo.ts           # column swap (drag)
 ```
 
-Each video has its own `setup` that recreates the required state. Later videos have heavier setup. Every video is independently recordable.
+Each video is independently recordable. For apps requiring login, use the `auth` + `setup` blocks to recreate state from scratch.
 
 ## CI/CD
 
@@ -338,10 +340,10 @@ jobs:
 Piper binary and voice models download automatically on first run — no secrets needed for the built-in demos. For cloud TTS, add secrets in your repo settings and pass them as env:
 
 ```yaml
-      - run: pnpm demo-reel demos/my-demo
-        env:
-          ELEVENLABS_KEY: ${{ secrets.ELEVENLABS_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+- run: pnpm demo-reel demos/my-demo
+  env:
+    ELEVENLABS_KEY: ${{ secrets.ELEVENLABS_KEY }}
+    OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 ```
 
 ## License
