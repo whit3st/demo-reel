@@ -48,8 +48,7 @@ export default defineConfig({
       ],
     },
     {
-      narration:
-        "Dragging column A over to column B. Notice how the columns swap places.",
+      narration: "Dragging column A over to column B. Notice how the columns swap places.",
       steps: [
         {
           action: "hover",

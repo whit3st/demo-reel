@@ -78,8 +78,7 @@ export default defineConfig({
       ],
     },
     {
-      narration:
-        "Now let's enable a disabled input field and type something into it.",
+      narration: "Now let's enable a disabled input field and type something into it.",
       steps: [
         {
           action: "hover",

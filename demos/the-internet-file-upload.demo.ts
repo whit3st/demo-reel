@@ -37,8 +37,7 @@ export default defineConfig({
 
   scenes: [
     {
-      narration:
-        "This is a file upload page. We'll choose a file from our system and upload it.",
+      narration: "This is a file upload page. We'll choose a file from our system and upload it.",
       isIntro: true,
       steps: [
         { action: "goto", url: "https://the-internet.herokuapp.com/upload" },
@@ -46,8 +45,7 @@ export default defineConfig({
       ],
     },
     {
-      narration:
-        "Selecting a test file and clicking the upload button.",
+      narration: "Selecting a test file and clicking the upload button.",
       steps: [
         {
           action: "hover",
@@ -73,8 +71,7 @@ export default defineConfig({
       ],
     },
     {
-      narration:
-        "The file was uploaded successfully. The page shows the filename as confirmation.",
+      narration: "The file was uploaded successfully. The page shows the filename as confirmation.",
       steps: [{ action: "wait", ms: 2500 }],
     },
   ],

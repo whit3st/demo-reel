@@ -36,8 +36,7 @@ export default defineConfig({
 
   scenes: [
     {
-      narration:
-        "Let's explore form controls. First, we'll work with checkboxes.",
+      narration: "Let's explore form controls. First, we'll work with checkboxes.",
       isIntro: true,
       steps: [
         {

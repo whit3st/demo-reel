@@ -60,8 +60,7 @@ export default defineConfig({
       ],
     },
     {
-      narration:
-        "Here is the second user. Hovering reveals their name as well.",
+      narration: "Here is the second user. Hovering reveals their name as well.",
       steps: [
         {
           action: "hover",
