@@ -80,8 +80,24 @@ describe("voice-config", () => {
     ).toBe("/models/custom.onnx");
   });
 
-  it("rejects invalid provider-specific options", () => {
-    expect(() => resolveVoiceConfig({ provider: "openai", voice: "invalid" })).toThrow();
+  it("accepts any voice name string per provider", () => {
+    expect(
+      resolveVoiceConfig({ provider: "openai", voice: "custom-voice" }),
+    ).toEqual({
+      provider: "openai",
+      voice: "custom-voice",
+      speed: 1,
+    });
+    expect(
+      resolveVoiceConfig({ provider: "elevenlabs", voice: "custom-id" }),
+    ).toEqual({
+      provider: "elevenlabs",
+      voice: "custom-id",
+      speed: 1,
+    });
+  });
+
+  it("rejects invalid speed values", () => {
     expect(() => resolveVoiceConfig({ provider: "piper", speed: 3 })).toThrow();
   });
 });

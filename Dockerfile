@@ -115,7 +115,6 @@ COPY --from=deps /build/node_modules node_modules/
 COPY --from=playwright-browser /ms-playwright /ms-playwright
 
 COPY --from=builder /build/dist dist/
-COPY templates/ templates/
 
 RUN mkdir -p /work && chown -R appuser:appuser /app /work /ms-playwright
 
