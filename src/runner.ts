@@ -412,6 +412,12 @@ const moveMouseBezier = async (
     return;
   }
 
+  if (motion.moveDurationMs === 0) {
+    await page.mouse.move(targetX, targetY);
+    state.position = end;
+    return;
+  }
+
   const stepsByDistance = Math.max(3, Math.round(distance / motion.stepsPerPx));
   const steps = Math.max(motion.moveStepsMin, stepsByDistance);
   const stepDelay = Math.max(1, Math.floor(motion.moveDurationMs / steps));
