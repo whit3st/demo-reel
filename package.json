@@ -1,6 +1,6 @@
 {
   "name": "demo-reel",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "description": "Create demo videos from web apps using Playwright",
   "keywords": [
     "automation",

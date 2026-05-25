@@ -24,6 +24,7 @@ git log $(git describe --tags --abbrev=0)..HEAD --oneline
 ```
 
 Determine bump:
+
 - **patch** (0.7.4 → 0.7.5): bug fixes, minor improvements
 - **minor** (0.7.4 → 0.8.0): new features, backward-compatible
 - **major** (0.7.4 → 1.0.0): breaking changes
@@ -33,6 +34,7 @@ Ask user for confirmation if ambiguous.
 ## Step 2 — Update CHANGELOG
 
 Edit `CHANGELOG.md`:
+
 1. Replace `## [Unreleased]` with `## [X.Y.Z] - YYYY-MM-DD`
 2. Add a new empty `## [Unreleased]` section above it
 
@@ -43,6 +45,7 @@ Update `"version"` in `package.json` to the new version.
 ## Step 4 — Verify quality
 
 Before committing, ensure the changes pass:
+
 ```bash
 pnpm format
 pnpm build

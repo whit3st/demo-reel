@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.5] - 2026-05-25
+
+### Added
+
+- **`--dry-run` CLI flag**: execute all steps through a real browser at maximum speed — no video recording, TTS narration, subtitle generation, or audio processing. Forces instant timing presets and strips all `wait` steps and delay fields. Ideal for CI validation of demo scripts.
+- **`waitFor` flag on interactive steps**: collapse the common `waitFor selector + action` pattern into a single step by setting `waitFor: true` on click, type, hover, scroll, select, check, upload, drag, press, assertText, assertVisible, and assertCount steps.
+
 ## [0.7.0] - 2026-05-23
 
 ### Added
