@@ -169,6 +169,13 @@ export const stepDelaySchema = z.object({
   delayAfterMs: z.number().int().min(0).optional().describe("Delay after step completes in ms"),
 });
 
+export const waitableStepSchema = stepDelaySchema.extend({
+  waitFor: z
+    .boolean()
+    .optional()
+    .describe("Wait for selector to be visible before executing the step"),
+});
+
 export const gotoStepSchema = z.object({
   action: z.literal("goto").describe("Navigate to URL"),
   url: z.string().url().describe("Target URL"),
@@ -178,7 +185,7 @@ export const gotoStepSchema = z.object({
     .describe("When to consider navigation complete"),
 });
 
-export const clickStepSchema = stepDelaySchema.extend({
+export const clickStepSchema = waitableStepSchema.extend({
   action: z.literal("click").describe("Click on element"),
   selector: selectorSchema.describe("Element to click"),
 });
