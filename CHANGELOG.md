@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.7] - 2026-05-25
+
 ### Fixed
 
 - **`--dry-run` cursor movement**: cursor now teleports instantly instead of stepping through bezier points when `moveDurationMs` is zero. Previously, even with instant presets, `stepsPerPx: 1` generated hundreds of mouse-move steps with a 1ms minimum delay each, adding hundreds of milliseconds per interaction.
