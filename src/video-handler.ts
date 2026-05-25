@@ -3,6 +3,7 @@ import { basename, dirname, join, resolve } from "path";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import type { DemoReelConfig, AuthConfig, AuthBehaviorConfig } from "./schemas.js";
 import { runDemo, runSteps, runStepSimple, type SceneTimestamp } from "./runner.js";
+import { motionPresets, typingPresets, timingPresets } from "./presets.js";
 import {
   mergeAudioVideo,
   resolveAudioPaths,
@@ -436,6 +437,20 @@ export function generateMetadata(
   };
 }
 
+function stripDelaysForDryRun(steps: DemoReelConfig["steps"]): DemoReelConfig["steps"] {
+  return steps
+    .filter((step) => (step as any).action !== "wait")
+    .map((step) => {
+      const stripped = { ...step } as Record<string, unknown>;
+      for (const key of ["delayAfterMs", "delayBeforeMs", "delayMs"]) {
+        if (key in stripped) {
+          stripped[key] = 0;
+        }
+      }
+      return stripped;
+    }) as DemoReelConfig["steps"];
+}
+
 export async function runVideoScenario(
   config: DemoReelConfig,
   outputPath: string,
@@ -449,7 +464,101 @@ export async function runVideoScenario(
   const { verbose, dryRun, headed } = options;
 
   if (dryRun) {
-    console.log("✓ Config validated successfully (dry run)");
+    const dryConfig = {
+      ...config,
+      motion: motionPresets.instant,
+      typing: typingPresets.instant,
+      timing: { ...timingPresets.instant, narrationSyncMode: "off" as const },
+      steps: stripDelaysForDryRun(config.steps),
+      preSteps: config.preSteps ? stripDelaysForDryRun(config.preSteps) : undefined,
+      postSteps: config.postSteps ? stripDelaysForDryRun(config.postSteps) : undefined,
+    };
+
+    const startTime = Date.now();
+
+    const browser = await startBrowser(dryConfig, headed);
+
+    try {
+      if (config.auth) {
+        if (verbose) {
+          console.log("→ Authenticating...");
+        }
+        await handleAuth(browser.context, browser.page, config.auth, configPath, verbose);
+      }
+
+      if (config.preSteps && config.preSteps.length > 0) {
+        if (verbose) {
+          console.log("Running pre-steps...");
+        }
+        await runSteps(browser.page, config.preSteps, {
+          tolerant: false,
+          verbose,
+          label: "setup",
+        });
+      }
+
+      if (verbose) {
+        console.log("Running scenes...\n");
+      }
+
+      const sceneTimestamps = await runDemo(browser.page, dryConfig);
+
+      if (sceneTimestamps.length > 0) {
+        console.log("Scene results:");
+        for (const ts of sceneTimestamps) {
+          const duration = ((ts.endMs - ts.startMs) / 1000).toFixed(1);
+          const label = ts.narration
+            ? ts.narration.length > 60
+              ? `${ts.narration.slice(0, 60)}...`
+              : ts.narration
+            : "(no narration)";
+          console.log(`  scene ${ts.sceneIndex}: ${duration}s — ${label}`);
+        }
+      }
+
+      const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.log(`\n✓ All steps passed (${duration}s)`);
+
+      if (config.postSteps && config.postSteps.length > 0) {
+        if (verbose) {
+          console.log("Running post-steps...");
+        }
+        await runSteps(browser.page, config.postSteps, {
+          tolerant: true,
+          verbose,
+          label: "post",
+        });
+        if (verbose) {
+          console.log("✓ Post-steps complete");
+        }
+      }
+    } catch (error) {
+      console.error(`\n✗ Failed: ${error instanceof Error ? error.message : String(error)}`);
+
+      if (config.postSteps && config.postSteps.length > 0) {
+        try {
+          if (verbose) {
+            console.log("Running post-steps (error cleanup)...");
+          }
+          await runSteps(browser.page, config.postSteps, {
+            tolerant: true,
+            verbose,
+            label: "post",
+          });
+        } catch {
+          // Ignore post-step errors during error cleanup
+        }
+      }
+
+      await browser.context.close().catch(() => {});
+      await browser.browser.close().catch(() => {});
+
+      throw error;
+    }
+
+    await browser.context.close().catch(() => {});
+    await browser.browser.close().catch(() => {});
+
     return outputPath;
   }
 

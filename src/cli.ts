@@ -155,6 +155,11 @@ async function runScenario(
   loaded: Awaited<ReturnType<typeof loadConfig>>,
   options: CliOptions,
 ): Promise<void> {
+  if (options.dryRun) {
+    await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
+    return;
+  }
+
   if (shouldGenerateVoice(loaded.config)) {
     const config = options.outputDir
       ? { ...loaded.config, outputDir: options.outputDir }
