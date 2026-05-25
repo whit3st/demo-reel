@@ -40,7 +40,17 @@ Edit `CHANGELOG.md`:
 
 Update `"version"` in `package.json` to the new version.
 
-## Step 4 — Commit, tag, push
+## Step 4 — Verify quality
+
+Before committing, ensure the changes pass:
+```bash
+pnpm format
+pnpm build
+```
+
+Stop if either fails.
+
+## Step 5 — Commit, tag, push
 
 ```bash
 git add CHANGELOG.md package.json
@@ -49,7 +59,7 @@ git tag vX.Y.Z
 git push origin main --tags
 ```
 
-## Step 5 — Wait for publish CI
+## Step 6 — Wait for publish CI
 
 ```bash
 gh run list --workflow=publish.yml --limit 3
@@ -58,7 +68,7 @@ gh run watch <run-id>
 
 If it fails, inspect: `gh run view <run-id> --log`
 
-## Step 6 — Verify
+## Step 7 — Verify
 
 ```bash
 npm view demo-reel version
