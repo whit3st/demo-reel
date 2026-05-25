@@ -579,6 +579,14 @@ const runWithConfirm = async (
   return updatedStartDelayApplied;
 };
 
+function getWaitFor(step: Step): boolean {
+  return (step as any).waitFor === true;
+}
+
+function getWaitForSelector(step: Step): SelectorConfig {
+  return (step as any).selector ?? (step as any).source;
+}
+
 export const runStepSimple = async (page: Page, step: Step): Promise<void> => {
   if (step.action === "goto") {
     await page.goto(step.url, step.waitUntil ? { waitUntil: step.waitUntil } : undefined);
@@ -635,6 +643,11 @@ export const runStepSimple = async (page: Page, step: Step): Promise<void> => {
       });
       return;
     }
+  }
+
+  if (getWaitFor(step)) {
+    const locator = resolveLocator(page, getWaitForSelector(step));
+    await locator.waitFor({ state: "visible", timeout: 5000 });
   }
 
   if (step.action === "click") {
@@ -890,6 +903,12 @@ const runStep = async (
       });
       return startDelayApplied;
     }
+  }
+
+  if (getWaitFor(step)) {
+    const locator = resolveLocator(page, getWaitForSelector(step));
+    await locator.waitFor({ state: "visible", timeout: 5000 });
+    await ensureCursorOverlay(page, resolvedCursor);
   }
 
   if (step.action === "click") {
