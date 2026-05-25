@@ -15,6 +15,8 @@ export type DemoConfig = DemoReelConfigInput;
 
 export interface GenerateOptions {
   verbose?: boolean;
+  dryRun?: boolean;
+  headed?: boolean;
 }
 
 export function defineConfig(config: DemoConfig): DemoReelConfig {
@@ -78,8 +80,20 @@ function shouldRegenerateNarrationArtifacts(audioPath: string, manifestPath: str
 }
 
 export async function generate(config: DemoConfig, options: GenerateOptions = {}): Promise<void> {
-  const { verbose = false } = options;
+  const { verbose = false, dryRun = false, headed = false } = options;
   const resolvedConfig = validateConfig(config);
+
+  if (dryRun) {
+    const { runVideoScenario } = await import("./video-handler.js");
+    const outputPath =
+      resolvedConfig.outputPath ?? join(resolve("./output"), `${getBaseName(resolvedConfig)}.mp4`);
+    await runVideoScenario(resolvedConfig, outputPath, resolve("demo-reel-dry-run.json"), {
+      verbose,
+      dryRun,
+      headed,
+    });
+    return;
+  }
   const name = getBaseName(resolvedConfig);
   const narratedScenes = getNarratedScenesInPlaybackOrder(resolvedConfig);
 

@@ -530,8 +530,31 @@ describe("runVideoScenario", () => {
     setOnBrowserCreated(null);
   });
 
-  it("returns early on dry run", async () => {
-    const config = { video: { resolution: { width: 1920, height: 1080 } } } as any;
+  it("runs all steps with instant timing in dry-run mode", async () => {
+    const config = {
+      video: { resolution: { width: 1920, height: 1080 } },
+      scenes: [
+        { narration: "Intro scene", stepIndex: 0 },
+        { narration: "Main scene", stepIndex: 1 },
+      ],
+      steps: [
+        { action: "wait", ms: 100 },
+        { action: "wait", ms: 100 },
+      ],
+    } as any;
+
+    browserMock.newContext.mockResolvedValue(contextMock);
+    contextMock.newPage.mockResolvedValue(pageMock);
+    launchMock.mockResolvedValue(browserMock);
+    (runDemoMock as any).mockResolvedValue([
+      { sceneIndex: 0, narration: "Intro scene", startMs: 0, endMs: 500, isIntro: true },
+      { sceneIndex: 1, narration: "Main scene", startMs: 500, endMs: 1000, isIntro: false },
+    ]);
+    pageMock.close.mockResolvedValue(undefined);
+    contextMock.close.mockResolvedValue(undefined);
+    browserMock.close.mockResolvedValue(undefined);
+    pageMock.video.mockReturnValue(null);
+
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
     const result = await runVideoScenario(config, "/out/demo.mp4", "/cfg/config.yaml", {
@@ -539,8 +562,15 @@ describe("runVideoScenario", () => {
     });
 
     expect(result).toBe("/out/demo.mp4");
-    expect(logSpy).toHaveBeenCalledWith("✓ Config validated successfully (dry run)");
-    expect(launchMock).not.toHaveBeenCalled();
+    expect(launchMock).toHaveBeenCalled();
+    expect(runDemoMock).toHaveBeenCalled();
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("All steps passed"));
+
+    const allLogs = logSpy.mock.calls.map((c) => c[0]).join("\n");
+    expect(allLogs).toContain("Scene results:");
+    expect(allLogs).toContain("Intro scene");
+    expect(allLogs).toContain("Main scene");
+
     logSpy.mockRestore();
   });
 
