@@ -242,6 +242,7 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
 export { demoReelConfigSchema, demoReelConfigInputSchema };
 export type { DemoReelConfig, DemoReelConfigInput } from "./schemas.js";
 export type * from "./types.js";
+export { run, type RunOptions } from "./run.js";
 export {
   runScenarioForTest,
   runSteps,

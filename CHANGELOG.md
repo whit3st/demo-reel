@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.6] - 2026-05-25
+
+### Added
+
+- **`run()` export**: lightweight entry point for `.demo.ts` scripts that automatically resolves CLI flags (`--dry-run`, `--verbose`, `--headed`, `--silent`) from `process.argv`. Replaces manual `process.argv.includes(...)` plumbing with a single call: `await run(config)`. The `--silent` flag strips voice narration, forces webm output, and clears scene narrations — useful for CI or local testing without TTS.
+
 ## [0.7.5] - 2026-05-25
 
 ### Added
