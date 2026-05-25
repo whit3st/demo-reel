@@ -5,13 +5,15 @@ import { run } from "demo-reel";
  * config or CLI flags (--dry-run, --verbose, --headed, --silent).
  *
  * Run normally:   pnpm tsx demos/run-example.demo.ts
- * Run as dry-run: pnpm tsx demos/run-example.demo.ts --dry-run
+ * Run as dry-run: pnpm tsx demos/run-example.demo.ts --dry-run --verbose
  * Run silently:   pnpm tsx demos/run-example.demo.ts --silent
  */
 
 const url = process.env.BASE_URL ?? "https://the-internet.herokuapp.com/dynamic_controls";
 
 await run({
+  name: "run-example",
+  outputDir: "./output",
   video: { resolution: "FHD" },
   cursor: "dot",
   motion: "smooth",
