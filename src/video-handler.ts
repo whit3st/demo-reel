@@ -1,6 +1,6 @@
 import { mkdir, unlink, rmdir, writeFile as fsWriteFile, readFile } from "fs/promises";
 import { basename, dirname, join, resolve } from "path";
-import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
+import type { Browser, BrowserContext, Page } from "playwright";
 import type { DemoReelConfig, AuthConfig, AuthBehaviorConfig } from "./schemas.js";
 import { runDemo, runSteps, runStepSimple, type SceneTimestamp } from "./runner.js";
 import { motionPresets, typingPresets, timingPresets } from "./presets.js";
@@ -129,30 +129,27 @@ export async function handleAuth(
   return true;
 }
 
-// Fail fast instead of waiting 30s on broken selectors
-const DEFAULT_TIMEOUT_MS = 5000;
+import {
+  launchBrowser as _launchBrowser,
+  launchRecordingBrowser as _launchRecordingBrowser,
+  closeSession as _closeSession,
+} from "./browser/launcher.js";
+import type { BrowserSession } from "./browser/types.js";
 
 export async function startBrowser(
   config: DemoReelConfig,
   headed: boolean = false,
 ): Promise<VideoResult> {
-  const browser = await chromium.launch({ headless: !headed });
-
-  const context = await browser.newContext({
-    viewport: config.video.resolution,
-  });
-  context.setDefaultTimeout(DEFAULT_TIMEOUT_MS);
-
-  const page = await context.newPage();
+  const session = await _launchBrowser(config, headed);
 
   if (onBrowserCreated) {
-    onBrowserCreated(browser, context);
+    onBrowserCreated(session.browser, session.context);
   }
 
   return {
-    page,
-    context,
-    browser,
+    page: session.page,
+    context: session.context,
+    browser: session.browser,
     tempVideoPath: "",
   };
 }
@@ -161,27 +158,16 @@ export async function startRecording(
   config: DemoReelConfig,
   headed: boolean = false,
 ): Promise<VideoResult> {
-  const browser = await chromium.launch({ headless: !headed });
-
-  const context = await browser.newContext({
-    viewport: config.video.resolution,
-    recordVideo: {
-      dir: join(process.cwd(), ".demo-reel-temp"),
-      size: config.video.resolution,
-    },
-  });
-  context.setDefaultTimeout(DEFAULT_TIMEOUT_MS);
-
-  const page = await context.newPage();
+  const session = await _launchRecordingBrowser(config, headed);
 
   if (onBrowserCreated) {
-    onBrowserCreated(browser, context);
+    onBrowserCreated(session.browser, session.context);
   }
 
   return {
-    page,
-    context,
-    browser,
+    page: session.page,
+    context: session.context,
+    browser: session.browser,
     tempVideoPath: "",
   };
 }
@@ -190,26 +176,14 @@ export async function stopRecording(
   result: VideoResult,
   saveSessionFn?: () => Promise<void>,
 ): Promise<string> {
-  const { page, context, browser } = result;
+  const session: BrowserSession = {
+    page: result.page,
+    context: result.context,
+    browser: result.browser,
+    isRecording: true,
+  };
 
-  // Close page first to finish video recording
-  await page.close();
-
-  // Get the video path before closing context
-  const video = page.video();
-  let tempVideoPath = "";
-
-  if (video) {
-    tempVideoPath = await video.path();
-  }
-
-  // Save session if callback provided (before closing context)
-  if (saveSessionFn) {
-    await saveSessionFn();
-  }
-
-  await context.close();
-  await browser.close();
+  const tempVideoPath = await _closeSession(session, saveSessionFn);
 
   if (!tempVideoPath) {
     throw new Error("No video was recorded");

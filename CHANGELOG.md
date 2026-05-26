@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Unified FFmpeg wrapper**: merged duplicate `getFfmpegPath`/`runFFmpeg`/`runFfprobe` implementations from `audio-processor.ts` and `script/tts.ts` into a single `src/ffmpeg/utils.ts` module. Both original files now re-export from the shared module. No consumer API changes.
 - **Split runner into submodules**: extracted 12 focused modules from `src/runner.ts` (1392 lines) into `src/runner/` (types, utils, selectors, cursor, typing, motion, assertions, step-simple, steps, scene-tracking, index). Original file is now a re-export barrel. All tests pass, no consumer API changes.
 - **Extracted voice module**: split `src/script/tts.ts` (432 lines) into `src/voice/` (types, index, cache, piper, openai, elevenlabs). TTS provider interface, registry, providers, and caching live in the new module. `src/script/tts.ts` retains the high-level voice generation pipeline and re-exports everything for backward compatibility.
+- **Extracted browser module**: moved browser lifecycle functions from `src/video-handler.ts` into `src/browser/` (types, launcher, pool). `startBrowser`, `startRecording`, and `stopRecording` are now thin wrappers delegating to the new module. Browser pool provides lifecycle management for multiple concurrent sessions.
 
 ## [0.7.7] - 2026-05-25
 
