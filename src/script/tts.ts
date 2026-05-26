@@ -23,126 +23,34 @@ export interface TTSProvider {
   generate(text: string, options: VoiceConfig): Promise<{ audio: Buffer; durationMs: number }>;
 }
 
-// --- Audio utilities (shared by all providers) ---
+// --- Audio utilities (re-exported from shared FFmpeg module) ---
 
-export async function getFFmpegPath(): Promise<string> {
-  try {
-    const mod: any = await import("ffmpeg-static");
-    const ffmpegPath = mod.default || mod;
-    if (ffmpegPath && typeof ffmpegPath === "string") {
-      const { accessSync } = await import("fs");
-      accessSync(ffmpegPath);
-      return ffmpegPath;
+import {
+  getFfmpegPath as _getFfmpegPath,
+  getFfprobePath as _getFfprobePath,
+  runFFmpeg,
+  runFfprobe,
+  measureAudioDuration,
+  wavToMp3,
+  generateSilence,
+  concatenateAudio,
+} from "../ffmpeg/utils.js";
+
+export { runFFmpeg, runFfprobe, measureAudioDuration, wavToMp3, generateSilence, concatenateAudio };
+
+export const getFFmpegPath = _getFfmpegPath;
+
+export async function getFFprobePath(ffmpegPath?: string): Promise<string> {
+  if (ffmpegPath) {
+    const adjacent = ffmpegPath.replace(/ffmpeg([^/\\]*)$/, "ffprobe$1");
+    try {
+      await stat(adjacent);
+      return adjacent;
+    } catch {
+      return "ffprobe";
     }
-  } catch {
-    /* ffmpeg-static not available or binary missing */
   }
-  return "ffmpeg";
-}
-
-export async function getFFprobePath(ffmpegPath: string): Promise<string> {
-  // Try alongside ffmpeg-static first
-  const adjacent = ffmpegPath.replace(/ffmpeg([^/\\]*)$/, "ffprobe$1");
-  try {
-    await stat(adjacent);
-    return adjacent;
-  } catch {
-    // Fall back to system ffprobe
-    return "ffprobe";
-  }
-}
-
-export function runFFmpeg(ffmpegPath: string, args: string[]): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn(ffmpegPath, args);
-    let stderr = "";
-    proc.stderr.on("data", (data: Buffer) => {
-      stderr += data.toString();
-    });
-    proc.on("close", (code) => {
-      if (code !== 0) {
-        reject(new Error(`FFmpeg exited with code ${code}: ${stderr.slice(-200)}`));
-        return;
-      }
-      resolve();
-    });
-    proc.on("error", reject);
-  });
-}
-
-export function runFfprobe(ffprobePath: string, args: string[]): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn(ffprobePath, args);
-    let output = "";
-    proc.stdout.on("data", (data: Buffer) => {
-      output += data.toString();
-    });
-    proc.stderr.on("data", () => {});
-    proc.on("close", (code) => {
-      if (code !== 0) {
-        reject(new Error(`ffprobe exited with code ${code}`));
-        return;
-      }
-      resolve(output);
-    });
-    proc.on("error", reject);
-  });
-}
-
-export async function measureAudioDuration(audioBuffer: Buffer): Promise<number> {
-  const ffmpegPath = await getFFmpegPath();
-  const ffprobePath = await getFFprobePath(ffmpegPath);
-
-  const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
-  await mkdir(tempDir, { recursive: true });
-  const tempPath = join(tempDir, `probe-${Date.now()}.mp3`);
-  await writeFile(tempPath, audioBuffer);
-
-  try {
-    const output = await runFfprobe(ffprobePath, [
-      "-v",
-      "quiet",
-      "-show_entries",
-      "format=duration",
-      "-of",
-      "default=noprint_wrappers=1:nokey=1",
-      tempPath,
-    ]);
-    const seconds = parseFloat(output.trim());
-    if (isNaN(seconds)) {
-      throw new Error("Could not parse audio duration");
-    }
-    return Math.round(seconds * 1000);
-  } finally {
-    await unlink(tempPath).catch(() => {});
-  }
-}
-
-/** Convert WAV buffer to MP3 buffer via FFmpeg. */
-export async function wavToMp3(wavBuffer: Buffer): Promise<Buffer> {
-  const ffmpegPath = await getFFmpegPath();
-  const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
-  await mkdir(tempDir, { recursive: true });
-
-  const wavPath = join(tempDir, `convert-${Date.now()}.wav`);
-  const mp3Path = join(tempDir, `convert-${Date.now()}.mp3`);
-
-  await writeFile(wavPath, wavBuffer);
-  await runFFmpeg(ffmpegPath, [
-    "-i",
-    wavPath,
-    "-codec:a",
-    "libmp3lame",
-    "-q:a",
-    "2",
-    "-y",
-    mp3Path,
-  ]);
-
-  const mp3Buffer = await readFile(mp3Path);
-  await unlink(wavPath).catch(() => {});
-  await unlink(mp3Path).catch(() => {});
-  return mp3Buffer;
+  return _getFfprobePath();
 }
 
 // --- Piper TTS Provider (local, free) ---
@@ -378,69 +286,6 @@ async function setCache(key: string, audio: Buffer): Promise<void> {
   const dir = join(process.cwd(), CACHE_DIR);
   await mkdir(dir, { recursive: true });
   await writeFile(join(dir, `${key}.mp3`), audio);
-}
-
-// --- Concatenation ---
-
-export async function generateSilence(
-  ffmpegPath: string,
-  outputPath: string,
-  durationMs: number,
-): Promise<void> {
-  await runFFmpeg(ffmpegPath, [
-    "-f",
-    "lavfi",
-    "-i",
-    `anullsrc=r=44100:cl=mono`,
-    "-t",
-    (durationMs / 1000).toString(),
-    "-q:a",
-    "9",
-    "-y",
-    outputPath,
-  ]);
-}
-
-export async function concatenateAudio(
-  segments: { audio: Buffer; gapAfterMs: number }[],
-): Promise<Buffer> {
-  const ffmpegPath = await getFFmpegPath();
-  const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
-  await mkdir(tempDir, { recursive: true });
-
-  const inputFiles: string[] = [];
-  const filterParts: string[] = [];
-  let inputIndex = 0;
-
-  for (let i = 0; i < segments.length; i++) {
-    const segPath = join(tempDir, `seg-${i}.mp3`);
-    await writeFile(segPath, segments[i].audio);
-    inputFiles.push(segPath);
-    filterParts.push(`[${inputIndex}:a]`);
-    inputIndex++;
-
-    if (segments[i].gapAfterMs > 0) {
-      const silencePath = join(tempDir, `silence-${i}.mp3`);
-      await generateSilence(ffmpegPath, silencePath, segments[i].gapAfterMs);
-      inputFiles.push(silencePath);
-      filterParts.push(`[${inputIndex}:a]`);
-      inputIndex++;
-    }
-  }
-
-  const outputPath = join(tempDir, "concatenated.mp3");
-  const args: string[] = [];
-  for (const file of inputFiles) args.push("-i", file);
-  const concatFilter = `${filterParts.join("")}concat=n=${filterParts.length}:v=0:a=1[out]`;
-  args.push("-filter_complex", concatFilter, "-map", "[out]", "-y", outputPath);
-
-  await runFFmpeg(ffmpegPath, args);
-  const result = await readFile(outputPath);
-
-  for (const file of inputFiles) await unlink(file).catch(() => {});
-  await unlink(outputPath).catch(() => {});
-
-  return result;
 }
 
 // --- Main voice generation pipeline ---

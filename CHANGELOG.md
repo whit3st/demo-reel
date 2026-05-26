@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Unified FFmpeg wrapper**: merged duplicate `getFfmpegPath`/`runFFmpeg`/`runFfprobe` implementations from `audio-processor.ts` and `script/tts.ts` into a single `src/ffmpeg/utils.ts` module. Both original files now re-export from the shared module. No consumer API changes.
+
 ## [0.7.7] - 2026-05-25
 
 ### Fixed
