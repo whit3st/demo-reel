@@ -70,7 +70,7 @@ vi.mock("../src/browser/pool.js", () => ({
   }),
 }));
 
-import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readFileSync } from "fs";
 import { loadConfig } from "../src/config-loader.js";
 import { runVideoScenario, processVideoWithAudio } from "../src/video-handler.js";
 import { generateVoiceSegments, generateNarrationAudio } from "../src/script/tts.js";
