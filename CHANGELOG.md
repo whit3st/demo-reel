@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Extracted browser module**: moved browser lifecycle functions from `src/video-handler.ts` into `src/browser/` (types, launcher, pool). `startBrowser`, `startRecording`, and `stopRecording` are now thin wrappers delegating to the new module. Browser pool provides lifecycle management for multiple concurrent sessions.
 - **Pipeline orchestrator + stages**: created `src/pipeline/` (types, context, orchestrator) and `src/stages/` (tts, sync, auth, pre-steps, recording, audio-mix, output, post-steps). `generate()` now composes stages via `runPipeline()` instead of inline orchestration. Eliminates the temp JSON serialization roundtrip. `runVideoScenario` remains as backward-compatible entry point.
 - **Split schemas into sub-modules**: extracted 6 focused modules from `src/schemas.ts` (732 lines) into `src/schemas/` (primitives, selector, steps, config, scenes, transform). Original file is now a re-export barrel. All tests pass, no consumer API changes.
+- **Citty CLI framework**: replaced the 55-line manual `showHelp()` with auto-generated help via [Citty](https://github.com/unjs/citty). Args are declared declaratively in a `defineCommand({})` block, driving `--help` output automatically. The existing `parseArgs()` and `runCli()` dispatch logic are unchanged, preserving backward compatibility.
+
+### Added
+
+- New dependency: `citty` for declarative CLI arg definitions and auto-generated help.
 
 ## [0.7.7] - 2026-05-25
 

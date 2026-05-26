@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { defineCommand, renderUsage } from "citty";
 import { loadConfig, loadScenario, findScenarioFiles } from "./config-loader.js";
 import { runVideoScenario, setOnBrowserCreated } from "./video-handler.js";
 import { generate } from "./index.js";
@@ -244,62 +245,34 @@ export function parseArgs(): { scenario?: string; options: CliOptions } {
   return { scenario, options };
 }
 
-export function showHelp(): void {
-  console.log(`
-demo-reel - Create demo videos from web apps
+const cliDef = defineCommand({
+  meta: {
+    name: "demo-reel",
+    version: "0.7.7",
+    description: "Create demo videos from web apps using Playwright",
+  },
+  args: {
+    verbose: { type: "boolean", description: "Show detailed output", alias: ["v"] },
+    "dry-run": { type: "boolean", description: "Validate config without recording" },
+    headed: { type: "boolean", description: "Show browser window (non-headless)" },
+    "output-dir": { type: "string", description: "Override output directory for videos", alias: ["o"], valueHint: "dir" },
+    url: { type: "string", description: "Starting URL for script generation or tracking", valueHint: "url" },
+    output: { type: "string", description: "Output name (without extension)", valueHint: "name" },
+    name: { type: "string", description: "Output or track name (without extension)", valueHint: "name" },
+    voice: { type: "string", description: "TTS voice name (default: alloy)", valueHint: "voice" },
+    speed: { type: "string", description: "TTS speed multiplier (default: 1.0)", valueHint: "number" },
+    "no-cache": { type: "boolean", description: "Skip voice cache" },
+    resolution: { type: "string", description: "Video resolution (HD, FHD, 2K, 4K)", valueHint: "preset" },
+    format: { type: "string", description: "Output format (mp4, webm)", valueHint: "fmt" },
+    tag: { type: "string", description: "Run only scenarios with matching tag (comma-separated)", valueHint: "tags" },
+    "track-name": { type: "string", description: "Track file name", valueHint: "name" },
+    "track-session": { type: "string", description: "Auth session name for save/load", valueHint: "name" },
+  },
+});
 
-Usage:
-  demo-reel [command] [options]
-
-Commands:
-  init                         Create example .demo.ts scenario file
-  track --name <name>          Record browser interactions to a track file
-  script <subcommand>          AI-powered script generation
-  [scenario]                   Run a specific scenario
-
-Track options:
-  --name <name>                Track file name (without extension)
-  --url <url>                  Starting URL for tracking
-  --session <name>             Auth session name for save/load
-
-Script subcommands:
-  script generate "desc" --url <url>   Generate a script from description
-  script voice <script.json>           Generate voiceover audio
-  script build <script.json>           Build .demo.ts from timed script
-  script validate <script.json>        Validate selectors against live app
-  script fix <script.json>             Fix broken selectors via re-crawl
-  script "description" --url <url>     Full pipeline (generate → voice → build)
-
-Options:
-  --all                        Run all *.demo.ts files in the project
-  --output-dir, -o <dir>       Override output directory for videos
-  --dry-run                    Validate config without recording
-  --headed                     Show browser window (non-headless)
-  --tag <tag>[,<tag>]          Run only scenarios with matching tags
-  --verbose, -v                Show detailed output
-  --help, -h                   Show this help message
-
-Script options:
-  --url <url>                  Starting URL for script generation
-  --output, --name <name>      Output name (without extension)
-  --voice <voice>              TTS voice name (default: alloy)
-  --speed <number>             TTS speed multiplier (default: 1.0)
-  --hint <text>                Hint for script generator (repeatable)
-  --no-cache                   Skip voice cache
-  --resolution <preset>        Video resolution (HD, FHD, 2K, 4K)
-  --format <format>            Output format (mp4, webm)
-
-Examples:
-  demo-reel init                        # Create example.demo.ts
-  demo-reel                             # Run all *.demo.ts files
-  demo-reel onboarding                  # Run onboarding.demo.ts
-  demo-reel --dry-run                   # Validate without recording
-  demo-reel -o ./public/videos          # Override output directory
-  demo-reel script "Show signup flow" --url https://app.example.com
-  demo-reel script generate "Show signup" --url https://app.example.com
-  demo-reel script voice demo.script.json
-  demo-reel script build demo.script.json
-`);
+export async function showHelp(): Promise<void> {
+  console.log();
+  console.log(await renderUsage(cliDef));
 }
 
 export async function runCli(): Promise<number> {
@@ -312,7 +285,7 @@ export async function runCli(): Promise<number> {
 
   try {
     if (options.help) {
-      showHelp();
+      await showHelp();
       return 0;
     }
 
