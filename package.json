@@ -62,7 +62,7 @@
     "@vitest/coverage-v8": "^4.1.7",
     "@vitest/ui": "^4.1.7",
     "dotenv": "^17.4.2",
-    "oxfmt": "^0.51.0",
+    "oxfmt": "^0.52.0",
     "oxlint": "^1.66.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.7"
