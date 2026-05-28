@@ -133,7 +133,7 @@ describe("index runtime", () => {
   it("generates narration audio via local TTS", async () => {
     const manifestJson = JSON.stringify({
       version: 1,
-      processingVersion: "v5-no-volume-normalization",
+      processingVersion: "v4-old-processing",
       audioPath: "output/demo-narration.mp3",
       clips: [
         {
@@ -149,6 +149,7 @@ describe("index runtime", () => {
     });
     vi.mocked(existsSync).mockImplementation((path: string) => {
       if (path.endsWith("demo-narration.manifest.json")) return true;
+      if (path.endsWith("demo-narration.mp3")) return true;
       return false;
     });
     vi.mocked(readFileSync as any).mockImplementation((path: string) => {
@@ -219,6 +220,7 @@ describe("index runtime", () => {
     });
     vi.mocked(existsSync).mockImplementation((path: string) => {
       if (path.endsWith("custom-name-narration.manifest.json")) return true;
+      if (path.endsWith("custom-name-narration.mp3")) return true;
       return false;
     });
     vi.mocked(readFileSync as any).mockImplementation((path: string) => {

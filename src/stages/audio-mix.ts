@@ -1,4 +1,5 @@
 import { relative } from "path";
+import { existsSync } from "fs";
 import type { Stage } from "../pipeline/types.js";
 import type { PipelineContext } from "../pipeline/context.js";
 import type { DemoReelConfig } from "../schemas.js";
@@ -15,6 +16,14 @@ export class AudioMixStage implements Stage {
 
     const hasNarration = (ctx.config.scenes ?? []).some((s) => Boolean(s.narration));
     const configWithAudio = this.buildConfigWithAudio(ctx.config, hasNarration, ctx.audioPath);
+
+    if (configWithAudio.audio?.narration && !existsSync(configWithAudio.audio.narration)) {
+      throw new Error(
+        `Narration audio file not found: ${configWithAudio.audio.narration}. ` +
+          "The TTS voice generation may have failed. Run with --verbose to see details.",
+      );
+    }
+
     const { processVideoWithAudio } = await import("../video-handler.js");
 
     const result = await processVideoWithAudio(

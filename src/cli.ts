@@ -172,7 +172,7 @@ async function runScenario(
   await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
 }
 
-export function parseArgs(): { scenario?: string; options: CliOptions } {
+export function parseArgs(): { scenario?: string; options: CliOptions; unknownFlags: string[] } {
   const args = process.argv.slice(2);
   const options: CliOptions = {
     verbose: false,
@@ -180,69 +180,110 @@ export function parseArgs(): { scenario?: string; options: CliOptions } {
     all: false,
   };
   let scenario: string | undefined;
+  const consumed = new Set<number>();
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
     if (arg === "--verbose" || arg === "-v") {
+      consumed.add(i);
       options.verbose = true;
     } else if (arg === "--dry-run") {
+      consumed.add(i);
       options.dryRun = true;
     } else if (arg === "--all") {
+      consumed.add(i);
       options.all = true;
     } else if (arg === "--output-dir" || arg === "-o") {
+      consumed.add(i);
       options.outputDir = args[++i];
+      consumed.add(i);
     } else if (arg === "--headed") {
+      consumed.add(i);
       options.headed = true;
     } else if (arg === "--tag") {
+      consumed.add(i);
       options.tags = addTags(options.tags, args[++i]);
+      consumed.add(i);
     } else if (arg.startsWith("--tag=")) {
+      consumed.add(i);
       options.tags = addTags(options.tags, arg.slice("--tag=".length));
     } else if (arg === "--url") {
+      consumed.add(i);
       options.scriptUrl = args[++i];
+      consumed.add(i);
     } else if (arg.startsWith("--url=")) {
+      consumed.add(i);
       options.scriptUrl = arg.slice("--url=".length);
     } else if (arg === "--output") {
+      consumed.add(i);
       options.scriptOutput = args[++i];
+      consumed.add(i);
     } else if (arg === "--name") {
+      consumed.add(i);
       const val = args[++i];
+      consumed.add(i);
       options.scriptOutput = val;
       options.trackName = val;
     } else if (arg.startsWith("--name=")) {
+      consumed.add(i);
       const val = arg.slice("--name=".length);
       options.scriptOutput = val;
       options.trackName = val;
     } else if (arg === "--session") {
+      consumed.add(i);
       options.trackSession = args[++i];
+      consumed.add(i);
     } else if (arg.startsWith("--session=")) {
+      consumed.add(i);
       options.trackSession = arg.slice("--session=".length);
     } else if (arg === "--voice") {
+      consumed.add(i);
       options.scriptVoice = args[++i];
+      consumed.add(i);
     } else if (arg === "--speed") {
+      consumed.add(i);
       options.scriptSpeed = parseFloat(args[++i]);
+      consumed.add(i);
     } else if (arg === "--hint") {
+      consumed.add(i);
       options.scriptHints = options.scriptHints || [];
       options.scriptHints.push(args[++i]);
+      consumed.add(i);
     } else if (arg === "--no-cache") {
+      consumed.add(i);
       options.noCache = true;
     } else if (arg === "--resolution") {
+      consumed.add(i);
       options.resolution = args[++i];
+      consumed.add(i);
     } else if (arg === "--format") {
+      consumed.add(i);
       options.format = args[++i];
+      consumed.add(i);
     } else if (arg === "--help" || arg === "-h") {
+      consumed.add(i);
       options.help = true;
     } else if (arg === "init") {
+      consumed.add(i);
       options.init = true;
     } else if (arg === "script") {
+      consumed.add(i);
       options.script = true;
     } else if (arg === "track") {
+      consumed.add(i);
       options.track = true;
     } else if (!arg.startsWith("-") && scenario === undefined) {
+      consumed.add(i);
       scenario = arg;
     }
   }
 
-  return { scenario, options };
+  const unknownFlags = args.filter(
+    (_a, i) => !consumed.has(i) && args[i].startsWith("-"),
+  );
+
+  return { scenario, options, unknownFlags };
 }
 
 const cliDef = defineCommand({
@@ -276,7 +317,13 @@ export async function showHelp(): Promise<void> {
 }
 
 export async function runCli(): Promise<number> {
-  const { scenario, options } = parseArgs();
+  const { scenario, options, unknownFlags } = parseArgs();
+
+  if (unknownFlags.length > 0) {
+    console.error(`Error: unknown option(s): ${unknownFlags.join(", ")}`);
+    console.error("Run demo-reel --help for usage.");
+    return 1;
+  }
 
   setupSignalHandlers();
   setOnBrowserCreated((browser, context) => {
