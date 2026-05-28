@@ -3,6 +3,7 @@ import type { Stage } from "../pipeline/types.js";
 import type { PipelineContext } from "../pipeline/context.js";
 import type { DemoReelConfig } from "../schemas.js";
 import type { AudioConfig } from "../audio-processor.js";
+import { getNarrationManifestPath } from "../narration-manifest.js";
 
 export class AudioMixStage implements Stage {
   readonly name = "Audio Mix";
@@ -45,7 +46,7 @@ export class AudioMixStage implements Stage {
   ): DemoReelConfig {
     if (!hasNarration || !audioPath) return config;
     const narrationManifestPath =
-      config.audio?.narrationManifest ?? audioPath.replace(/\.mp3$/, ".narration-manifest.json");
+      config.audio?.narrationManifest ?? getNarrationManifestPath(audioPath);
 
     return {
       ...config,
