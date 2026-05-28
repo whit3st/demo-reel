@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Unknown flag detection**: the CLI now rejects unrecognized `--flags` (e.g. `--sry-run` typo of `--dry-run`) with a clear error message instead of silently ignoring them.
 - **Missing narration audio**: `AudioMixStage` now validates that the narration audio file exists before invoking ffmpeg, surfacing a clear error when TTS generation failed instead of the cryptic "Error opening input file" from ffmpeg.
+- **Audio path resolution**: fixed a bug where audio paths were resolved relative to the parent of `process.cwd()` instead of the project root, causing ffmpeg to look for narration files one directory level above where they were generated. `AudioMixStage` now passes absolute paths directly.
 
 ### Added
 

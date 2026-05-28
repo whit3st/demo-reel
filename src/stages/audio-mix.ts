@@ -1,4 +1,3 @@
-import { relative } from "path";
 import { existsSync } from "fs";
 import type { Stage } from "../pipeline/types.js";
 import type { PipelineContext } from "../pipeline/context.js";
@@ -52,10 +51,8 @@ export class AudioMixStage implements Stage {
       ...config,
       audio: {
         ...config.audio,
-        narration: relative(process.cwd(), audioPath),
-        narrationManifest: narrationManifestPath.startsWith("/")
-          ? narrationManifestPath
-          : relative(process.cwd(), narrationManifestPath),
+        narration: audioPath,
+        narrationManifest: narrationManifestPath,
         narrationDelay: config.audio?.narrationDelay ?? 300,
       } as AudioConfig,
       outputFormat: "mp4",
