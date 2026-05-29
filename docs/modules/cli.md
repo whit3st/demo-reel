@@ -10,10 +10,10 @@ The CLI entry point (`src/cli.ts`) parses command-line arguments and dispatches 
 
 ## Entry Points
 
-| Path | Purpose |
-|------|---------|
+| Path                | Purpose                                                                          |
+| ------------------- | -------------------------------------------------------------------------------- |
 | `bin/demo-reel.mjs` | Installed binary (package.json `bin` field). Spawns `dist/cli.js` via `tsx/esm`. |
-| `src/cli.ts` | Full CLI implementation. Direct execution via `tsx src/cli.ts`. |
+| `src/cli.ts`        | Full CLI implementation. Direct execution via `tsx src/cli.ts`.                  |
 
 ## Usage
 
@@ -27,27 +27,27 @@ demo-reel script <subcommand>      # AI-powered script generation
 
 ## Global Options
 
-| Flag | Alias | Description |
-|------|-------|-------------|
-| `--verbose` | `-v` | Show detailed output |
-| `--dry-run` | | Validate config without recording |
-| `--headed` | | Show browser window (non-headless) |
-| `--output-dir` | `-o` | Override output directory |
-| `--tag` | | Run only scenarios with matching tag (comma-separated) |
-| `--help` | `-h` | Show auto-generated help |
+| Flag           | Alias | Description                                            |
+| -------------- | ----- | ------------------------------------------------------ |
+| `--verbose`    | `-v`  | Show detailed output                                   |
+| `--dry-run`    |       | Validate config without recording                      |
+| `--headed`     |       | Show browser window (non-headless)                     |
+| `--output-dir` | `-o`  | Override output directory                              |
+| `--tag`        |       | Run only scenarios with matching tag (comma-separated) |
+| `--help`       | `-h`  | Show auto-generated help                               |
+| `--no-cache`   |       | Skip voice cache in the generate() pipeline            |
 
 ## Script Options
 
-| Flag | Description |
-|------|-------------|
-| `--url` | Starting URL for script generation |
-| `--output`, `--name` | Output name (without extension) |
-| `--voice` | TTS voice name |
-| `--speed` | TTS speed multiplier |
-| `--hint` | Hint for script generator (repeatable) |
-| `--no-cache` | Skip voice cache |
-| `--resolution` | Video resolution (HD, FHD, 2K, 4K) |
-| `--format` | Output format (mp4, webm) |
+| Flag                 | Description                            |
+| -------------------- | -------------------------------------- |
+| `--url`              | Starting URL for script generation     |
+| `--output`, `--name` | Output name (without extension)        |
+| `--voice`            | TTS voice name                         |
+| `--speed`            | TTS speed multiplier                   |
+| `--hint`             | Hint for script generator (repeatable) |
+| `--resolution`       | Video resolution (HD, FHD, 2K, 4K)     |
+| `--format`           | Output format (mp4, webm)              |
 
 ## Architecture
 
@@ -67,9 +67,9 @@ The citty `cliDef` serves double duty: it defines the arg schema for `--help` re
 
 ## Exports
 
-| Export | Type | Purpose |
-|--------|------|---------|
-| `runCli()` | `() => Promise<number>` | Parse args from `process.argv` and execute. Returns exit code. |
-| `main()` | `() => Promise<void>` | Calls `runCli()` and `process.exit()`. |
-| `showHelp()` | `() => Promise<void>` | Renders and prints auto-generated help via Citty. |
-| `parseArgs()` | `() => { scenario?, options }` | Legacy arg parser (internal). |
+| Export        | Type                           | Purpose                                                        |
+| ------------- | ------------------------------ | -------------------------------------------------------------- |
+| `runCli()`    | `() => Promise<number>`        | Parse args from `process.argv` and execute. Returns exit code. |
+| `main()`      | `() => Promise<void>`          | Calls `runCli()` and `process.exit()`.                         |
+| `showHelp()`  | `() => Promise<void>`          | Renders and prints auto-generated help via Citty.              |
+| `parseArgs()` | `() => { scenario?, options }` | Legacy arg parser (internal).                                  |
