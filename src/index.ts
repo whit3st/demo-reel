@@ -23,6 +23,7 @@ export interface GenerateOptions {
   dryRun?: boolean;
   headed?: boolean;
   noCache?: boolean;
+  silent?: boolean;
 }
 
 export function defineConfig(config: DemoConfig): DemoReelConfig {
@@ -49,8 +50,28 @@ function getBaseName(config: DemoReelConfig): string {
 }
 
 export async function generate(config: DemoConfig, options: GenerateOptions = {}): Promise<void> {
-  const { verbose = false, dryRun = false, headed = false, noCache = false } = options;
-  const resolvedConfig = validateConfig(config);
+  const { verbose = false, dryRun = false, headed = false, noCache = false, silent = false } = options;
+
+  let finalConfig = config;
+  if (silent) {
+    finalConfig = { ...finalConfig, voice: undefined, outputFormat: "webm" as const };
+
+    if (finalConfig.outputPath?.endsWith(".mp4")) {
+      finalConfig = {
+        ...finalConfig,
+        outputPath: finalConfig.outputPath.replace(/\.mp4$/, ".webm"),
+      };
+    }
+
+    if (finalConfig.scenes) {
+      finalConfig = {
+        ...finalConfig,
+        scenes: finalConfig.scenes.map((s) => ({ ...s, narration: "" })),
+      };
+    }
+  }
+
+  const resolvedConfig = validateConfig(finalConfig);
 
   if (dryRun) {
     const { runVideoScenario } = await import("./video-handler.js");
@@ -103,7 +124,6 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
 export { demoReelConfigSchema, demoReelConfigInputSchema };
 export type { DemoReelConfig, DemoReelConfigInput } from "./schemas.js";
 export type * from "./types.js";
-export { run, type RunOptions } from "./run.js";
 export {
   runScenarioForTest,
   runSteps,

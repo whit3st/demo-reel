@@ -42,6 +42,7 @@ interface CliOptions {
   scriptSpeed?: number;
   scriptHints?: string[];
   noCache?: boolean;
+  silent?: boolean;
   resolution?: string;
   format?: string;
   // Track-specific options
@@ -63,6 +64,7 @@ function toGlobalOptions(options: CliOptions): GlobalOptions {
     scriptSpeed: options.scriptSpeed,
     scriptHints: options.scriptHints,
     noCache: options.noCache,
+    silent: options.silent,
     resolution: options.resolution,
     format: options.format,
     trackName: options.trackName,
@@ -165,7 +167,7 @@ async function runScenario(
     const config = options.outputDir
       ? { ...loaded.config, outputDir: options.outputDir }
       : loaded.config;
-    await generate(config, { verbose: options.verbose, noCache: options.noCache });
+    await generate(config, { verbose: options.verbose, noCache: options.noCache, silent: options.silent });
     return;
   }
 
@@ -253,6 +255,9 @@ export function parseArgs(): { scenario?: string; options: CliOptions; unknownFl
     } else if (arg === "--no-cache") {
       consumed.add(i);
       options.noCache = true;
+    } else if (arg === "--silent") {
+      consumed.add(i);
+      options.silent = true;
     } else if (arg === "--resolution") {
       consumed.add(i);
       options.resolution = args[++i];
@@ -318,6 +323,7 @@ const cliDef = defineCommand({
       valueHint: "number",
     },
     "no-cache": { type: "boolean", description: "Skip voice cache" },
+    silent: { type: "boolean", description: "Strip voice, narration, force webm" },
     resolution: {
       type: "string",
       description: "Video resolution (HD, FHD, 2K, 4K)",

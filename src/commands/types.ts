@@ -13,6 +13,7 @@ export interface GlobalOptions {
   scriptSpeed?: number;
   scriptHints?: string[];
   noCache?: boolean;
+  silent?: boolean;
   resolution?: string;
   format?: string;
   // Track-specific options
