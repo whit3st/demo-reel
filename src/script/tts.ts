@@ -1,10 +1,7 @@
-import { mkdir, writeFile, readFile, stat, unlink } from "fs/promises";
+import { mkdir, writeFile, stat } from "fs/promises";
 import { join, dirname, relative } from "path";
-import { createHash } from "crypto";
-import { spawn } from "child_process";
 import type { DemoScript, TimedScene } from "./types.js";
-import { getVoiceName, type VoiceConfig } from "../voice-config.js";
-import { ensurePiperBinary, ensurePiperModel } from "../piper.js";
+import { type VoiceConfig } from "../voice-config.js";
 import {
   getNarrationClipDir,
   getNarrationClipFileName,
@@ -13,451 +10,51 @@ import {
   type NarrationManifest,
 } from "../narration-manifest.js";
 
-const CACHE_DIR = ".demo-reel-cache/voice";
-const VOICE_CACHE_VERSION = NARRATION_PROCESSING_VERSION;
+import {
+  runFFmpeg,
+  runFfprobe,
+  measureAudioDuration,
+  wavToMp3,
+  generateSilence,
+  concatenateAudio,
+  getFfmpegPath,
+} from "../ffmpeg/utils.js";
 
-// --- Provider interface ---
+export { runFFmpeg, runFfprobe, measureAudioDuration, wavToMp3, generateSilence, concatenateAudio };
 
-export interface TTSProvider {
-  name: string;
-  generate(text: string, options: VoiceConfig): Promise<{ audio: Buffer; durationMs: number }>;
-}
+export const getFFmpegPath = getFfmpegPath;
 
-// --- Audio utilities (shared by all providers) ---
-
-export async function getFFmpegPath(): Promise<string> {
-  try {
-    const mod: any = await import("ffmpeg-static");
-    const ffmpegPath = mod.default || mod;
-    if (ffmpegPath && typeof ffmpegPath === "string") {
-      const { accessSync } = await import("fs");
-      accessSync(ffmpegPath);
-      return ffmpegPath;
-    }
-  } catch {
-    /* ffmpeg-static not available or binary missing */
-  }
-  return "ffmpeg";
-}
-
-export async function getFFprobePath(ffmpegPath: string): Promise<string> {
-  // Try alongside ffmpeg-static first
-  const adjacent = ffmpegPath.replace(/ffmpeg([^/\\]*)$/, "ffprobe$1");
-  try {
-    await stat(adjacent);
-    return adjacent;
-  } catch {
-    // Fall back to system ffprobe
-    return "ffprobe";
-  }
-}
-
-export function runFFmpeg(ffmpegPath: string, args: string[]): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn(ffmpegPath, args);
-    let stderr = "";
-    proc.stderr.on("data", (data: Buffer) => {
-      stderr += data.toString();
-    });
-    proc.on("close", (code) => {
-      if (code !== 0) {
-        reject(new Error(`FFmpeg exited with code ${code}: ${stderr.slice(-200)}`));
-        return;
-      }
-      resolve();
-    });
-    proc.on("error", reject);
-  });
-}
-
-export function runFfprobe(ffprobePath: string, args: string[]): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn(ffprobePath, args);
-    let output = "";
-    proc.stdout.on("data", (data: Buffer) => {
-      output += data.toString();
-    });
-    proc.stderr.on("data", () => {});
-    proc.on("close", (code) => {
-      if (code !== 0) {
-        reject(new Error(`ffprobe exited with code ${code}`));
-        return;
-      }
-      resolve(output);
-    });
-    proc.on("error", reject);
-  });
-}
-
-export async function measureAudioDuration(audioBuffer: Buffer): Promise<number> {
-  const ffmpegPath = await getFFmpegPath();
-  const ffprobePath = await getFFprobePath(ffmpegPath);
-
-  const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
-  await mkdir(tempDir, { recursive: true });
-  const tempPath = join(tempDir, `probe-${Date.now()}.mp3`);
-  await writeFile(tempPath, audioBuffer);
-
-  try {
-    const output = await runFfprobe(ffprobePath, [
-      "-v",
-      "quiet",
-      "-show_entries",
-      "format=duration",
-      "-of",
-      "default=noprint_wrappers=1:nokey=1",
-      tempPath,
-    ]);
-    const seconds = parseFloat(output.trim());
-    if (isNaN(seconds)) {
-      throw new Error("Could not parse audio duration");
-    }
-    return Math.round(seconds * 1000);
-  } finally {
-    await unlink(tempPath).catch(() => {});
-  }
-}
-
-/** Convert WAV buffer to MP3 buffer via FFmpeg. */
-export async function wavToMp3(wavBuffer: Buffer): Promise<Buffer> {
-  const ffmpegPath = await getFFmpegPath();
-  const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
-  await mkdir(tempDir, { recursive: true });
-
-  const wavPath = join(tempDir, `convert-${Date.now()}.wav`);
-  const mp3Path = join(tempDir, `convert-${Date.now()}.mp3`);
-
-  await writeFile(wavPath, wavBuffer);
-  await runFFmpeg(ffmpegPath, [
-    "-i",
-    wavPath,
-    "-codec:a",
-    "libmp3lame",
-    "-q:a",
-    "2",
-    "-y",
-    mp3Path,
-  ]);
-
-  const mp3Buffer = await readFile(mp3Path);
-  await unlink(wavPath).catch(() => {});
-  await unlink(mp3Path).catch(() => {});
-  return mp3Buffer;
-}
-
-// --- Piper TTS Provider (local, free) ---
-
-async function findPiperBinary(): Promise<string> {
-  try {
-    return await ensurePiperBinary();
-  } catch {}
-
-  for (const name of ["piper", "piper-tts"]) {
+export async function getFFprobePath(ffmpegPath?: string): Promise<string> {
+  if (ffmpegPath) {
+    const adjacent = ffmpegPath.replace(/ffmpeg([^/\\]*)$/, "ffprobe$1");
     try {
-      const result = await new Promise<string>((resolve, reject) => {
-        const proc = spawn("which", [name]);
-        let out = "";
-        proc.stdout.on("data", (d: Buffer) => {
-          out += d.toString();
-        });
-        proc.on("close", (code) => (code === 0 ? resolve(out.trim()) : reject()));
-        proc.on("error", reject);
-      });
-      if (result) return result;
-    } catch {}
-  }
-  throw new Error("Piper not found. Install with: pip install piper-tts");
-}
-
-function getPiperModelDir(voice: string): string {
-  if (voice.startsWith("/") || voice.includes(".onnx")) {
-    return dirname(voice);
-  }
-  return (
-    process.env.PIPER_VOICE_DIR ||
-    join(process.env.HOME || process.env.USERPROFILE || ".", ".local", "share", "piper-voices")
-  );
-}
-
-async function getPiperModelPath(options: VoiceConfig): Promise<string> {
-  if ("voicePath" in options) {
-    const voice = options.voicePath;
-    if (voice.startsWith("/") || voice.includes(".onnx")) {
-      return voice;
+      await stat(adjacent);
+      return adjacent;
+    } catch {
+      return "ffprobe";
     }
   }
-
-  const voiceDir = getPiperModelDir("voicePath" in options ? options.voicePath : options.voice);
-  const voiceName = "voicePath" in options ? options.voicePath : options.voice;
-
-  if ("voicePath" in options) {
-    return join(voiceDir, `${voiceName}.onnx`);
-  }
-
-  try {
-    return await ensurePiperModel(voiceName, voiceDir);
-  } catch (error) {
-    throw new Error(
-      `Piper voice model not found: ${voiceName}\n` +
-        `${error instanceof Error ? error.message : error}`,
-    );
-  }
+  const { getFfprobePath } = await import("../ffmpeg/utils.js");
+  return getFfprobePath();
 }
 
-async function generatePiper(
-  text: string,
-  options: Extract<VoiceConfig, { provider: "piper" }>,
-): Promise<{ audio: Buffer; durationMs: number }> {
-  const piperPath = await findPiperBinary();
-  const modelPath = await getPiperModelPath(options);
+export type { TTSProvider } from "../voice/types.js";
 
-  const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
-  await mkdir(tempDir, { recursive: true });
-  const wavPath = join(tempDir, `piper-${Date.now()}.wav`);
+import { registerTTSProvider, getTTSProvider } from "../voice/index.js";
+export { registerTTSProvider, getTTSProvider };
 
-  // Run piper: echo text | piper --model <model> --output_file <wav>
-  await new Promise<void>((resolve, reject) => {
-    const args = ["--model", modelPath, "--output_file", wavPath];
-    if (options.speed !== 1.0) {
-      args.push("--length_scale", String(1.0 / options.speed));
-    }
-    const proc = spawn(piperPath, args);
-    let stderr = "";
-    proc.stderr.on("data", (d: Buffer) => {
-      stderr += d.toString();
-    });
-    proc.on("close", (code) => {
-      if (code !== 0) {
-        reject(new Error(`Piper exited with code ${code}: ${stderr}`));
-        return;
-      }
-      resolve();
-    });
-    proc.on("error", reject);
-    proc.stdin.write(text);
-    proc.stdin.end();
-  });
+import { piperProvider } from "../voice/piper.js";
+import { openaiProvider } from "../voice/openai.js";
+import { elevenlabsProvider } from "../voice/elevenlabs.js";
 
-  const wavBuffer = await readFile(wavPath);
-  await unlink(wavPath).catch(() => {});
+registerTTSProvider(piperProvider);
+registerTTSProvider(openaiProvider);
+registerTTSProvider(elevenlabsProvider);
 
-  // Convert WAV to MP3
-  const audio = await wavToMp3(wavBuffer);
-  const durationMs = await measureAudioDuration(audio);
+import { cacheKey, getCached, setCache } from "../voice/cache.js";
 
-  return { audio, durationMs };
-}
+import type { VoiceSegment } from "../voice/types.js";
 
-// --- OpenAI TTS Provider ---
-
-async function generateOpenAI(
-  text: string,
-  options: Extract<VoiceConfig, { provider: "openai" }>,
-): Promise<{ audio: Buffer; durationMs: number }> {
-  // @ts-ignore — openai is an optional peer dependency
-  const openaiModule: any = await import("openai");
-  const OpenAI = openaiModule.default;
-  const client = new OpenAI();
-
-  const response = await client.audio.speech.create({
-    model: "tts-1",
-    voice: options.voice as "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer",
-    input: text,
-    speed: options.speed,
-    response_format: "mp3",
-  });
-
-  const arrayBuffer = await response.arrayBuffer();
-  const audio = Buffer.from(arrayBuffer);
-  const durationMs = await measureAudioDuration(audio);
-
-  return { audio, durationMs };
-}
-
-// --- ElevenLabs TTS Provider ---
-
-async function generateElevenLabs(
-  text: string,
-  options: Extract<VoiceConfig, { provider: "elevenlabs" }>,
-): Promise<{ audio: Buffer; durationMs: number }> {
-  const apiKey = process.env.ELEVENLABS_KEY || process.env.ELEVENLABS_API_KEY;
-  if (!apiKey) {
-    throw new Error(
-      "ElevenLabs API key not found. Set ELEVENLABS_KEY or ELEVENLABS_API_KEY env var.",
-    );
-  }
-
-  // Default to a good multilingual voice
-  const voiceId = options.voice || "21m00Tcm4TlvDq8ikWAM"; // "Rachel" - good for multilingual
-
-  const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-    method: "POST",
-    headers: {
-      "xi-api-key": apiKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      text,
-      model_id: "eleven_multilingual_v2",
-      voice_settings: {
-        stability: 0.5,
-        similarity_boost: 0.75,
-        speed: options.speed,
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`ElevenLabs API error ${response.status}: ${body}`);
-  }
-
-  const arrayBuffer = await response.arrayBuffer();
-  const audio = Buffer.from(arrayBuffer);
-  const durationMs = await measureAudioDuration(audio);
-
-  return { audio, durationMs };
-}
-
-// --- Provider registry ---
-
-const providers: Record<string, TTSProvider> = {
-  piper: {
-    name: "piper",
-    generate: (text, options) =>
-      generatePiper(text, options as Extract<VoiceConfig, { provider: "piper" }>),
-  },
-  openai: {
-    name: "openai",
-    generate: (text, options) =>
-      generateOpenAI(text, options as Extract<VoiceConfig, { provider: "openai" }>),
-  },
-  elevenlabs: {
-    name: "elevenlabs",
-    generate: (text, options) =>
-      generateElevenLabs(text, options as Extract<VoiceConfig, { provider: "elevenlabs" }>),
-  },
-};
-
-export function getTTSProvider(name: string): TTSProvider {
-  const provider = providers[name];
-  if (!provider) {
-    throw new Error(
-      `Unknown TTS provider: "${name}". Available: ${Object.keys(providers).join(", ")}`,
-    );
-  }
-  return provider;
-}
-
-export function registerTTSProvider(provider: TTSProvider): void {
-  providers[provider.name] = provider;
-}
-
-// --- Caching ---
-
-function cacheKey(text: string, voice: VoiceConfig): string {
-  return createHash("sha256")
-    .update(
-      `${VOICE_CACHE_VERSION}|${text}|${voice.provider}|${getVoiceName(voice)}|${voice.speed}`,
-    )
-    .digest("hex")
-    .slice(0, 16);
-}
-
-async function getCached(key: string): Promise<Buffer | null> {
-  const path = join(process.cwd(), CACHE_DIR, `${key}.mp3`);
-  try {
-    await stat(path);
-    return await readFile(path);
-  } catch {
-    return null;
-  }
-}
-
-async function setCache(key: string, audio: Buffer): Promise<void> {
-  const dir = join(process.cwd(), CACHE_DIR);
-  await mkdir(dir, { recursive: true });
-  await writeFile(join(dir, `${key}.mp3`), audio);
-}
-
-// --- Concatenation ---
-
-export async function generateSilence(
-  ffmpegPath: string,
-  outputPath: string,
-  durationMs: number,
-): Promise<void> {
-  await runFFmpeg(ffmpegPath, [
-    "-f",
-    "lavfi",
-    "-i",
-    `anullsrc=r=44100:cl=mono`,
-    "-t",
-    (durationMs / 1000).toString(),
-    "-q:a",
-    "9",
-    "-y",
-    outputPath,
-  ]);
-}
-
-export async function concatenateAudio(
-  segments: { audio: Buffer; gapAfterMs: number }[],
-): Promise<Buffer> {
-  const ffmpegPath = await getFFmpegPath();
-  const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
-  await mkdir(tempDir, { recursive: true });
-
-  const inputFiles: string[] = [];
-  const filterParts: string[] = [];
-  let inputIndex = 0;
-
-  for (let i = 0; i < segments.length; i++) {
-    const segPath = join(tempDir, `seg-${i}.mp3`);
-    await writeFile(segPath, segments[i].audio);
-    inputFiles.push(segPath);
-    filterParts.push(`[${inputIndex}:a]`);
-    inputIndex++;
-
-    if (segments[i].gapAfterMs > 0) {
-      const silencePath = join(tempDir, `silence-${i}.mp3`);
-      await generateSilence(ffmpegPath, silencePath, segments[i].gapAfterMs);
-      inputFiles.push(silencePath);
-      filterParts.push(`[${inputIndex}:a]`);
-      inputIndex++;
-    }
-  }
-
-  const outputPath = join(tempDir, "concatenated.mp3");
-  const args: string[] = [];
-  for (const file of inputFiles) args.push("-i", file);
-  const concatFilter = `${filterParts.join("")}concat=n=${filterParts.length}:v=0:a=1[out]`;
-  args.push("-filter_complex", concatFilter, "-map", "[out]", "-y", outputPath);
-
-  await runFFmpeg(ffmpegPath, args);
-  const result = await readFile(outputPath);
-
-  for (const file of inputFiles) await unlink(file).catch(() => {});
-  await unlink(outputPath).catch(() => {});
-
-  return result;
-}
-
-// --- Main voice generation pipeline ---
-
-interface VoiceSegment {
-  sceneIndex: number;
-  stepIndex?: number;
-  sourceSceneIndex?: number;
-  narration: string;
-  audio: Buffer;
-  durationMs: number;
-}
-
-/**
- * Apply pronunciation replacements to text before sending to TTS.
- * Replacements are case-insensitive and match whole words.
- */
 export function applyPronunciation(text: string, pronunciation?: Record<string, string>): string {
   if (!pronunciation) return text;
   let result = text;
@@ -500,14 +97,12 @@ export async function generateVoiceSegments(
 
     if (options.verbose) console.log(`  Scene ${i + 1}: generating voice...`);
 
-    // Apply pronunciation map before TTS
     const ttsText = applyPronunciation(scene.narration, voice.pronunciation);
     const generated = await provider.generate(ttsText, voice);
     const { audio, durationMs } = generated;
     await setCache(key, audio);
     if (options.verbose) console.log(`  Scene ${i + 1}: ${(durationMs / 1000).toFixed(1)}s`);
 
-    // Store the original narration (for subtitles), not the pronunciation-adjusted text
     segments.push({
       sceneIndex: i,
       stepIndex: scene.stepIndex,

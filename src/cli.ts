@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { defineCommand, renderUsage } from "citty";
 import { loadConfig, loadScenario, findScenarioFiles } from "./config-loader.js";
 import { runVideoScenario, setOnBrowserCreated } from "./video-handler.js";
 import { generate } from "./index.js";
@@ -41,6 +42,7 @@ interface CliOptions {
   scriptSpeed?: number;
   scriptHints?: string[];
   noCache?: boolean;
+  silent?: boolean;
   resolution?: string;
   format?: string;
   // Track-specific options
@@ -62,6 +64,7 @@ function toGlobalOptions(options: CliOptions): GlobalOptions {
     scriptSpeed: options.scriptSpeed,
     scriptHints: options.scriptHints,
     noCache: options.noCache,
+    silent: options.silent,
     resolution: options.resolution,
     format: options.format,
     trackName: options.trackName,
@@ -164,14 +167,18 @@ async function runScenario(
     const config = options.outputDir
       ? { ...loaded.config, outputDir: options.outputDir }
       : loaded.config;
-    await generate(config, { verbose: options.verbose });
+    await generate(config, {
+      verbose: options.verbose,
+      noCache: options.noCache,
+      silent: options.silent,
+    });
     return;
   }
 
   await runVideoScenario(loaded.config, loaded.outputPath, loaded.configPath, options);
 }
 
-export function parseArgs(): { scenario?: string; options: CliOptions } {
+export function parseArgs(): { scenario?: string; options: CliOptions; unknownFlags: string[] } {
   const args = process.argv.slice(2);
   const options: CliOptions = {
     verbose: false,
@@ -179,131 +186,181 @@ export function parseArgs(): { scenario?: string; options: CliOptions } {
     all: false,
   };
   let scenario: string | undefined;
+  const consumed = new Set<number>();
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
     if (arg === "--verbose" || arg === "-v") {
+      consumed.add(i);
       options.verbose = true;
     } else if (arg === "--dry-run") {
+      consumed.add(i);
       options.dryRun = true;
     } else if (arg === "--all") {
+      consumed.add(i);
       options.all = true;
     } else if (arg === "--output-dir" || arg === "-o") {
+      consumed.add(i);
       options.outputDir = args[++i];
+      consumed.add(i);
     } else if (arg === "--headed") {
+      consumed.add(i);
       options.headed = true;
     } else if (arg === "--tag") {
+      consumed.add(i);
       options.tags = addTags(options.tags, args[++i]);
+      consumed.add(i);
     } else if (arg.startsWith("--tag=")) {
+      consumed.add(i);
       options.tags = addTags(options.tags, arg.slice("--tag=".length));
     } else if (arg === "--url") {
+      consumed.add(i);
       options.scriptUrl = args[++i];
+      consumed.add(i);
     } else if (arg.startsWith("--url=")) {
+      consumed.add(i);
       options.scriptUrl = arg.slice("--url=".length);
     } else if (arg === "--output") {
+      consumed.add(i);
       options.scriptOutput = args[++i];
+      consumed.add(i);
     } else if (arg === "--name") {
+      consumed.add(i);
       const val = args[++i];
+      consumed.add(i);
       options.scriptOutput = val;
       options.trackName = val;
     } else if (arg.startsWith("--name=")) {
+      consumed.add(i);
       const val = arg.slice("--name=".length);
       options.scriptOutput = val;
       options.trackName = val;
     } else if (arg === "--session") {
+      consumed.add(i);
       options.trackSession = args[++i];
+      consumed.add(i);
     } else if (arg.startsWith("--session=")) {
+      consumed.add(i);
       options.trackSession = arg.slice("--session=".length);
     } else if (arg === "--voice") {
+      consumed.add(i);
       options.scriptVoice = args[++i];
+      consumed.add(i);
     } else if (arg === "--speed") {
+      consumed.add(i);
       options.scriptSpeed = parseFloat(args[++i]);
+      consumed.add(i);
     } else if (arg === "--hint") {
+      consumed.add(i);
       options.scriptHints = options.scriptHints || [];
       options.scriptHints.push(args[++i]);
+      consumed.add(i);
     } else if (arg === "--no-cache") {
+      consumed.add(i);
       options.noCache = true;
+    } else if (arg === "--silent") {
+      consumed.add(i);
+      options.silent = true;
     } else if (arg === "--resolution") {
+      consumed.add(i);
       options.resolution = args[++i];
+      consumed.add(i);
     } else if (arg === "--format") {
+      consumed.add(i);
       options.format = args[++i];
+      consumed.add(i);
     } else if (arg === "--help" || arg === "-h") {
+      consumed.add(i);
       options.help = true;
     } else if (arg === "init") {
+      consumed.add(i);
       options.init = true;
     } else if (arg === "script") {
+      consumed.add(i);
       options.script = true;
     } else if (arg === "track") {
+      consumed.add(i);
       options.track = true;
     } else if (!arg.startsWith("-") && scenario === undefined) {
+      consumed.add(i);
       scenario = arg;
     }
   }
 
-  return { scenario, options };
+  const unknownFlags = args.filter((_a, i) => !consumed.has(i) && args[i].startsWith("-"));
+
+  return { scenario, options, unknownFlags };
 }
 
-export function showHelp(): void {
-  console.log(`
-demo-reel - Create demo videos from web apps
+const cliDef = defineCommand({
+  meta: {
+    name: "demo-reel",
+    version: "0.7.7",
+    description: "Create demo videos from web apps using Playwright",
+  },
+  args: {
+    verbose: { type: "boolean", description: "Show detailed output", alias: ["v"] },
+    "dry-run": { type: "boolean", description: "Validate config without recording" },
+    headed: { type: "boolean", description: "Show browser window (non-headless)" },
+    "output-dir": {
+      type: "string",
+      description: "Override output directory for videos",
+      alias: ["o"],
+      valueHint: "dir",
+    },
+    url: {
+      type: "string",
+      description: "Starting URL for script generation or tracking",
+      valueHint: "url",
+    },
+    output: { type: "string", description: "Output name (without extension)", valueHint: "name" },
+    name: {
+      type: "string",
+      description: "Output or track name (without extension)",
+      valueHint: "name",
+    },
+    voice: { type: "string", description: "TTS voice name (default: alloy)", valueHint: "voice" },
+    speed: {
+      type: "string",
+      description: "TTS speed multiplier (default: 1.0)",
+      valueHint: "number",
+    },
+    "no-cache": { type: "boolean", description: "Skip voice cache" },
+    silent: { type: "boolean", description: "Strip voice, narration, force webm" },
+    resolution: {
+      type: "string",
+      description: "Video resolution (HD, FHD, 2K, 4K)",
+      valueHint: "preset",
+    },
+    format: { type: "string", description: "Output format (mp4, webm)", valueHint: "fmt" },
+    tag: {
+      type: "string",
+      description: "Run only scenarios with matching tag (comma-separated)",
+      valueHint: "tags",
+    },
+    "track-name": { type: "string", description: "Track file name", valueHint: "name" },
+    "track-session": {
+      type: "string",
+      description: "Auth session name for save/load",
+      valueHint: "name",
+    },
+  },
+});
 
-Usage:
-  demo-reel [command] [options]
-
-Commands:
-  init                         Create example .demo.ts scenario file
-  track --name <name>          Record browser interactions to a track file
-  script <subcommand>          AI-powered script generation
-  [scenario]                   Run a specific scenario
-
-Track options:
-  --name <name>                Track file name (without extension)
-  --url <url>                  Starting URL for tracking
-  --session <name>             Auth session name for save/load
-
-Script subcommands:
-  script generate "desc" --url <url>   Generate a script from description
-  script voice <script.json>           Generate voiceover audio
-  script build <script.json>           Build .demo.ts from timed script
-  script validate <script.json>        Validate selectors against live app
-  script fix <script.json>             Fix broken selectors via re-crawl
-  script "description" --url <url>     Full pipeline (generate → voice → build)
-
-Options:
-  --all                        Run all *.demo.ts files in the project
-  --output-dir, -o <dir>       Override output directory for videos
-  --dry-run                    Validate config without recording
-  --headed                     Show browser window (non-headless)
-  --tag <tag>[,<tag>]          Run only scenarios with matching tags
-  --verbose, -v                Show detailed output
-  --help, -h                   Show this help message
-
-Script options:
-  --url <url>                  Starting URL for script generation
-  --output, --name <name>      Output name (without extension)
-  --voice <voice>              TTS voice name (default: alloy)
-  --speed <number>             TTS speed multiplier (default: 1.0)
-  --hint <text>                Hint for script generator (repeatable)
-  --no-cache                   Skip voice cache
-  --resolution <preset>        Video resolution (HD, FHD, 2K, 4K)
-  --format <format>            Output format (mp4, webm)
-
-Examples:
-  demo-reel init                        # Create example.demo.ts
-  demo-reel                             # Run all *.demo.ts files
-  demo-reel onboarding                  # Run onboarding.demo.ts
-  demo-reel --dry-run                   # Validate without recording
-  demo-reel -o ./public/videos          # Override output directory
-  demo-reel script "Show signup flow" --url https://app.example.com
-  demo-reel script generate "Show signup" --url https://app.example.com
-  demo-reel script voice demo.script.json
-  demo-reel script build demo.script.json
-`);
+export async function showHelp(): Promise<void> {
+  console.log();
+  console.log(await renderUsage(cliDef));
 }
 
 export async function runCli(): Promise<number> {
-  const { scenario, options } = parseArgs();
+  const { scenario, options, unknownFlags } = parseArgs();
+
+  if (unknownFlags.length > 0) {
+    console.error(`Error: unknown option(s): ${unknownFlags.join(", ")}`);
+    console.error("Run demo-reel --help for usage.");
+    return 1;
+  }
 
   setupSignalHandlers();
   setOnBrowserCreated((browser, context) => {
@@ -312,7 +369,7 @@ export async function runCli(): Promise<number> {
 
   try {
     if (options.help) {
-      showHelp();
+      await showHelp();
       return 0;
     }
 

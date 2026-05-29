@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Unified FFmpeg wrapper**: merged duplicate `getFfmpegPath`/`runFFmpeg`/`runFfprobe` implementations from `audio-processor.ts` and `script/tts.ts` into a single `src/ffmpeg/utils.ts` module. Both original files now re-export from the shared module. No consumer API changes.
+- **Split runner into submodules**: extracted 12 focused modules from `src/runner.ts` (1392 lines) into `src/runner/` (types, utils, selectors, cursor, typing, motion, assertions, step-simple, steps, scene-tracking, index). Original file is now a re-export barrel. All tests pass, no consumer API changes.
+- **Extracted voice module**: split `src/script/tts.ts` (432 lines) into `src/voice/` (types, index, cache, piper, openai, elevenlabs). TTS provider interface, registry, providers, and caching live in the new module. `src/script/tts.ts` retains the high-level voice generation pipeline and re-exports everything for backward compatibility.
+- **Extracted browser module**: moved browser lifecycle functions from `src/video-handler.ts` into `src/browser/` (types, launcher, pool). `startBrowser`, `startRecording`, and `stopRecording` are now thin wrappers delegating to the new module. Browser pool provides lifecycle management for multiple concurrent sessions.
+- **Pipeline orchestrator + stages**: created `src/pipeline/` (types, context, orchestrator) and `src/stages/` (tts, sync, auth, pre-steps, recording, audio-mix, output, post-steps). `generate()` now composes stages via `runPipeline()` instead of inline orchestration. Eliminates the temp JSON serialization roundtrip. `runVideoScenario` remains as backward-compatible entry point.
+- **Split schemas into sub-modules**: extracted 6 focused modules from `src/schemas.ts` (732 lines) into `src/schemas/` (primitives, selector, steps, config, scenes, transform). Original file is now a re-export barrel. All tests pass, no consumer API changes.
+- **Citty CLI framework**: replaced the 55-line manual `showHelp()` with auto-generated help via [Citty](https://github.com/unjs/citty). Args are declared declaratively in a `defineCommand({})` block, driving `--help` output automatically. The existing `parseArgs()` and `runCli()` dispatch logic are unchanged, preserving backward compatibility.
+
+### Fixed
+
+- **Unknown flag detection**: the CLI now rejects unrecognized `--flags` (e.g. `--sry-run` typo of `--dry-run`) with a clear error message instead of silently ignoring them.
+- **Missing narration audio**: `AudioMixStage` now validates that the narration audio file exists before invoking ffmpeg, surfacing a clear error when TTS generation failed instead of the cryptic "Error opening input file" from ffmpeg.
+- **Audio path resolution**: fixed a bug where audio paths were resolved relative to the parent of `process.cwd()` instead of the project root, causing ffmpeg to look for narration files one directory level above where they were generated. `AudioMixStage` now passes absolute paths directly.
+
+### Added
+
+- New dependency: `citty` for declarative CLI arg definitions and auto-generated help.
+
 ## [0.7.7] - 2026-05-25
 
 ### Fixed

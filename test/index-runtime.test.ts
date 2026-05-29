@@ -14,6 +14,16 @@ vi.mock("fs", () => ({
   readFileSync: vi.fn(),
 }));
 
+vi.mock("fs/promises", () => ({
+  mkdir: vi.fn().mockResolvedValue(undefined),
+  writeFile: vi.fn().mockResolvedValue(undefined),
+  readFile: vi.fn().mockResolvedValue(undefined),
+  unlink: vi.fn().mockResolvedValue(undefined),
+  stat: vi.fn().mockRejectedValue(new Error("not found")),
+  rmdir: vi.fn().mockResolvedValue(undefined),
+  copyFile: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("../src/script/tts.js", () => ({
   generateVoiceSegments: vi.fn(),
   generateNarrationAudio: vi.fn(),
@@ -25,11 +35,44 @@ vi.mock("../src/config-loader.js", () => ({
 
 vi.mock("../src/video-handler.js", () => ({
   runVideoScenario: vi.fn(),
+  processVideoWithAudio: vi.fn(),
+  handleAuth: vi.fn(),
+  buildSubtitleCuesWithNarrationPlacements: vi.fn().mockReturnValue([]),
+  generateSRT: vi.fn().mockReturnValue(""),
+  generateVTT: vi.fn().mockReturnValue(""),
+  generateMetadata: vi.fn().mockReturnValue({}),
+  setOnBrowserCreated: vi.fn(),
 }));
 
-import { existsSync, mkdirSync, unlinkSync, writeFileSync } from "fs";
+vi.mock("../src/browser/pool.js", () => ({
+  BrowserPool: vi.fn().mockImplementation(function (this: any) {
+    this.acquire = vi.fn().mockResolvedValue({
+      browser: {},
+      context: {},
+      page: {
+        viewportSize: vi.fn().mockReturnValue({ width: 1920, height: 1080 }),
+        addInitScript: vi.fn(),
+        evaluate: vi.fn().mockResolvedValue(true),
+        waitForTimeout: vi.fn().mockResolvedValue(undefined),
+        goto: vi.fn().mockResolvedValue(undefined),
+        url: vi.fn().mockReturnValue("https://example.com"),
+        video: vi.fn().mockReturnValue({
+          path: vi.fn().mockResolvedValue("/workspace/project/.demo-reel-temp/video.webm"),
+        }),
+        close: vi.fn().mockResolvedValue(undefined),
+        mouse: { move: vi.fn() },
+        screenshot: vi.fn().mockResolvedValue(undefined),
+      },
+      isRecording: true,
+    });
+    this.release = vi.fn().mockResolvedValue("/workspace/project/.demo-reel-temp/video.webm");
+    this.releaseAll = vi.fn();
+  }),
+}));
+
+import { existsSync, mkdirSync, readFileSync } from "fs";
 import { loadConfig } from "../src/config-loader.js";
-import { runVideoScenario } from "../src/video-handler.js";
+import { runVideoScenario, processVideoWithAudio } from "../src/video-handler.js";
 import { generateVoiceSegments, generateNarrationAudio } from "../src/script/tts.js";
 
 function createConfig(overrides: Record<string, unknown> = {}) {
@@ -56,6 +99,11 @@ describe("index runtime", () => {
       configPath: "/workspace/project/.demo.tmp.json",
     });
     vi.mocked(runVideoScenario).mockResolvedValue(undefined);
+    vi.mocked(processVideoWithAudio).mockResolvedValue({
+      finalPath: "/workspace/project/output/demo.mp4",
+      narrationPlacements: [],
+      warnings: [],
+    });
     vi.mocked(generateVoiceSegments).mockResolvedValue([]);
     vi.mocked(generateNarrationAudio).mockResolvedValue({
       timedScenes: [],
@@ -67,35 +115,47 @@ describe("index runtime", () => {
     vi.restoreAllMocks();
   });
 
-  it("runs locally and calls video handler", async () => {
+  it("runs locally via pipeline without temp JSON roundtrip", async () => {
     const { generate } = await import("../src/index.js");
 
     await generate(createConfig(), { verbose: true });
 
-    expect(mkdirSync).toHaveBeenCalledWith("/workspace/project/output", { recursive: true });
-    expect(writeFileSync).toHaveBeenCalledWith(
-      ".demo.tmp.json",
-      expect.stringContaining('"https://example.com"'),
-      "utf-8",
+    expect(runVideoScenario).not.toHaveBeenCalled();
+    expect(processVideoWithAudio).toHaveBeenCalledWith(
+      "/workspace/project/.demo-reel-temp/video.webm",
+      "/workspace/project/output/demo.mp4",
+      undefined,
+      "/workspace/project",
+      [],
+      "auto",
     );
-    expect(loadConfig).toHaveBeenCalledWith("/workspace/project/.demo.tmp.json");
-    expect(runVideoScenario).toHaveBeenCalledWith(
-      expect.any(Object),
-      "/workspace/project/output/demo.webm",
-      "/workspace/project/.demo.tmp.json",
-      { verbose: true },
-    );
-    expect(unlinkSync).toHaveBeenCalledWith(".demo.tmp.json");
   });
 
-  it("generates narration audio via local TTS and injects mp4 audio config", async () => {
-    let audioChecks = 0;
+  it("generates narration audio via local TTS", async () => {
+    const manifestJson = JSON.stringify({
+      version: 1,
+      processingVersion: "v4-old-processing",
+      audioPath: "output/demo-narration.mp3",
+      clips: [
+        {
+          sceneIndex: 0,
+          stepIndex: 1,
+          narration: "test",
+          filePath: "output/demo-narration-clips/clip-0.mp3",
+          audioDurationMs: 1000,
+          audioOffsetMs: 0,
+          gapAfterMs: 0,
+        },
+      ],
+    });
     vi.mocked(existsSync).mockImplementation((path: string) => {
-      if (path.endsWith("demo-narration.mp3")) {
-        audioChecks += 1;
-        return audioChecks > 1;
-      }
+      if (path.endsWith("demo-narration.manifest.json")) return true;
+      if (path.endsWith("demo-narration.mp3")) return true;
       return false;
+    });
+    vi.mocked(readFileSync as any).mockImplementation((path: string) => {
+      if (path.endsWith(".manifest.json")) return manifestJson;
+      return undefined;
     });
 
     vi.mocked(generateVoiceSegments).mockResolvedValue([
@@ -140,26 +200,33 @@ describe("index runtime", () => {
       expect.any(Object),
     );
     expect(generateNarrationAudio).toHaveBeenCalled();
-    expect(writeFileSync).toHaveBeenCalledWith(
-      ".demo.tmp.json",
-      expect.stringContaining('"outputFormat": "mp4"'),
-      "utf-8",
-    );
-    expect(writeFileSync).toHaveBeenCalledWith(
-      ".demo.tmp.json",
-      expect.stringContaining('"narration": "output/demo-narration.mp3"'),
-      "utf-8",
-    );
   });
 
   it("uses outputPath to derive the narration filename", async () => {
-    let audioChecks = 0;
+    const manifestJson = JSON.stringify({
+      version: 1,
+      processingVersion: "v5-no-volume-normalization",
+      audioPath: "videos/custom-name-narration.mp3",
+      clips: [
+        {
+          sceneIndex: 0,
+          stepIndex: 0,
+          narration: "test",
+          filePath: "videos/custom-name-narration-clips/clip-0.mp3",
+          audioDurationMs: 1000,
+          audioOffsetMs: 0,
+          gapAfterMs: 0,
+        },
+      ],
+    });
     vi.mocked(existsSync).mockImplementation((path: string) => {
-      if (path.endsWith("custom-name-narration.mp3")) {
-        audioChecks += 1;
-        return audioChecks > 1;
-      }
+      if (path.endsWith("custom-name-narration.manifest.json")) return true;
+      if (path.endsWith("custom-name-narration.mp3")) return true;
       return false;
+    });
+    vi.mocked(readFileSync as any).mockImplementation((path: string) => {
+      if (path.endsWith(".manifest.json")) return manifestJson;
+      return undefined;
     });
 
     const { generate } = await import("../src/index.js");
@@ -173,23 +240,20 @@ describe("index runtime", () => {
     );
 
     expect(mkdirSync).toHaveBeenCalledWith("/workspace/project/videos", { recursive: true });
-    expect(writeFileSync).toHaveBeenCalledWith(
-      ".custom-name.tmp.json",
-      expect.stringContaining('"narration": "videos/custom-name-narration.mp3"'),
-      "utf-8",
-    );
   });
 
-  it("wraps config write failures with a helpful error", async () => {
-    vi.mocked(writeFileSync).mockImplementation((path: string) => {
-      if (path === ".demo.tmp.json") {
-        throw new Error("disk full");
-      }
-    });
+  it("handles pipeline errors gracefully", async () => {
+    vi.mocked(generateVoiceSegments).mockRejectedValue(new Error("TTS engine failure"));
 
     const { generate } = await import("../src/index.js");
 
-    await expect(generate(createConfig())).rejects.toThrow("Failed to write config: disk full");
-    expect(unlinkSync).not.toHaveBeenCalled();
+    await expect(
+      generate(
+        createConfig({
+          scenes: [{ narration: "Hello world", stepIndex: 0 }],
+          voice: { provider: "piper", voice: "en_US-amy-medium", speed: 1 },
+        }),
+      ),
+    ).rejects.toThrow("TTS engine failure");
   });
 });

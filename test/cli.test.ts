@@ -165,7 +165,7 @@ describe("cli", () => {
     const { runCli } = await import("../src/cli.js");
 
     await expect(runCli()).resolves.toBe(0);
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining("Usage:"));
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining("USAGE"));
   });
 
   it("returns usage error when script command has no subcommand or description", async () => {
