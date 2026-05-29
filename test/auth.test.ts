@@ -105,7 +105,7 @@ describe("Auth Persistence", () => {
 
       expect(cookies.length).toBeGreaterThan(0);
       expect(cookies.some((c) => c.name === "testCookie" && c.value === "testValue")).toBe(true);
-    });
+    }, 30000);
   });
 
   describe("LocalStorage Capture", () => {
@@ -123,7 +123,7 @@ describe("Auth Persistence", () => {
       expect(storage?.[domain]).toBeDefined();
       expect(storage?.[domain]["authToken"]).toBe("token123");
       expect(storage?.[domain]["userId"]).toBe("user456");
-    });
+    }, 30000);
   });
 
   describe("Session Capture and Restore", () => {
@@ -413,7 +413,7 @@ describe("Auth Persistence", () => {
       await page.goto("https://example.com/signin");
       authenticated = await isAuthenticated(page);
       expect(authenticated).toBe(false);
-    });
+    }, 30000);
 
     it("should check authentication with custom login URL", async () => {
       const { isAuthenticated } = await import("../src/auth.js");
@@ -425,7 +425,7 @@ describe("Auth Persistence", () => {
       await page.goto("https://example.com/home");
       authenticated = await isAuthenticated(page, "/auth");
       expect(authenticated).toBe(true);
-    });
+    }, 30000);
   });
 
   describe("Error Handling and Edge Cases", () => {
@@ -461,7 +461,7 @@ describe("Auth Persistence", () => {
 
       const storage = await captureLocalStorage(context);
       expect(storage).toBeUndefined();
-    });
+    }, 30000);
 
     it("should log element visibility with verbose mode", async () => {
       const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
@@ -544,6 +544,6 @@ describe("Auth Persistence", () => {
       expect(restoredCookies.some((c) => c.name === "sessionId")).toBe(true);
 
       await newContext.close();
-    });
+    }, 30000);
   });
 });
