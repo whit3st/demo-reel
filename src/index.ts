@@ -50,7 +50,13 @@ function getBaseName(config: DemoReelConfig): string {
 }
 
 export async function generate(config: DemoConfig, options: GenerateOptions = {}): Promise<void> {
-  const { verbose = false, dryRun = false, headed = false, noCache = false, silent = false } = options;
+  const {
+    verbose = false,
+    dryRun = false,
+    headed = false,
+    noCache = false,
+    silent = false,
+  } = options;
 
   let finalConfig = config;
   if (silent) {

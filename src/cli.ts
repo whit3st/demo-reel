@@ -167,7 +167,11 @@ async function runScenario(
     const config = options.outputDir
       ? { ...loaded.config, outputDir: options.outputDir }
       : loaded.config;
-    await generate(config, { verbose: options.verbose, noCache: options.noCache, silent: options.silent });
+    await generate(config, {
+      verbose: options.verbose,
+      noCache: options.noCache,
+      silent: options.silent,
+    });
     return;
   }
 
