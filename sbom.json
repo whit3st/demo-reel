@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
-  "serialNumber": "urn:uuid:e3afe34f-1116-4aed-ab4b-c1c3c70e88ba",
+  "serialNumber": "urn:uuid:27d4d4b7-e162-48b7-bb45-8dcaf39465d4",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-05-25T17:35:42.646Z",
+    "timestamp": "2026-05-29T12:01:16.026Z",
     "lifecycles": [
       {
         "phase": "build"
@@ -52,6 +52,25 @@
             {
               "alg": "SHA-512",
               "content": "59e5cb9fbccd564df28deb219fec591ef95de80a0550e47749ea7aa52a07868e586d28ba1f0722aea80f03971c16e5bc41354900053b37cb90402e966bd4c6fa"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "citty",
+      "version": "0.2.2",
+      "purl": "pkg:npm/citty@0.2.2",
+      "bom-ref": "pkg:npm/citty@0.2.2",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/citty/-/citty-0.2.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "fbabc90372fdf32bfe21d7ca1991c1362196e4a1e7db67bf270203d12b6bb33f21e12fdcb00bbf3ae202c31ae0e389393118991d6228f175ee260413ae244fe3"
             }
           ]
         }
@@ -1308,6 +1327,7 @@
       "ref": "pkg:npm/demo-reel@0.7.7",
       "dependsOn": [
         "pkg:npm/%40anthropic-ai/sdk@0.80.0",
+        "pkg:npm/citty@0.2.2",
         "pkg:npm/ffmpeg-static@5.3.0",
         "pkg:npm/glob@13.0.6",
         "pkg:npm/openai@5.23.2",
@@ -1321,6 +1341,10 @@
       "dependsOn": [
         "pkg:npm/json-schema-to-ts@3.1.1"
       ]
+    },
+    {
+      "ref": "pkg:npm/citty@0.2.2",
+      "dependsOn": []
     },
     {
       "ref": "pkg:npm/ffmpeg-static@5.3.0",
