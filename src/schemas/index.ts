@@ -94,7 +94,11 @@ export {
   type Step,
 } from "./steps.js";
 
-export { demoReelConfigInputSchema, legacySceneInputSchema, sceneOwnedSceneInputSchema } from "./scenes.js";
+export {
+  demoReelConfigInputSchema,
+  legacySceneInputSchema,
+  sceneOwnedSceneInputSchema,
+} from "./scenes.js";
 
 export {
   demoReelConfigSchema,

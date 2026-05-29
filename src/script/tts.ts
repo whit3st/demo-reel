@@ -20,14 +20,7 @@ import {
   getFfmpegPath,
 } from "../ffmpeg/utils.js";
 
-export {
-  runFFmpeg,
-  runFfprobe,
-  measureAudioDuration,
-  wavToMp3,
-  generateSilence,
-  concatenateAudio,
-};
+export { runFFmpeg, runFfprobe, measureAudioDuration, wavToMp3, generateSilence, concatenateAudio };
 
 export const getFFmpegPath = getFfmpegPath;
 

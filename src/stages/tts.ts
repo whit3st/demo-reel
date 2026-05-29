@@ -64,7 +64,7 @@ export class TTSStage implements Stage {
     ctx.narrationManifestPath = manifestPath;
     mkdirSync(dirname(audioPath), { recursive: true });
 
-    if (!shouldRegenerateNarrationArtifacts(audioPath, manifestPath)) {
+    if (!ctx.noCache && !shouldRegenerateNarrationArtifacts(audioPath, manifestPath)) {
       const raw = JSON.parse(readFileSync(manifestPath, "utf-8"));
       ctx.narrationManifest = narrationManifestSchema.parse(raw);
       if (ctx.verbose) console.log("  Using cached narration audio");
@@ -73,9 +73,7 @@ export class TTSStage implements Stage {
 
     if (ctx.verbose) console.log("  Generating voiceover...");
 
-    const { generateVoiceSegments, generateNarrationAudio } = await import(
-      "../script/tts.js"
-    );
+    const { generateVoiceSegments, generateNarrationAudio } = await import("../script/tts.js");
     const { resolveVoiceConfig } = await import("../voice-config.js");
 
     const resolvedVoice = resolveVoiceConfig(ctx.config.voice as VoiceConfigOverrides);
@@ -95,6 +93,7 @@ export class TTSStage implements Stage {
 
     const segments = await generateVoiceSegments(script, resolvedVoice, {
       verbose: ctx.verbose,
+      noCache: ctx.noCache,
     });
     await generateNarrationAudio(segments, audioPath, { verbose: ctx.verbose });
 

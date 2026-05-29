@@ -57,9 +57,7 @@ export class NarrationSyncStage implements Stage {
         }));
       }
       if (ctx.verbose) {
-        console.log(
-          `  Narration sync applied: ${syncOutput.report.appliedPadMs}ms total padding`,
-        );
+        console.log(`  Narration sync applied: ${syncOutput.report.appliedPadMs}ms total padding`);
       }
     }
   }

@@ -154,7 +154,12 @@ export const humanMoveToLocator = async (
 const SCROLL_STEP_PX = 80;
 const SCROLL_STEP_DELAY_MS = 16;
 
-export const humanScroll = async (page: Page, deltaX: number, deltaY: number, _motion: MotionConfig) => {
+export const humanScroll = async (
+  page: Page,
+  deltaX: number,
+  deltaY: number,
+  _motion: MotionConfig,
+) => {
   const totalDistance = Math.max(Math.abs(deltaX), Math.abs(deltaY));
   if (totalDistance === 0) {
     return;

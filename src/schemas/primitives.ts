@@ -168,7 +168,9 @@ const resolutionPresets: Record<
   "4K": { width: 3840, height: 2160 },
 };
 
-export function resolveResolution(val: z.infer<typeof resolutionSchema>): z.infer<typeof sizeSchema> {
+export function resolveResolution(
+  val: z.infer<typeof resolutionSchema>,
+): z.infer<typeof sizeSchema> {
   return typeof val === "string" ? resolutionPresets[val] : val;
 }
 

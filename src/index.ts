@@ -8,7 +8,6 @@ import {
 import { runPipeline } from "./pipeline/orchestrator.js";
 import { PipelineContext } from "./pipeline/context.js";
 import { TTSStage } from "./stages/tts.js";
-import { NarrationSyncStage } from "./stages/sync.js";
 import { AuthStage } from "./stages/auth.js";
 import { PreStepsStage } from "./stages/pre-steps.js";
 import { RecordingStage } from "./stages/recording.js";
@@ -23,6 +22,7 @@ export interface GenerateOptions {
   verbose?: boolean;
   dryRun?: boolean;
   headed?: boolean;
+  noCache?: boolean;
 }
 
 export function defineConfig(config: DemoConfig): DemoReelConfig {
@@ -49,7 +49,7 @@ function getBaseName(config: DemoReelConfig): string {
 }
 
 export async function generate(config: DemoConfig, options: GenerateOptions = {}): Promise<void> {
-  const { verbose = false, dryRun = false, headed = false } = options;
+  const { verbose = false, dryRun = false, headed = false, noCache = false } = options;
   const resolvedConfig = validateConfig(config);
 
   if (dryRun) {
@@ -72,11 +72,11 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
     verbose,
     dryRun,
     headed,
+    noCache,
   });
 
   const stages = [
     new TTSStage(),
-    new NarrationSyncStage(),
     new AuthStage(),
     new PreStepsStage(),
     new RecordingStage(),

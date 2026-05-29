@@ -11,6 +11,7 @@ export class PipelineContext {
   readonly verbose: boolean;
   readonly dryRun: boolean;
   readonly headed: boolean;
+  readonly noCache: boolean;
 
   audioPath?: string;
   narrationManifest?: NarrationManifest;
@@ -29,6 +30,7 @@ export class PipelineContext {
     verbose: boolean;
     dryRun: boolean;
     headed: boolean;
+    noCache: boolean;
   }) {
     this.config = params.config;
     this.configPath = params.configPath;
@@ -36,5 +38,6 @@ export class PipelineContext {
     this.verbose = params.verbose;
     this.dryRun = params.dryRun;
     this.headed = params.headed;
+    this.noCache = params.noCache;
   }
 }

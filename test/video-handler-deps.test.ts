@@ -310,7 +310,7 @@ describe("processVideoWithAudio", () => {
     expect(result.narrationPlacements).toEqual([]);
   });
 
-  it("warns when manifest clips overlap", async () => {
+  it("auto-shifts overlapping narration clips forward", async () => {
     resolveAudioPathsMock.mockReturnValue({
       narrationManifest: "/cfg/manifest.json",
     });
@@ -336,7 +336,70 @@ describe("processVideoWithAudio", () => {
       timestamps,
     );
 
-    expect(result.warnings.some((w) => w.includes("Narration overlap"))).toBe(true);
+    expect(result.warnings.some((w) => w.includes("Narration auto-shift"))).toBe(true);
+    expect(result.narrationPlacements[1].startMs).toBe(1500);
+    expect(result.narrationPlacements[1].endMs).toBe(2300);
+  });
+
+  it("throws in strict mode when narrations overlap", async () => {
+    resolveAudioPathsMock.mockReturnValue({
+      narrationManifest: "/cfg/manifest.json",
+    });
+    readFileMock.mockResolvedValue('{"clips":[]}');
+    narrationManifestSchemaMock.mockReturnValue({
+      clips: [
+        { sceneIndex: 0, narration: "A", filePath: "a.mp3", audioDurationMs: 1500 },
+        { sceneIndex: 1, narration: "B", filePath: "b.mp3", audioDurationMs: 800 },
+      ],
+    });
+    mergeAudioVideoMock.mockResolvedValue("/out/final.mp4");
+
+    const timestamps = [
+      { sceneIndex: 0, narration: "A", startMs: 0, endMs: 1000, isIntro: false },
+      { sceneIndex: 1, narration: "B", startMs: 1000, endMs: 2000, isIntro: false },
+    ];
+    const audio = { narration: "v.mp3" } as any;
+    await expect(
+      processVideoWithAudio(
+        "/tmp/raw.mp4",
+        "/out/final.mp4",
+        audio,
+        "/cfg/config.yaml",
+        timestamps,
+        "strict",
+      ),
+    ).rejects.toThrow("Narration overlap");
+  });
+
+  it("skips overlap handling in off mode", async () => {
+    resolveAudioPathsMock.mockReturnValue({
+      narrationManifest: "/cfg/manifest.json",
+    });
+    readFileMock.mockResolvedValue('{"clips":[]}');
+    narrationManifestSchemaMock.mockReturnValue({
+      clips: [
+        { sceneIndex: 0, narration: "A", filePath: "a.mp3", audioDurationMs: 1500 },
+        { sceneIndex: 1, narration: "B", filePath: "b.mp3", audioDurationMs: 800 },
+      ],
+    });
+    mergeAudioVideoMock.mockResolvedValue("/out/final.mp4");
+
+    const timestamps = [
+      { sceneIndex: 0, narration: "A", startMs: 0, endMs: 1000, isIntro: false },
+      { sceneIndex: 1, narration: "B", startMs: 1000, endMs: 2000, isIntro: false },
+    ];
+    const audio = { narration: "v.mp3" } as any;
+    const result = await processVideoWithAudio(
+      "/tmp/raw.mp4",
+      "/out/final.mp4",
+      audio,
+      "/cfg/config.yaml",
+      timestamps,
+      "off",
+    );
+
+    expect(result.narrationPlacements[1].startMs).toBe(1000);
+    expect(result.narrationPlacements[1].endMs).toBe(1800);
   });
 
   it("warns when manifest load fails", async () => {

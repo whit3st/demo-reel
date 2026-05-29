@@ -182,7 +182,10 @@ export const installCursorOverlay = async (page: Page, cursor: CursorConfig) => 
   return resolvedCursor;
 };
 
-export const ensureCursorOverlay = async (page: Page, resolvedCursor: CursorConfig & { start: Point }) => {
+export const ensureCursorOverlay = async (
+  page: Page,
+  resolvedCursor: CursorConfig & { start: Point },
+) => {
   try {
     const cursorExists = await page.evaluate(() => {
       return document.getElementById("__pw_cursor") !== null;
@@ -195,7 +198,6 @@ export const ensureCursorOverlay = async (page: Page, resolvedCursor: CursorConf
     try {
       await page.waitForTimeout(200);
       await page.evaluate(cursorScript, resolvedCursor);
-    } catch {
-    }
+    } catch {}
   }
 };

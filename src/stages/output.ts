@@ -8,12 +8,8 @@ export class OutputStage implements Stage {
   async run(ctx: PipelineContext): Promise<void> {
     if (!ctx.finalVideoPath || !ctx.sceneTimestamps || ctx.sceneTimestamps.length === 0) return;
 
-    const {
-      buildSubtitleCuesWithNarrationPlacements,
-      generateSRT,
-      generateVTT,
-      generateMetadata,
-    } = await import("../video-handler.js");
+    const { buildSubtitleCuesWithNarrationPlacements, generateSRT, generateVTT, generateMetadata } =
+      await import("../video-handler.js");
 
     const basePath = ctx.finalVideoPath.replace(/\.[^.]+$/, "");
 

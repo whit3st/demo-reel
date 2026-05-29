@@ -11,13 +11,7 @@ export class AuthStage implements Stage {
 
     const session = await ctx.browserPool.acquire(ctx.config, { recording: false });
     try {
-      await handleAuth(
-        session.context,
-        session.page,
-        ctx.config.auth,
-        ctx.configPath,
-        ctx.verbose,
-      );
+      await handleAuth(session.context, session.page, ctx.config.auth, ctx.configPath, ctx.verbose);
     } finally {
       await ctx.browserPool.release(session);
     }

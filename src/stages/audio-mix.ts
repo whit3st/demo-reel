@@ -32,6 +32,7 @@ export class AudioMixStage implements Stage {
       configWithAudio.audio,
       ctx.configPath,
       ctx.sceneTimestamps ?? [],
+      ctx.config.timing.narrationSyncMode ?? "auto",
     );
 
     ctx.finalVideoPath = result.finalPath;

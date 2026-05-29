@@ -127,6 +127,7 @@ describe("index runtime", () => {
       undefined,
       "/workspace/project",
       [],
+      "auto",
     );
   });
 

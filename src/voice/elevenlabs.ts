@@ -13,8 +13,7 @@ export const elevenlabsProvider: TTSProvider = {
     }
 
     const voiceId =
-      (options as Extract<VoiceConfig, { provider: "elevenlabs" }>).voice ||
-      "21m00Tcm4TlvDq8ikWAM";
+      (options as Extract<VoiceConfig, { provider: "elevenlabs" }>).voice || "21m00Tcm4TlvDq8ikWAM";
 
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: "POST",

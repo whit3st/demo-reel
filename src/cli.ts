@@ -165,7 +165,7 @@ async function runScenario(
     const config = options.outputDir
       ? { ...loaded.config, outputDir: options.outputDir }
       : loaded.config;
-    await generate(config, { verbose: options.verbose });
+    await generate(config, { verbose: options.verbose, noCache: options.noCache });
     return;
   }
 
@@ -279,9 +279,7 @@ export function parseArgs(): { scenario?: string; options: CliOptions; unknownFl
     }
   }
 
-  const unknownFlags = args.filter(
-    (_a, i) => !consumed.has(i) && args[i].startsWith("-"),
-  );
+  const unknownFlags = args.filter((_a, i) => !consumed.has(i) && args[i].startsWith("-"));
 
   return { scenario, options, unknownFlags };
 }
@@ -296,18 +294,47 @@ const cliDef = defineCommand({
     verbose: { type: "boolean", description: "Show detailed output", alias: ["v"] },
     "dry-run": { type: "boolean", description: "Validate config without recording" },
     headed: { type: "boolean", description: "Show browser window (non-headless)" },
-    "output-dir": { type: "string", description: "Override output directory for videos", alias: ["o"], valueHint: "dir" },
-    url: { type: "string", description: "Starting URL for script generation or tracking", valueHint: "url" },
+    "output-dir": {
+      type: "string",
+      description: "Override output directory for videos",
+      alias: ["o"],
+      valueHint: "dir",
+    },
+    url: {
+      type: "string",
+      description: "Starting URL for script generation or tracking",
+      valueHint: "url",
+    },
     output: { type: "string", description: "Output name (without extension)", valueHint: "name" },
-    name: { type: "string", description: "Output or track name (without extension)", valueHint: "name" },
+    name: {
+      type: "string",
+      description: "Output or track name (without extension)",
+      valueHint: "name",
+    },
     voice: { type: "string", description: "TTS voice name (default: alloy)", valueHint: "voice" },
-    speed: { type: "string", description: "TTS speed multiplier (default: 1.0)", valueHint: "number" },
+    speed: {
+      type: "string",
+      description: "TTS speed multiplier (default: 1.0)",
+      valueHint: "number",
+    },
     "no-cache": { type: "boolean", description: "Skip voice cache" },
-    resolution: { type: "string", description: "Video resolution (HD, FHD, 2K, 4K)", valueHint: "preset" },
+    resolution: {
+      type: "string",
+      description: "Video resolution (HD, FHD, 2K, 4K)",
+      valueHint: "preset",
+    },
     format: { type: "string", description: "Output format (mp4, webm)", valueHint: "fmt" },
-    tag: { type: "string", description: "Run only scenarios with matching tag (comma-separated)", valueHint: "tags" },
+    tag: {
+      type: "string",
+      description: "Run only scenarios with matching tag (comma-separated)",
+      valueHint: "tags",
+    },
     "track-name": { type: "string", description: "Track file name", valueHint: "name" },
-    "track-session": { type: "string", description: "Auth session name for save/load", valueHint: "name" },
+    "track-session": {
+      type: "string",
+      description: "Auth session name for save/load",
+      valueHint: "name",
+    },
   },
 });
 

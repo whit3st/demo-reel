@@ -198,6 +198,7 @@ export async function processVideoWithAudio(
   audio: AudioConfig | undefined,
   configPath: string,
   sceneTimestamps: SceneTimestamp[],
+  narrationSyncMode: string = "auto",
 ): Promise<{ finalPath: string; narrationPlacements: NarrationPlacement[]; warnings: string[] }> {
   // Ensure output directory exists
   await mkdir(dirname(outputPath), { recursive: true });
@@ -241,21 +242,32 @@ export async function processVideoWithAudio(
         })
         .filter((placement): placement is NarrationPlacement => placement !== null)
         .sort((left, right) => left.startMs - right.startMs || left.sceneIndex - right.sceneIndex);
-
-      for (let i = 1; i < narrationPlacements.length; i++) {
-        const previous = narrationPlacements[i - 1];
-        const current = narrationPlacements[i];
-        if (current.startMs < previous.endMs) {
-          const overlapMs = previous.endMs - current.startMs;
-          warnings.push(
-            `Narration overlap: scene ${current.sceneIndex} starts at ${current.startMs}ms (with narrationDelay) before scene ${previous.sceneIndex} narration ends at ${previous.endMs}ms (overlap: ${overlapMs}ms)`,
-          );
-        }
-      }
     } catch (error) {
       warnings.push(
         `Failed to load narration manifest: ${error instanceof Error ? error.message : String(error)}`,
       );
+    }
+
+    for (let i = 1; i < narrationPlacements.length; i++) {
+      const current = narrationPlacements[i];
+      const previous = narrationPlacements[i - 1];
+      if (current.startMs < previous.endMs) {
+        const overlapMs = previous.endMs - current.startMs;
+
+        if (narrationSyncMode === "off") continue;
+
+        if (narrationSyncMode === "strict") {
+          throw new Error(
+            `Narration overlap: scene ${current.sceneIndex} starts before scene ${previous.sceneIndex} narration ends (overlap: ${overlapMs}ms)`,
+          );
+        }
+
+        current.startMs = previous.endMs;
+        current.endMs += overlapMs;
+        warnings.push(
+          `Narration auto-shift: scene ${current.sceneIndex} pushed forward ${overlapMs}ms to avoid overlap with scene ${previous.sceneIndex}`,
+        );
+      }
     }
   }
 
@@ -623,6 +635,7 @@ export async function runVideoScenario(
       config.audio,
       configPath,
       sceneTimestamps,
+      config.timing?.narrationSyncMode ?? "auto",
     );
     const { finalPath, narrationPlacements, warnings } = processedVideo;
 
