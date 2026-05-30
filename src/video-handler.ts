@@ -477,7 +477,7 @@ export async function runVideoScenario(
           console.log("Running pre-steps...");
         }
         await runSteps(browser.page, config.preSteps, {
-          tolerant: false,
+          tolerant: true,
           verbose,
           label: "setup",
         });
