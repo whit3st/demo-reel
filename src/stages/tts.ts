@@ -49,6 +49,9 @@ export class TTSStage implements Stage {
   readonly name = "TTS";
 
   async run(ctx: PipelineContext): Promise<void> {
+    // Dry runs produce no video, so there is nothing to narrate.
+    if (ctx.dryRun) return;
+
     const hasVoice = Boolean(ctx.config.voice);
     const hasNarration = (ctx.config.scenes ?? []).some((s) => Boolean(s.narration));
     const hasNarrationAudio = Boolean(

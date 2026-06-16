@@ -9,6 +9,8 @@ export class AudioMixStage implements Stage {
   readonly name = "Audio Mix";
 
   async run(ctx: PipelineContext): Promise<void> {
+    if (ctx.dryRun) return;
+
     if (!ctx.tempVideoPath) {
       ctx.warnings.push("No video recorded, skipping audio mix");
       return;

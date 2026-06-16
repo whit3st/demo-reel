@@ -256,4 +256,16 @@ describe("index runtime", () => {
       ),
     ).rejects.toThrow("TTS engine failure");
   });
+
+  it("dry run goes through the pipeline, not the legacy runVideoScenario path", async () => {
+    const { generate } = await import("../src/index.js");
+
+    // Dry run must exercise the SAME engine as a real run (so a passing dry run
+    // predicts a passing real run). It must never fall back to runVideoScenario.
+    await generate(createConfig(), { dryRun: true });
+
+    expect(runVideoScenario).not.toHaveBeenCalled();
+    // Dry run skips video production, so no audio mixing happens.
+    expect(processVideoWithAudio).not.toHaveBeenCalled();
+  });
 });

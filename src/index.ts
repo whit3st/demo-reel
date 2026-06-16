@@ -79,18 +79,12 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
 
   const resolvedConfig = validateConfig(finalConfig);
 
-  if (dryRun) {
-    const { runVideoScenario } = await import("./video-handler.js");
-    const outputPath =
-      resolvedConfig.outputPath ?? join(resolve("./output"), `${getBaseName(resolvedConfig)}.mp4`);
-    await runVideoScenario(resolvedConfig, outputPath, resolve("demo-reel-dry-run.json"), {
-      verbose,
-      dryRun,
-      headed,
-    });
-    return;
-  }
-
+  // Dry run and real run share ONE engine: the pipeline below. A dry run is
+  // just the pipeline with the production stages (TTS, recording capture,
+  // audio mix, output) skipped — so it exercises the exact same auth, pre-steps
+  // and scene steps a real run does. This makes a passing dry run a faithful
+  // predictor of a passing real run (it cannot structurally diverge); the only
+  // thing it can't reproduce is recording-induced CPU-timing flakiness.
   const ctx = new PipelineContext({
     config: resolvedConfig,
     configPath: process.cwd(),
@@ -124,7 +118,9 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
     console.warn(`Warning: ${warning}`);
   }
 
-  console.log(`✓ Video created → ${ctx.finalVideoPath}`);
+  if (!dryRun) {
+    console.log(`✓ Video created → ${ctx.finalVideoPath}`);
+  }
 }
 
 export { demoReelConfigSchema, demoReelConfigInputSchema };

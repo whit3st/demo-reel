@@ -6,6 +6,7 @@ export class OutputStage implements Stage {
   readonly name = "Output";
 
   async run(ctx: PipelineContext): Promise<void> {
+    if (ctx.dryRun) return;
     if (!ctx.finalVideoPath || !ctx.sceneTimestamps || ctx.sceneTimestamps.length === 0) return;
 
     const { buildSubtitleCuesWithNarrationPlacements, generateSRT, generateVTT, generateMetadata } =
