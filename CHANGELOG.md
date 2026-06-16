@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-06-16
+
+### Fixed
+
+- **Pre-steps now authenticate**: `PreStepsStage` restores the session before running pre-steps, matching the recording and post-steps stages. Previously pre-steps ran in a fresh, unauthenticated browser, so any step touching a protected page silently failed (pre-steps run in `tolerant` mode) — leaving setup work like template creation undone and causing the demo's scenes to fail later on a blank page.
+
+### Changed
+
+- **`--dry-run` now uses the same pipeline as a real run**: removed the separate legacy `runVideoScenario` dry-run path. A dry run is now the real pipeline with the production stages (TTS, recording capture, audio mix, output) skipped, so it exercises the exact same auth, pre-steps, and scene steps a real run does — at real timing, in a non-recording browser, producing no video. A passing dry run is now a faithful predictor of a passing real run and cannot structurally diverge from it; the only thing it can't reproduce is recording-induced CPU-timing flakiness.
+
 ## [0.8.1] - 2026-05-30
 
 ### Fixed
