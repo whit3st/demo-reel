@@ -2,7 +2,12 @@ export { clamp, applyJitter, buildTimeoutOption, isConfirmStep } from "./runner/
 export type { SceneTimestamp } from "./runner/types.js";
 export { assertRawSelector, resolveLocatorAll, resolveLocator } from "./runner/selectors.js";
 export { getTypingDelay } from "./runner/typing.js";
-export { cubicBezierPoint, easeInOutCubic, getBezierControlPoints } from "./runner/motion.js";
+export {
+  cubicBezierPoint,
+  easeInOutCubic,
+  getBezierControlPoints,
+  moveMouseBezier,
+} from "./runner/motion.js";
 export { runAssertion } from "./runner/assertions.js";
 export { runStepSimple } from "./runner/step-simple.js";
 export { buildSceneBoundaries, buildSceneTimestamps } from "./runner/scene-tracking.js";

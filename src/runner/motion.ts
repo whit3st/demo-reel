@@ -101,18 +101,34 @@ export const moveMouseBezier = async (
     return;
   }
 
-  const stepsByDistance = Math.max(3, Math.round(distance / motion.stepsPerPx));
-  const steps = Math.max(motion.moveStepsMin, stepsByDistance);
-  const stepDelay = Math.max(1, Math.floor(motion.moveDurationMs / steps));
   const { control1, control2 } = getBezierControlPoints(start, end, motion, rng);
   const easing = easingLookup[motion.curve.easing];
 
-  for (let i = 1; i <= steps; i += 1) {
-    const progress = i / steps;
+  // Drive the curve by elapsed wall-clock time, not a fixed step count. Each
+  // page.mouse.move() costs ~15-25ms (a CDP round-trip), which the old
+  // fixed-step model ignored — it only budgeted the per-step waitForTimeout, so
+  // real move time ran ~1.7-3x past moveDurationMs, scaling with distance (and
+  // worse under recording load). That desynced recordings from dry-run timing,
+  // most visibly on dialog scenes with long cursor travel. Time-driving keeps
+  // the total duration faithful; the frame count adapts to machine/recording load.
+  const MIN_FRAME_MS = 8;
+  const startedAt = Date.now();
+
+  for (;;) {
+    const frameStart = Date.now();
+    const progress = Math.min(1, (frameStart - startedAt) / motion.moveDurationMs);
     const eased = easing(progress);
     const point = cubicBezierPoint(eased, start, control1, control2, end);
     await page.mouse.move(point.x, point.y);
-    await page.waitForTimeout(stepDelay);
+
+    if (progress >= 1) {
+      break;
+    }
+
+    const frameElapsed = Date.now() - frameStart;
+    if (frameElapsed < MIN_FRAME_MS) {
+      await page.waitForTimeout(MIN_FRAME_MS - frameElapsed);
+    }
   }
 
   state.position = end;

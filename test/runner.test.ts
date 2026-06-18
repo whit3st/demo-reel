@@ -11,6 +11,7 @@ import {
   getBezierControlPoints,
   getTypingDelay,
   isConfirmStep,
+  moveMouseBezier,
   resolveLocator,
 } from "../src/runner.js";
 import type { Locator, Page } from "playwright";
@@ -42,6 +43,63 @@ const mockLocator = (): Locator =>
     dragTo: vi.fn(),
     focus: vi.fn(),
   }) as unknown as Locator;
+
+describe("moveMouseBezier (time-driven duration)", () => {
+  const motion: MotionConfig = {
+    curve: { easing: "easeInOutCubic", offsetRatio: 0.1, offsetMin: 4, offsetMax: 80 },
+    stepsPerPx: 12,
+    moveDurationMs: 300,
+    moveStepsMin: 25,
+    clickDelayMs: 60,
+  };
+
+  // Each mouse.move costs `moveCostMs` of real time, mimicking the CDP
+  // round-trip the old fixed-step model ignored.
+  const makeSlowMovePage = (moveCostMs: number, moves: { x: number; y: number }[]): Page =>
+    ({
+      mouse: {
+        move: vi.fn(async (x: number, y: number) => {
+          moves.push({ x, y });
+          await new Promise((r) => setTimeout(r, moveCostMs));
+        }),
+      },
+      waitForTimeout: vi.fn((ms: number) => new Promise((r) => setTimeout(r, ms))),
+    }) as unknown as Page;
+
+  it("holds total duration near moveDurationMs even when each move is slow", async () => {
+    const moves: { x: number; y: number }[] = [];
+    const page = makeSlowMovePage(15, moves);
+    const state = { initialized: true, position: { x: 0, y: 0 } };
+
+    const start = Date.now();
+    await moveMouseBezier(page, state, 800, 400, motion);
+    const elapsed = Date.now() - start;
+
+    // Faithful: ~moveDurationMs, not steps * (moveCost + delay). The old
+    // fixed-step model would emit ~75 moves and take well over a second here.
+    expect(elapsed).toBeGreaterThanOrEqual(motion.moveDurationMs - 50);
+    expect(elapsed).toBeLessThan(800);
+
+    // Frame count adapts to load instead of being a fixed large step count.
+    expect(moves.length).toBeGreaterThan(1);
+    expect(moves.length).toBeLessThan(50);
+
+    // The curve still lands exactly on the target.
+    expect(moves.at(-1)).toEqual({ x: 800, y: 400 });
+    expect(state.position).toEqual({ x: 800, y: 400 });
+  });
+
+  it("moves instantly when moveDurationMs is 0", async () => {
+    const moves: { x: number; y: number }[] = [];
+    const page = makeSlowMovePage(0, moves);
+    const state = { initialized: true, position: { x: 10, y: 10 } };
+
+    await moveMouseBezier(page, state, 200, 100, { ...motion, moveDurationMs: 0 });
+
+    expect(moves).toEqual([{ x: 200, y: 100 }]);
+    expect(state.position).toEqual({ x: 200, y: 100 });
+  });
+});
 
 describe("clamp (inline via getBezierControlPoints)", () => {
   it("clamps values within range", () => {
