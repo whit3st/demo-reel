@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-06-18
+
+### Fixed
+
+- **Cursor motion duration is now faithful**: `moveMouseBezier` drives the easing curve by elapsed wall-clock time against `moveDurationMs` instead of a fixed step count. Each `page.mouse.move()` costs ~15-25ms (a CDP round-trip) that the old fixed-step model ignored — it only budgeted the per-step `waitForTimeout` — so real move time ran ~1.7-3x past `moveDurationMs`, scaling with travel distance and worse under recording load. This desynced recordings from dry-run timing, most visibly on dialog-heavy scenes with long cursor travel. The frame count now adapts to machine/recording load while total duration stays ~`moveDurationMs`.
+- **`upload` works on hidden file inputs**: the `upload` action now waits for the target to be `attached` rather than `visible`. File inputs are conventionally hidden behind a styled dropzone and `setInputFiles` works on hidden elements, so requiring visibility made uploads time out.
+
 ## [0.8.2] - 2026-06-16
 
 ### Fixed
