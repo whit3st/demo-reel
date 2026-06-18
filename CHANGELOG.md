@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Cursor renders above modal dialogs**: the cursor overlay is now promoted into the browser top layer via the Popover API, so it paints above native modal dialogs (`showModal()`) and popovers, which sit above any `z-index`. It re-promotes itself above dialogs/popovers that open after it. Previously the cursor was a high-`z-index` element that the top layer always covered, so it appeared behind (and blurred by) any open dialog. Degrades gracefully to the old z-index element where the Popover API is unavailable.
+
 ## [0.8.3] - 2026-06-18
 
 ### Fixed

@@ -67,12 +67,22 @@ const cursorScript = (cursor: CursorConfig) => {
     const style = document.createElement("style");
     style.id = styleId;
 
+    // The cursor is promoted into the browser top layer via the Popover API so
+    // it renders above native modal dialogs (which sit above any z-index). The
+    // Popover UA styles would otherwise center it and give it a border/background,
+    // so reset inset/margin/padding/border/background and re-anchor to top/left.
     const baseStyle = `
 * { cursor: none !important; }
 #__pw_cursor {
   position: fixed;
+  inset: auto;
   top: 0;
   left: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
   pointer-events: none;
   z-index: 2147483647;
   transform: translate(-100px, -100px);
@@ -130,6 +140,29 @@ const cursorScript = (cursor: CursorConfig) => {
     }
     (document.body || document.documentElement).appendChild(cursorEl);
 
+    // Promote the cursor into the browser top layer via the Popover API so it
+    // paints above native modal dialogs. Falls back to the z-index element if the
+    // API is unavailable.
+    try {
+      cursorEl.setAttribute("popover", "manual");
+      cursorEl.showPopover();
+    } catch {}
+
+    // Modal dialogs and open popovers also live in the top layer, stacked by the
+    // order they were promoted. Re-promote the cursor above any that opened after
+    // it. hide+show is synchronous, so it re-enters the top layer without a flash.
+    const ensureTopLayer = () => {
+      try {
+        if (
+          cursorEl.matches(":popover-open") &&
+          document.querySelector("dialog:modal, [popover]:popover-open:not(#__pw_cursor)")
+        ) {
+          cursorEl.hidePopover();
+          cursorEl.showPopover();
+        }
+      } catch {}
+    };
+
     const offset =
       cursor.type === "svg"
         ? { x: cursor.svg.hotspot.x, y: cursor.svg.hotspot.y }
@@ -153,6 +186,7 @@ const cursorScript = (cursor: CursorConfig) => {
       cursorEl.style.transform =
         "translate(" + (clamped.x - offset.x) + "px, " + (clamped.y - offset.y) + "px)";
       writeStoredPosition(clamped.x, clamped.y);
+      ensureTopLayer();
     };
 
     const stored = readStoredPosition();
