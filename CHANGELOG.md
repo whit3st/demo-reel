@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.4] - 2026-06-18
+
 ### Changed
 
 - **`select` action is now cursor-driven**: the `select` action moves the cursor to the element and clicks it before committing the value, so the interaction reads as a deliberate user action instead of the value teleporting in. A native `<select>`'s option list is an OS popup outside the DOM (unreachable by the overlay cursor or coordinate clicks), so the value itself is still committed via `selectOption` — no config changes are required.
