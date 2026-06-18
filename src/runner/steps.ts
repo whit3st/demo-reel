@@ -220,7 +220,10 @@ export const runStep = async (
 
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
-    await prepareLocator(target);
+    // File inputs are conventionally hidden behind a styled dropzone, so don't
+    // require visibility — setInputFiles works on hidden inputs. Just ensure the
+    // element is attached to the DOM.
+    await target.waitFor({ state: "attached" });
     await target.setInputFiles(step.filePath);
     await applyStepDelay(page, step.delayAfterMs);
     return delayApplied;
