@@ -199,6 +199,11 @@ export const runStep = async (
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
     await prepareLocator(target);
+    // Drive the cursor to the select and click it before applying the value, so
+    // the interaction reads as a deliberate user action instead of the value
+    // teleporting in. A native <select>'s option list is an OS popup outside the
+    // DOM, so the value itself is still committed via selectOption.
+    await humanClick(page, target, state, config.motion, cursorStart, rng);
     await target.selectOption(step.value);
     await applyStepDelay(page, step.delayAfterMs);
     return delayApplied;
