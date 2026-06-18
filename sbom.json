@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
-  "serialNumber": "urn:uuid:59945b31-6cc9-487f-9541-6683d96080ed",
+  "serialNumber": "urn:uuid:f366c0f1-5ba9-4762-91ce-7e4dd6f9dc3c",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-06-16T07:46:38.242Z",
+    "timestamp": "2026-06-18T14:35:02.186Z",
     "lifecycles": [
       {
         "phase": "build"
@@ -23,9 +23,9 @@
     "component": {
       "type": "library",
       "name": "demo-reel",
-      "version": "0.8.2",
-      "purl": "pkg:npm/demo-reel@0.8.2",
-      "bom-ref": "pkg:npm/demo-reel@0.8.2",
+      "version": "0.8.3",
+      "purl": "pkg:npm/demo-reel@0.8.3",
+      "bom-ref": "pkg:npm/demo-reel@0.8.3",
       "licenses": [
         {
           "license": {
@@ -1324,7 +1324,7 @@
   ],
   "dependencies": [
     {
-      "ref": "pkg:npm/demo-reel@0.8.2",
+      "ref": "pkg:npm/demo-reel@0.8.3",
       "dependsOn": [
         "pkg:npm/%40anthropic-ai/sdk@0.80.0",
         "pkg:npm/citty@0.2.2",
