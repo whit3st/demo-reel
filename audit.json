@@ -44,28 +44,6 @@
       "github_advisory_id": "GHSA-p7fg-763f-g4gf",
       "url": "https://github.com/advisories/GHSA-p7fg-763f-g4gf"
     },
-    "1120679": {
-      "findings": [
-        {
-          "version": "0.28.0",
-          "paths": [
-            ".>tsx>esbuild"
-          ],
-          "dev": false,
-          "optional": false,
-          "bundled": false
-        }
-      ],
-      "id": 1120679,
-      "title": "esbuild: Missing binary integrity verification in Deno module enables remote code execution via NPM_CONFIG_REGISTRY",
-      "module_name": "esbuild",
-      "vulnerable_versions": ">=0.17.0 <0.28.1",
-      "patched_versions": ">=0.28.1",
-      "severity": "high",
-      "cwe": "CWE-426, CWE-494",
-      "github_advisory_id": "GHSA-gv7w-rqvm-qjhr",
-      "url": "https://github.com/advisories/GHSA-gv7w-rqvm-qjhr"
-    },
     "1120680": {
       "findings": [
         {
@@ -94,7 +72,7 @@
       "info": 0,
       "low": 1,
       "moderate": 2,
-      "high": 1,
+      "high": 0,
       "critical": 0
     },
     "dependencies": 38,
