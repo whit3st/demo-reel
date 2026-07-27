@@ -306,7 +306,9 @@ describe("processVideoWithAudio", () => {
       timestamps,
     );
 
-    expect(result.warnings[0]).toContain("No recorded scene timestamp");
+    // Order-independent: the duration probe also warns when it cannot measure
+    // the (fake) video path, and which warning lands first is not the contract.
+    expect(result.warnings.join("\n")).toContain("No recorded scene timestamp");
     expect(result.narrationPlacements).toEqual([]);
   });
 

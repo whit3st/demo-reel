@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.4] - 2026-07-27
+
+### Fixed
+
+- **Narration no longer drifts ahead of the picture.** Scene timestamps come off the _step clock_ — elapsed time measured while driving the page — but the recorded video is not that long. The browser records on wall-clock at a fixed frame rate and runs a few percent longer under recording load. Narration was placed at raw step-clock offsets against that longer video, so every clip landed progressively early: on a 63s demo the recording measured 65.5s, a 3.7% stretch, which by the closing scenes put lines seconds ahead of the actions they describe. The symptom is nasty because each scene looks individually plausible — only the accumulation gives it away, and it reads as "the narration doesn't match the video" rather than as a timing bug. `processVideoWithAudio` now measures the recording with ffprobe and rescales scene starts onto it; the two clocks share an origin, so one ratio corrects the whole timeline. Drift over 250ms is reported. If the probe fails, placement falls back to the step clock and says so.
+
 ## [0.9.3] - 2026-07-27
 
 ### Added

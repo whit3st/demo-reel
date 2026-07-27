@@ -89,6 +89,32 @@ export function runFfprobe(ffprobePath: string, args: string[]): Promise<string>
   });
 }
 
+/**
+ * Duration of a media file on disk, in milliseconds.
+ *
+ * Needed because a recorded video's real duration does not equal the sum of the
+ * step durations that produced it — the browser records on wall-clock time and
+ * runs longer under load — so anything aligning to the recording has to measure
+ * it rather than trust the step clock.
+ */
+export async function measureMediaDurationMs(filePath: string): Promise<number> {
+  const ffprobePath = await getFfprobePath();
+  const output = await runFfprobe(ffprobePath, [
+    "-v",
+    "quiet",
+    "-show_entries",
+    "format=duration",
+    "-of",
+    "default=noprint_wrappers=1:nokey=1",
+    filePath,
+  ]);
+  const seconds = parseFloat(output.trim());
+  if (isNaN(seconds)) {
+    throw new Error(`Could not parse media duration for ${filePath}`);
+  }
+  return Math.round(seconds * 1000);
+}
+
 export async function measureAudioDuration(audioBuffer: Buffer): Promise<number> {
   const ffprobePath = await getFfprobePath();
 

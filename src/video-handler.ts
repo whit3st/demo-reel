@@ -11,6 +11,7 @@ import {
   type NarrationPlacement,
 } from "./audio-processor.js";
 import { narrationManifestSchema } from "./narration-manifest.js";
+import { measureMediaDurationMs } from "./ffmpeg/utils.js";
 import {
   loadSession,
   saveSession,
@@ -221,6 +222,38 @@ export async function processVideoWithAudio(
       const manifest = narrationManifestSchema.parse(JSON.parse(rawManifest));
       const timestampsByScene = new Map(sceneTimestamps.map((scene) => [scene.sceneIndex, scene]));
 
+      // Scene timestamps come off the STEP clock — the elapsed time the runner
+      // measured while driving the page. The recorded video is not that long:
+      // the browser records on wall-clock at a fixed frame rate and runs longer
+      // under recording load, typically by a few percent. Placing narration at
+      // raw step-clock offsets therefore drifts progressively ahead of the
+      // picture, so by the end of a minute-long demo a line can land seconds
+      // before the thing it describes.
+      //
+      // Measure the recording and rescale onto it. The two clocks share an
+      // origin, so a single ratio corrects the whole timeline.
+      const stepClockMs = sceneTimestamps.reduce((max, scene) => Math.max(max, scene.endMs), 0);
+      let timeScale = 1;
+      try {
+        const recordedMs = await measureMediaDurationMs(tempVideoPath);
+        if (stepClockMs > 0 && recordedMs > 0) {
+          timeScale = recordedMs / stepClockMs;
+          const driftMs = Math.round(recordedMs - stepClockMs);
+          if (Math.abs(driftMs) > 250) {
+            warnings.push(
+              `Recording ran ${driftMs}ms ${driftMs > 0 ? "longer" : "shorter"} than the step clock ` +
+                `(${stepClockMs}ms); narration rescaled by ${timeScale.toFixed(4)} to stay in sync.`,
+            );
+          }
+        }
+      } catch (error) {
+        warnings.push(
+          `Could not measure recorded video duration, narration placed on the step clock and may drift: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+
       narrationPlacements = manifest.clips
         .map((clip) => {
           const scene = timestampsByScene.get(clip.sceneIndex);
@@ -231,7 +264,8 @@ export async function processVideoWithAudio(
             return null;
           }
 
-          const startMs = scene.startMs + (resolvedAudio.narrationDelay ?? 0);
+          const startMs =
+            Math.round(scene.startMs * timeScale) + (resolvedAudio.narrationDelay ?? 0);
           return {
             sceneIndex: clip.sceneIndex,
             narration: clip.narration,
