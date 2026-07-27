@@ -134,6 +134,12 @@ export const runStepSimple = async (page: Page, step: Step): Promise<void> => {
     return;
   }
 
+  if (step.action === "fill") {
+    const target = resolveLocator(page, step.selector);
+    await target.fill(step.value);
+    return;
+  }
+
   if (step.action === "select") {
     const target = resolveLocator(page, step.selector);
     await target.selectOption(step.value);

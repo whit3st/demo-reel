@@ -170,6 +170,22 @@ export const runStep = async (
     return delayApplied;
   }
 
+  if (step.action === "fill") {
+    const delayApplied = await applyStartDelayIfNeeded(page, config.timing, startDelayApplied);
+
+    await applyStepDelay(page, step.delayBeforeMs);
+    const target = resolveLocator(page, step.selector);
+    // Cursor still travels to the field so the interaction reads naturally, but
+    // the value is committed with fill() rather than keystrokes. Native date,
+    // time and colour inputs are segmented: a click lands on whichever segment
+    // is under the pointer and typed digits fill that one, so keystroke entry
+    // cannot reliably set them at all.
+    await humanMoveToLocator(page, target, state, config.motion, cursorStart, rng);
+    await target.fill(step.value);
+    await applyStepDelay(page, step.delayAfterMs);
+    return delayApplied;
+  }
+
   if (step.action === "press") {
     const delayApplied = await applyStartDelayIfNeeded(page, config.timing, startDelayApplied);
 

@@ -40,6 +40,12 @@ export const typeStepSchema = stepDelaySchema.extend({
   clear: z.boolean().optional().describe("Clear existing value before typing"),
 });
 
+export const fillStepSchema = stepDelaySchema.extend({
+  action: z.literal("fill").describe("Set an input's value directly, without keystrokes"),
+  selector: selectorSchema.describe("Input element to fill"),
+  value: z.string().describe("Value to set"),
+});
+
 export const pressStepSchema = stepDelaySchema.extend({
   action: z.literal("press").describe("Press a keyboard key"),
   selector: selectorSchema.describe("Element to focus before pressing"),
@@ -211,6 +217,7 @@ export const stepSchema = z
     clickStepSchema,
     hoverStepSchema,
     typeStepSchema,
+    fillStepSchema,
     pressStepSchema,
     scrollStepSchema,
     selectStepSchema,

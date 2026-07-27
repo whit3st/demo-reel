@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-07-27
+
+### Added
+
+- **`fill` step: set an input's value directly, without keystrokes.** `type` clicks the element and then types character by character, which cannot set a segmented native input at all. A `<input type="date">` renders as `mm/dd/yyyy`, the click lands on whichever segment sits under the pointer — the centre, so usually not the first — and typed digits fill only that segment. The result is a half-entered date the form rejects, with no step failure, because typing characters into a field is all `type` verifies. Verified against a real date input: `focus()` or a click on the field's left edge then typing works, a centre click then typing does not, at any keystroke delay. `fill` moves the cursor to the field so the interaction still reads naturally on camera, then commits via `fill()`. Use it for `date`, `time` and `color` inputs; keep `type` where the typing animation is the point.
+
 ## [0.9.2] - 2026-07-27
 
 ### Fixed
