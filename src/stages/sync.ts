@@ -38,9 +38,15 @@ export class NarrationSyncStage implements Stage {
       },
     });
 
-    if (syncOutput.hasOverflow && syncMode === "strict") {
-      throw new Error(
-        `Narration sync overflow: scenes ${syncOutput.report.overflowScenes.join(", ")} exceed maxAutoPadMs`,
+    // `maxAutoPadMs` is a warning threshold, not a cap — injectPadding always
+    // closes the full deficit. A scene over the threshold still gets padded, it
+    // just means the narration is far longer than the visual it was written
+    // for, which is usually a script problem worth surfacing.
+    if (syncOutput.hasOverflow) {
+      ctx.warnings.push(
+        `Narration sync: scene(s) ${syncOutput.report.overflowScenes.join(", ")} needed more than ` +
+          `maxAutoPadMs (${ctx.config.timing.maxAutoPadMs ?? 5000}ms) of padding to fit their ` +
+          `narration — the visual is much shorter than the voiceover.`,
       );
     }
 
@@ -56,9 +62,13 @@ export class NarrationSyncStage implements Stage {
           stepIndex: syncOutput.sceneStepIndices[i],
         }));
       }
-      if (ctx.verbose) {
-        console.log(`  Narration sync applied: ${syncOutput.report.appliedPadMs}ms total padding`);
-      }
+      // Not verbose-gated: on a dry run this line is the whole point — it is
+      // what tells you the narration did not fit the visual as written.
+      const padded = syncOutput.report.windows.filter((w) => w.deficitMs > 0).length;
+      console.log(
+        `  Narration sync: padded ${padded} scene(s) by ${syncOutput.report.appliedPadMs}ms total ` +
+          `to fit narration`,
+      );
     }
   }
 }

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Narration sync is wired into the pipeline again**: `NarrationSyncStage` was defined but never instantiated — it was dropped from the stage list in the 6-phase refactor (#59) and nothing failed, because the pipeline still ran and still produced video. Scenes were simply never padded to cover their narration, and `maxAutoPadMs` / `maxSyncPasses` silently became no-ops read only by unreachable code. The stage now runs between TTS and Recording, where it can see the clip durations TTS writes and rewrite the step delays Recording plays back. **Videos with narration longer than their visual will get longer**: a scene is now extended to fit its voiceover instead of the voiceover being pushed into the following scene by the post-recording auto-shift. Two real slate segments were being cut off mid-sentence by 6.3s and 4.7s respectively.
+- **Narration overflow is reported**: a scene needing more than `maxAutoPadMs` of padding now pushes a warning that is always printed, rather than being visible only under `--verbose`. `maxAutoPadMs` is a warning threshold, not a cap — padding always closes the full deficit.
+
+### Changed
+
+- **`--dry-run` now generates narration**: `TTSStage` no longer returns early on a dry run. Narration is what decides scene padding, so a dry run that skipped it could not predict whether the voiceover fits — and `strict` mode would pass in a dry run and throw in the real one. Voice clips are cached by content hash, so a dry run pays for TTS once per narration edit and the real run that follows reuses the same audio. **Dry runs now need the TTS provider available** (for the default Piper, the binary and voice auto-download on first use). This supersedes the 0.8.2 claim that a dry run "cannot structurally diverge" from a real run: it could, for narration timing, and now it does not.
+
+### Added
+
+- **`buildStages()` is exported** from the package entry point, so the pipeline's stage ordering can be asserted in tests. Added as a regression guard for the class of bug above, where a stage silently leaves the pipeline and nothing fails loudly.
+
 ## [0.8.4] - 2026-06-18
 
 ### Changed

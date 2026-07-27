@@ -49,9 +49,12 @@ export class TTSStage implements Stage {
   readonly name = "TTS";
 
   async run(ctx: PipelineContext): Promise<void> {
-    // Dry runs produce no video, so there is nothing to narrate.
-    if (ctx.dryRun) return;
-
+    // Runs on dry runs too. A dry run produces no video, but NarrationSyncStage
+    // needs this stage's clip durations to decide how much to pad each scene —
+    // without them a dry run cannot tell whether the narration fits, which is
+    // half of what it is asked to predict. Clips are cached by content hash, so
+    // a dry run pays for TTS once per narration edit and the real run that
+    // follows reuses the same audio.
     const hasVoice = Boolean(ctx.config.voice);
     const hasNarration = (ctx.config.scenes ?? []).some((s) => Boolean(s.narration));
     const hasNarrationAudio = Boolean(

@@ -7,7 +7,9 @@ import {
 } from "./schemas.js";
 import { runPipeline } from "./pipeline/orchestrator.js";
 import { PipelineContext } from "./pipeline/context.js";
+import type { Stage } from "./pipeline/types.js";
 import { TTSStage } from "./stages/tts.js";
+import { NarrationSyncStage } from "./stages/sync.js";
 import { AuthStage } from "./stages/auth.js";
 import { PreStepsStage } from "./stages/pre-steps.js";
 import { RecordingStage } from "./stages/recording.js";
@@ -49,6 +51,30 @@ function getBaseName(config: DemoReelConfig): string {
   return "demo";
 }
 
+/**
+ * The pipeline, in execution order.
+ *
+ * Exported so the ordering can be asserted in tests. NarrationSyncStage was
+ * once dropped from this list and went unnoticed for several releases —
+ * nothing failed, scenes were simply never padded to fit their narration and
+ * the `maxAutoPadMs` / `maxSyncPasses` knobs quietly became no-ops.
+ */
+export function buildStages(): Stage[] {
+  return [
+    new TTSStage(),
+    // Must sit between TTS and Recording: it needs the clip durations TTS
+    // writes to the narration manifest, and it rewrites step delays that
+    // Recording then plays back.
+    new NarrationSyncStage(),
+    new AuthStage(),
+    new PreStepsStage(),
+    new RecordingStage(),
+    new AudioMixStage(),
+    new OutputStage(),
+    new PostStepsStage(),
+  ];
+}
+
 export async function generate(config: DemoConfig, options: GenerateOptions = {}): Promise<void> {
   const {
     verbose = false,
@@ -79,12 +105,16 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
 
   const resolvedConfig = validateConfig(finalConfig);
 
-  // Dry run and real run share ONE engine: the pipeline below. A dry run is
-  // just the pipeline with the production stages (TTS, recording capture,
-  // audio mix, output) skipped — so it exercises the exact same auth, pre-steps
-  // and scene steps a real run does. This makes a passing dry run a faithful
-  // predictor of a passing real run (it cannot structurally diverge); the only
-  // thing it can't reproduce is recording-induced CPU-timing flakiness.
+  // Dry run and real run share ONE engine: the pipeline below. A dry run runs
+  // TTS and narration sync for real, then exercises the exact same auth,
+  // pre-steps and scene steps — only the recording capture, audio mix and
+  // encode are skipped. Narration is included deliberately: it is what decides
+  // scene padding, so a dry run that skipped it could not predict whether the
+  // narration fits (and `strict` mode would pass here and throw for real).
+  // Voice clips are content-hash cached, so this costs once per narration edit.
+  // What a dry run still cannot reproduce: recording-induced CPU-timing
+  // flakiness, and the post-recording auto-shift in AudioMixStage, which acts
+  // on real recorded scene timestamps rather than the estimates used here.
   const ctx = new PipelineContext({
     config: resolvedConfig,
     configPath: process.cwd(),
@@ -96,15 +126,7 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
     noCache,
   });
 
-  const stages = [
-    new TTSStage(),
-    new AuthStage(),
-    new PreStepsStage(),
-    new RecordingStage(),
-    new AudioMixStage(),
-    new OutputStage(),
-    new PostStepsStage(),
-  ];
+  const stages = buildStages();
 
   ctx.browserPool = new BrowserPool();
 
