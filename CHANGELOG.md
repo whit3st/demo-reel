@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-07-27
+
 ### Fixed
 
 - **Narration sync is wired into the pipeline again**: `NarrationSyncStage` was defined but never instantiated — it was dropped from the stage list in the 6-phase refactor (#59) and nothing failed, because the pipeline still ran and still produced video. Scenes were simply never padded to cover their narration, and `maxAutoPadMs` / `maxSyncPasses` silently became no-ops read only by unreachable code. The stage now runs between TTS and Recording, where it can see the clip durations TTS writes and rewrite the step delays Recording plays back. **Videos with narration longer than their visual will get longer**: a scene is now extended to fit its voiceover instead of the voiceover being pushed into the following scene by the post-recording auto-shift. Two real slate segments were being cut off mid-sentence by 6.3s and 4.7s respectively.
