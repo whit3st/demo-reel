@@ -171,7 +171,12 @@ export async function validateSession(
     if (verbose) {
       console.log(`  → Navigating to: ${validateConfig.protectedUrl}`);
     }
-    await page.goto(validateConfig.protectedUrl, { waitUntil: "networkidle" });
+    // `domcontentloaded`, not `networkidle`: an app that polls (long-poll,
+    // websocket heartbeat, periodic refresh) never goes network-idle, so
+    // validation timed out and reported "Login failed" for a session that was
+    // in fact valid. Nothing here needs a settled network — the success
+    // indicator below is waited for explicitly, which is the real signal.
+    await page.goto(validateConfig.protectedUrl, { waitUntil: "domcontentloaded" });
 
     const currentUrl = page.url();
     if (verbose) {

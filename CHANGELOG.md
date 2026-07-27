@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-07-27
+
+### Added
+
+- **`DEMO_REEL_EXECUTABLE_PATH` selects the recording browser**: set it to a browser installed on the host (Brave, Chrome) and both launchers use it instead of the bundled Chromium. Needed when a page depends on a proprietary component the open-source build omits — most often PDFium: bundled Chromium renders "PDF preview is not supported in this browser" where Brave or Chrome shows the document, making any demo of an embedded PDF preview unrecordable. Ignored when unset or empty, so the default is unchanged.
+
+### Fixed
+
+- **Login validation no longer waits for `networkidle`**: `validateSession` now navigates with `domcontentloaded`. An app that polls — long-poll, websocket heartbeat, periodic refresh — never goes network-idle, so validation timed out and reported "Login failed: could not find success indicator" for a session that was in fact valid. Nothing there needed a settled network: the success indicator is awaited explicitly afterwards, and that is the real signal.
+
+Both of the above previously had to be carried downstream as pnpm `patches/` entries, which break on every version bump because a pnpm patch is pinned to an exact version.
+
 ## [0.9.0] - 2026-07-27
 
 ### Fixed
