@@ -65,6 +65,50 @@
       "cwe": "CWE-22",
       "github_advisory_id": "GHSA-g7r4-m6w7-qqqr",
       "url": "https://github.com/advisories/GHSA-g7r4-m6w7-qqqr"
+    },
+    "1123898": {
+      "findings": [
+        {
+          "version": "5.0.6",
+          "paths": [
+            ".>glob>minimatch>brace-expansion"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1123898,
+      "title": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+      "module_name": "brace-expansion",
+      "vulnerable_versions": ">=3.0.0 <5.0.7",
+      "patched_versions": ">=5.0.7",
+      "severity": "high",
+      "cwe": "CWE-400, CWE-407",
+      "github_advisory_id": "GHSA-3jxr-9vmj-r5cp",
+      "url": "https://github.com/advisories/GHSA-3jxr-9vmj-r5cp"
+    },
+    "1124334": {
+      "findings": [
+        {
+          "version": "5.0.6",
+          "paths": [
+            ".>glob>minimatch>brace-expansion"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1124334,
+      "title": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+      "module_name": "brace-expansion",
+      "vulnerable_versions": "<=5.0.7",
+      "patched_versions": ">=5.0.8",
+      "severity": "high",
+      "cwe": "CWE-400, CWE-770",
+      "github_advisory_id": "GHSA-mh99-v99m-4gvg",
+      "url": "https://github.com/advisories/GHSA-mh99-v99m-4gvg"
     }
   },
   "metadata": {
@@ -72,7 +116,7 @@
       "info": 0,
       "low": 1,
       "moderate": 2,
-      "high": 0,
+      "high": 2,
       "critical": 0
     },
     "dependencies": 38,
