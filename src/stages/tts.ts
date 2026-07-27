@@ -1,4 +1,5 @@
-import { existsSync, mkdirSync, readFileSync } from "fs";
+import { createHash } from "crypto";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { basename, dirname, extname, join, resolve } from "path";
 import type { Stage } from "../pipeline/types.js";
 import type { PipelineContext } from "../pipeline/context.js";
@@ -32,14 +33,46 @@ function getNarratedScenesInPlaybackOrder(config: DemoReelConfig) {
     .map(({ scene, index }) => ({ scene, index }));
 }
 
-function shouldRegenerateNarrationArtifacts(audioPath: string, manifestPath: string): boolean {
+/**
+ * Fingerprint the inputs the narration audio is derived from: which scenes are
+ * narrated, where they sit, what they say, and in which voice. Anything that
+ * would change the audio or the clip-to-scene mapping has to be in here.
+ */
+export function narrationInputsHash(
+  narratedScenes: ReadonlyArray<{ scene: { narration: string; stepIndex: number }; index: number }>,
+  resolvedVoice: unknown,
+): string {
+  const inputs = {
+    voice: resolvedVoice,
+    scenes: narratedScenes.map(({ scene, index }) => ({
+      index,
+      stepIndex: scene.stepIndex,
+      narration: scene.narration,
+    })),
+  };
+  return createHash("sha256").update(JSON.stringify(inputs)).digest("hex");
+}
+
+function shouldRegenerateNarrationArtifacts(
+  audioPath: string,
+  manifestPath: string,
+  inputsHash: string,
+): boolean {
   if (!existsSync(audioPath) || !existsSync(manifestPath)) {
     return true;
   }
 
   try {
     const manifest = narrationManifestSchema.parse(JSON.parse(readFileSync(manifestPath, "utf-8")));
-    return manifest.processingVersion !== NARRATION_PROCESSING_VERSION;
+    if (manifest.processingVersion !== NARRATION_PROCESSING_VERSION) {
+      return true;
+    }
+    // Checking the file exists is not enough: the manifest maps clips onto
+    // scene indices, so editing the scene list leaves a cache that describes a
+    // config that no longer exists. Reusing it produced narration attached to
+    // the wrong scenes, or a hard crash in narration sync when the manifest
+    // named more scenes than remained.
+    return manifest.inputsHash !== inputsHash;
   } catch {
     return true;
   }
@@ -70,7 +103,13 @@ export class TTSStage implements Stage {
     ctx.narrationManifestPath = manifestPath;
     mkdirSync(dirname(audioPath), { recursive: true });
 
-    if (!ctx.noCache && !shouldRegenerateNarrationArtifacts(audioPath, manifestPath)) {
+    // Resolve the voice before the cache check — it is part of the cache key,
+    // since the same text in a different voice is different audio.
+    const { resolveVoiceConfig } = await import("../voice-config.js");
+    const resolvedVoice = resolveVoiceConfig(ctx.config.voice as VoiceConfigOverrides);
+    const inputsHash = narrationInputsHash(narratedScenes, resolvedVoice);
+
+    if (!ctx.noCache && !shouldRegenerateNarrationArtifacts(audioPath, manifestPath, inputsHash)) {
       const raw = JSON.parse(readFileSync(manifestPath, "utf-8"));
       ctx.narrationManifest = narrationManifestSchema.parse(raw);
       if (ctx.verbose) console.log("  Using cached narration audio");
@@ -80,9 +119,6 @@ export class TTSStage implements Stage {
     if (ctx.verbose) console.log("  Generating voiceover...");
 
     const { generateVoiceSegments, generateNarrationAudio } = await import("../script/tts.js");
-    const { resolveVoiceConfig } = await import("../voice-config.js");
-
-    const resolvedVoice = resolveVoiceConfig(ctx.config.voice as VoiceConfigOverrides);
 
     const script = {
       title: name,
@@ -103,7 +139,12 @@ export class TTSStage implements Stage {
     });
     await generateNarrationAudio(segments, audioPath, { verbose: ctx.verbose });
 
+    // Stamp the cache key onto the manifest the generator just wrote. This
+    // stage owns the caching decision, so it owns the key; generateNarrationAudio
+    // stays unaware of it.
     const rawManifest = JSON.parse(readFileSync(manifestPath, "utf-8"));
+    rawManifest.inputsHash = inputsHash;
+    writeFileSync(manifestPath, JSON.stringify(rawManifest, null, 2) + "\n");
     ctx.narrationManifest = narrationManifestSchema.parse(rawManifest);
   }
 }

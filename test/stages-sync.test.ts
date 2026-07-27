@@ -4,7 +4,7 @@ import { tmpdir } from "os";
 import { join } from "path";
 
 import { NarrationSyncStage } from "../src/stages/sync.js";
-import { TTSStage } from "../src/stages/tts.js";
+import { TTSStage, narrationInputsHash } from "../src/stages/tts.js";
 import { buildStages } from "../src/index.js";
 import { NARRATION_PROCESSING_VERSION } from "../src/narration-manifest.js";
 
@@ -165,5 +165,57 @@ describe("TTSStage on dry runs", () => {
 
     expect(ctx.audioPath).toBeDefined();
     expect(ctx.narrationManifestPath).toBeDefined();
+  });
+});
+
+describe("stale narration manifest", () => {
+  // The exact production failure: a config's scene list was cut from 12 to 9
+  // while the cached manifest still described 12. buildSceneWindows guarded the
+  // current clip's scene but dereferenced the NEXT clip's blind, so this threw
+  // "Cannot read properties of undefined (reading 'stepIndex')" — a stack trace
+  // pointing into demo-reel internals, with no hint that the cache was at fault.
+  it("explains itself instead of throwing a TypeError", async () => {
+    const ctx = makeCtx({ narrationManifestPath: await writeManifest([1000, 1000, 1000]) });
+    // Config has 2 scenes; the manifest names 3.
+    expect(ctx.config.scenes).toHaveLength(2);
+
+    const run = new NarrationSyncStage().run(ctx);
+
+    await expect(run).rejects.toThrow(/config has 2 scene\(s\)/);
+    await expect(run).rejects.toThrow(/--no-cache/);
+  });
+});
+
+describe("narration cache key", () => {
+  const voice = { provider: "piper", voice: "en_US-amy-medium" };
+  const scenes = [
+    { scene: { narration: "one", stepIndex: 0 }, index: 0 },
+    { scene: { narration: "two", stepIndex: 3 }, index: 1 },
+  ];
+
+  it("is stable for identical inputs", () => {
+    expect(narrationInputsHash(scenes, voice)).toBe(narrationInputsHash(scenes, voice));
+  });
+
+  // Each of these used to leave the cache looking valid.
+  it("changes when a scene is removed", () => {
+    expect(narrationInputsHash(scenes.slice(0, 1), voice)).not.toBe(
+      narrationInputsHash(scenes, voice),
+    );
+  });
+
+  it("changes when narration text is edited", () => {
+    const edited = [scenes[0], { scene: { narration: "TWO", stepIndex: 3 }, index: 1 }];
+    expect(narrationInputsHash(edited, voice)).not.toBe(narrationInputsHash(scenes, voice));
+  });
+
+  it("changes when a scene moves to a different step", () => {
+    const moved = [scenes[0], { scene: { narration: "two", stepIndex: 9 }, index: 1 }];
+    expect(narrationInputsHash(moved, voice)).not.toBe(narrationInputsHash(scenes, voice));
+  });
+
+  it("changes when the voice changes", () => {
+    const other = { provider: "piper", voice: "nl_NL-pim-medium" };
+    expect(narrationInputsHash(scenes, other)).not.toBe(narrationInputsHash(scenes, voice));
   });
 });

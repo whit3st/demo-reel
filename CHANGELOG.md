@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.2] - 2026-07-27
+
+### Fixed
+
+- **Narration cache now invalidates when the narration changes.** `shouldRegenerateNarrationArtifacts` only checked that the audio and manifest files existed and that `processingVersion` matched — never what the audio was generated from. Since the manifest maps clips onto scene *indices*, editing the scene list left a cache describing a config that no longer existed. Reusing it attached narration to the wrong scenes, or crashed narration sync outright when the manifest named more scenes than remained. The manifest now carries an `inputsHash` over the narrated scenes (index, step index, text) and the resolved voice, and is only reused while that still matches. Manifests written before this field are treated as a miss and regenerate once.
+- **A stale manifest now explains itself.** `buildSceneWindows` guarded the current clip's scene but dereferenced the *next* clip's without checking, so the failure surfaced as `TypeError: Cannot read properties of undefined (reading 'stepIndex')` from inside demo-reel, with nothing pointing at the cache. All referenced scenes are validated up front and the error names both the mismatch and the `--no-cache` way out.
+
 ## [0.9.1] - 2026-07-27
 
 ### Added

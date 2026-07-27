@@ -102,16 +102,25 @@ export function buildSceneWindows(
   // Sort clips by sceneIndex to ensure correct ordering
   const sorted = [...clips].sort((a, b) => a.sceneIndex - b.sceneIndex);
 
+  // Validate every referenced scene up front. The per-clip check below used to
+  // be the only guard, while the *next* clip's scene was dereferenced blind on
+  // the endStep line — so a manifest naming more scenes than the config exists
+  // crashed with "Cannot read properties of undefined (reading 'stepIndex')"
+  // instead of the explanatory error here. A stale cached manifest (one that
+  // outlived an edit to the scene list) lands in exactly that state.
+  for (const clip of sorted) {
+    if (!configScenes[clip.sceneIndex]) {
+      throw new Error(
+        `Narration clip references scene ${clip.sceneIndex} but the config has ${configScenes.length} scene(s). ` +
+          `This usually means a cached narration manifest is stale — re-run with --no-cache to regenerate it.`,
+      );
+    }
+  }
+
   return sorted.map((clip, i) => {
     // clip.sceneIndex is the original config scene position.
     // Look up the actual stepIndex from the config scenes.
-    const scene = configScenes[clip.sceneIndex];
-    if (!scene) {
-      throw new Error(
-        `Narration clip references scene ${clip.sceneIndex} but config only has ${configScenes.length} scene(s)`,
-      );
-    }
-    const startStep = scene.stepIndex;
+    const startStep = configScenes[clip.sceneIndex].stepIndex;
 
     const nextClip = i < sorted.length - 1 ? sorted[i + 1] : undefined;
     const endStep = nextClip ? configScenes[nextClip.sceneIndex].stepIndex : steps.length;

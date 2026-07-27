@@ -123,8 +123,11 @@ describe("buildSceneWindows", () => {
     ];
 
     expect(() => buildSceneWindows(steps, clips, configScenes, 300)).toThrow(
-      /scene 5 but config only has 1 scene/,
+      /scene 5 but the config has 1 scene/,
     );
+    // The overwhelmingly common cause is a cached manifest that outlived an
+    // edit to the scene list, so the message names the way out.
+    expect(() => buildSceneWindows(steps, clips, configScenes, 300)).toThrow(/--no-cache/);
   });
 });
 

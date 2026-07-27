@@ -17,6 +17,16 @@ export const narrationManifestSchema = z.object({
   version: z.literal(1),
   processingVersion: z.string().min(1),
   audioPath: z.string().min(1).optional(),
+  /**
+   * Fingerprint of what the audio was generated FROM — the narrated scenes and
+   * the resolved voice. The cache is only reusable while this still matches.
+   * Without it a manifest outlives edits to the scene list and goes on
+   * describing scenes that no longer exist.
+   *
+   * Optional so manifests written before this field still parse; a missing
+   * value counts as a miss, so such a cache regenerates once and gains a key.
+   */
+  inputsHash: z.string().min(1).optional(),
   clips: z.array(narrationManifestClipSchema).min(1),
 });
 
