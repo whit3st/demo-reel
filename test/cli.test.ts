@@ -493,6 +493,27 @@ describe("cli", () => {
     expect(runVideoScenario).not.toHaveBeenCalled();
   });
 
+  it("forwards --headed to generate on the voice-generation path", async () => {
+    vi.mocked(loadConfig).mockResolvedValueOnce({
+      ...createLoadedConfig(),
+      config: {
+        ...createLoadedConfig().config,
+        voice: { provider: "openai", voice: "alloy", speed: 1.0 },
+        scenes: [{ narration: "Welcome", steps: [{ action: "goto", url: "https://example.com" }] }],
+        audio: undefined,
+      },
+    } as never);
+    process.argv = ["node", "cli", "demo", "--headed"];
+
+    const { runCli } = await import("../src/cli.js");
+
+    await expect(runCli()).resolves.toBe(0);
+    expect(generate).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ headed: true }),
+    );
+  });
+
   it("main exits process with runCli exit code", async () => {
     process.argv = ["node", "cli", "--help"];
     const exitSpy = vi.spyOn(process, "exit").mockImplementation((() => undefined) as never);
