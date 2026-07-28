@@ -24,3 +24,6 @@ example-app/
 # 
 
 PLAN.md
+# Python bytecode from the Chatterbox worker
+__pycache__/
+*.pyc
