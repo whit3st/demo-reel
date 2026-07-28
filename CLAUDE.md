@@ -52,28 +52,31 @@ Scene-owned steps (`scenes[].steps[]`) are normalized into the runtime format (f
 `generate()` flow:
 
 1. Validate and normalize config
-2. Generate voiceover via local TTS (Piper, OpenAI, or ElevenLabs)
+2. Generate voiceover via local TTS (Piper, Chatterbox, OpenAI, or ElevenLabs)
 3. Narration auto-sync to audio timing
 4. Serialize config → execute recording via Playwright locally
 
 ### Key Source Files
 
-| File                     | Purpose                                                            |
-| ------------------------ | ------------------------------------------------------------------ |
-| `src/index.ts`           | Main entry: `generate()`, `defineConfig()`                         |
-| `src/cli.ts`             | CLI parser and entry point                                         |
-| `src/schemas.ts`         | All Zod schemas (config, steps, scenes, voice, auth)               |
-| `src/runner.ts`          | Playwright step execution engine (1300 lines)                      |
-| `src/video-handler.ts`   | Browser launch, auth, recording orchestration                      |
-| `src/config-loader.ts`   | Load `.ts`/`.json` config files                                    |
-| `src/narration-sync.ts`  | Audio-first step timing sync                                       |
-| `src/audio-processor.ts` | FFmpeg audio/video merging                                         |
-| `src/script/`            | AI script generation pipeline (crawler, generator, TTS, assembler) |
-| `src/commands/`          | Command pattern CLI implementation                                 |
+| File                      | Purpose                                                            |
+| ------------------------- | ------------------------------------------------------------------ |
+| `src/index.ts`            | Main entry: `generate()`, `defineConfig()`                         |
+| `src/cli.ts`              | CLI parser and entry point                                         |
+| `src/schemas.ts`          | All Zod schemas (config, steps, scenes, voice, auth)               |
+| `src/runner.ts`           | Playwright step execution engine (1300 lines)                      |
+| `src/video-handler.ts`    | Browser launch, auth, recording orchestration                      |
+| `src/config-loader.ts`    | Load `.ts`/`.json` config files                                    |
+| `src/narration-sync.ts`   | Audio-first step timing sync                                       |
+| `src/audio-processor.ts`  | FFmpeg audio/video merging                                         |
+| `src/voice/chatterbox.ts` | Chatterbox provider: Python worker lifecycle + JSON-lines protocol |
+| `src/script/`             | AI script generation pipeline (crawler, generator, TTS, assembler) |
+| `src/commands/`           | Command pattern CLI implementation                                 |
 
 ### TTS Provider Abstraction
 
-Three providers with pluggable interface: **Piper** (local/free, default), **OpenAI**, **ElevenLabs**. Audio is cached by content hash.
+Four providers with pluggable interface: **Piper** (local/free, default), **Chatterbox** (local/free, highest quality), **OpenAI**, **ElevenLabs**. Audio is cached by content hash.
+
+Chatterbox runs Resemble AI's Chatterbox Turbo through a persistent Python worker (`src/voice/chatterbox_worker.py`) spawned over a JSON-lines stdin/stdout protocol, so the ~15s model load is paid once per run rather than per narration line. It has no native pace control, so `speed` is applied via FFmpeg `atempo` in `src/voice/chatterbox.ts`.
 
 ### Narration Auto-Sync (`src/narration-sync.ts`)
 

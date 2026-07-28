@@ -31,6 +31,33 @@ export const piperVoiceConfigSchema = z
   ])
   .describe("Piper voice configuration");
 
+export const chatterboxVoiceConfigSchema = z
+  .union([
+    // voicePath schema must come first - it has no defaults, so Zod will try it first
+    z.object({
+      provider: z
+        .literal("chatterbox")
+        .default("chatterbox")
+        .describe("TTS provider (chatterbox = local/free, highest quality)"),
+      voicePath: z
+        .string()
+        .min(1)
+        .describe("Path to a 7-15s reference clip to clone the voice from"),
+      speed: speedSchema,
+      pronunciation: pronunciationSchema,
+    }),
+    z.object({
+      provider: z
+        .literal("chatterbox")
+        .default("chatterbox")
+        .describe("TTS provider (chatterbox = local/free, highest quality)"),
+      voice: z.string().default("default").describe("Built-in Chatterbox voice"),
+      speed: speedSchema,
+      pronunciation: pronunciationSchema,
+    }),
+  ])
+  .describe("Chatterbox voice configuration");
+
 export const openaiVoiceConfigSchema = z
   .object({
     provider: z.literal("openai").describe("TTS provider (OpenAI cloud voices)"),
@@ -50,7 +77,12 @@ export const elevenLabsVoiceConfigSchema = z
   .describe("ElevenLabs voice configuration");
 
 export const voiceConfigSchema = z
-  .union([piperVoiceConfigSchema, openaiVoiceConfigSchema, elevenLabsVoiceConfigSchema])
+  .union([
+    piperVoiceConfigSchema,
+    chatterboxVoiceConfigSchema,
+    openaiVoiceConfigSchema,
+    elevenLabsVoiceConfigSchema,
+  ])
   .default({ provider: "piper", voice: "nl_NL-mls-medium", speed: 1.0 });
 
 export type VoiceConfig = z.infer<typeof voiceConfigSchema>;
@@ -94,6 +126,24 @@ export function resolveVoiceConfig(overrides: VoiceConfigOverrides = {}): VoiceC
     return piperVoiceConfigSchema.parse({
       provider,
       voice: overrides.voice ?? DEFAULT_VOICE_CONFIG.voice,
+      speed,
+      pronunciation,
+    });
+  }
+
+  if (provider === "chatterbox") {
+    if (overrides.voicePath) {
+      return chatterboxVoiceConfigSchema.parse({
+        provider,
+        voicePath: overrides.voicePath,
+        speed,
+        pronunciation,
+      });
+    }
+
+    return chatterboxVoiceConfigSchema.parse({
+      provider,
+      voice: overrides.voice ?? "default",
       speed,
       pronunciation,
     });

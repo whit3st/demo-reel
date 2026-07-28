@@ -115,6 +115,7 @@ Output: `output/signup.mp4` + `.srt` + `.vtt` + `.meta.json`
 - **Playwright** — `pnpm exec playwright install chromium` (peer dependency)
 - **FFmpeg** — for video/audio processing (installed via `ffmpeg-static` or system package)
 - **Piper** (optional) — for local TTS voiceover (auto-downloaded on first use, no setup needed)
+- **Chatterbox** (optional) — highest-quality local TTS; needs a one-time Python env (see [Provider Details](#provider-details))
 - **API keys** (optional) — `ELEVENLABS_KEY` or `OPENAI_API_KEY` for cloud TTS
 
 ## Claude Code Integration
@@ -181,7 +182,7 @@ See `TRACKING.md` for the raw file format and guidance for AI tools that consume
 
 ```typescript
 voice: {
-  provider: "piper",             // "piper" | "openai" | "elevenlabs"
+  provider: "piper",             // "piper" | "chatterbox" | "openai" | "elevenlabs"
   voice: "en_US-amy-medium",      // any voice name or ID supported by the provider
   speed: 1.0,
   pronunciation: {                // word replacements before TTS
@@ -203,6 +204,29 @@ voice: {
   speed: 1.0,
 }
 ```
+
+**Chatterbox** (local, free, highest quality) — Resemble AI's Chatterbox Turbo. Noticeably more natural than Piper on multi-sentence narration, and supports zero-shot voice cloning. Requires a one-time Python environment (see below). Use the built-in voice, or point `voicePath` at a 7-15s reference clip to clone:
+
+```typescript
+voice: {
+  provider: "chatterbox",
+  voicePath: "./voices/brand-voice.wav",  // omit to use the built-in voice
+  speed: 1.0,
+}
+```
+
+Trade-offs versus Piper: ~3x slower than realtime on CPU (a 3-minute narration takes ~9 minutes to generate, once — results are cached by content hash), a ~4GB one-time model download, English-only, and output carries an inaudible Resemble watermark. `speed` is applied with FFmpeg `atempo` since Chatterbox has no native pace control.
+
+Setup:
+
+```bash
+uv venv --python 3.12 ~/.local/share/demo-reel-tts/venv
+VIRTUAL_ENV=~/.local/share/demo-reel-tts/venv uv pip install \
+  --index-url https://download.pytorch.org/whl/cpu torch==2.6.0 torchaudio==2.6.0
+VIRTUAL_ENV=~/.local/share/demo-reel-tts/venv uv pip install chatterbox-tts
+```
+
+The provider looks for `~/.local/share/demo-reel-tts/venv/bin/python`, then falls back to `python3`. Override with `DEMO_REEL_CHATTERBOX_PYTHON`.
 
 **OpenAI** — voice is an OpenAI TTS voice name (e.g. `alloy`, `nova`, `shimmer`). Requires `OPENAI_API_KEY` env var.
 

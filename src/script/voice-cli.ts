@@ -56,7 +56,10 @@ function pickVoiceOverrides(source: unknown): VoiceConfigOverridesSource {
   const value = source as Record<string, unknown>;
   return {
     provider:
-      value.provider === "piper" || value.provider === "openai" || value.provider === "elevenlabs"
+      value.provider === "piper" ||
+      value.provider === "chatterbox" ||
+      value.provider === "openai" ||
+      value.provider === "elevenlabs"
         ? value.provider
         : undefined,
     voice: typeof value.voice === "string" ? value.voice : undefined,

@@ -73,6 +73,28 @@ describe("voice-config", () => {
     });
   });
 
+  it("resolves chatterbox default voice", () => {
+    expect(resolveVoiceConfig({ provider: "chatterbox" })).toEqual({
+      provider: "chatterbox",
+      voice: "default",
+      speed: 1,
+    });
+  });
+
+  it("resolves chatterbox with a reference clip to clone", () => {
+    expect(
+      resolveVoiceConfig({
+        provider: "chatterbox",
+        voicePath: "./voices/brand.wav",
+        speed: 1.25,
+      }),
+    ).toEqual({
+      provider: "chatterbox",
+      voicePath: "./voices/brand.wav",
+      speed: 1.25,
+    });
+  });
+
   it("returns readable voice name for named and path-based configs", () => {
     expect(getVoiceName(resolveVoiceConfig({ provider: "openai", voice: "nova" }))).toBe("nova");
     expect(

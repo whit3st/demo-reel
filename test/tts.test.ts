@@ -99,7 +99,9 @@ describe("getTTSProvider", () => {
 
   it("throws for unknown provider with available options", () => {
     expect(() => getTTSProvider("unknown")).toThrow('Unknown TTS provider: "unknown"');
-    expect(() => getTTSProvider("unknown")).toThrow("Available: piper, openai, elevenlabs");
+    expect(() => getTTSProvider("unknown")).toThrow(
+      "Available: piper, chatterbox, openai, elevenlabs",
+    );
   });
 });
 
