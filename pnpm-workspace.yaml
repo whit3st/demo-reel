@@ -2,4 +2,4 @@ allowBuilds:
   esbuild: true
   ffmpeg-static: true
 overrides:
-  demo-reel: link:../../.local/share/pnpm/global/5/node_modules/demo-reel
+  vite: 8.0.16
