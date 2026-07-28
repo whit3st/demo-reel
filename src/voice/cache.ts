@@ -8,9 +8,12 @@ const CACHE_DIR = ".demo-reel-cache/voice";
 const VOICE_CACHE_VERSION = NARRATION_PROCESSING_VERSION;
 
 export function cacheKey(text: string, voice: VoiceConfig): string {
+  // Appended only when present, so keys for providers without a language stay
+  // byte-identical to previously cached ones.
+  const language = "language" in voice && voice.language ? `|${voice.language}` : "";
   return createHash("sha256")
     .update(
-      `${VOICE_CACHE_VERSION}|${text}|${voice.provider}|${getVoiceName(voice)}|${voice.speed}`,
+      `${VOICE_CACHE_VERSION}|${text}|${voice.provider}|${getVoiceName(voice)}|${voice.speed}${language}`,
     )
     .digest("hex")
     .slice(0, 16);

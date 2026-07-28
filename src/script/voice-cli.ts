@@ -23,6 +23,7 @@ interface VoiceConfigOverridesSource {
   provider?: VoiceConfig["provider"];
   voice?: string;
   voicePath?: string;
+  language?: string;
   speed?: number;
   pronunciation?: Record<string, string>;
 }
@@ -56,11 +57,16 @@ function pickVoiceOverrides(source: unknown): VoiceConfigOverridesSource {
   const value = source as Record<string, unknown>;
   return {
     provider:
-      value.provider === "piper" || value.provider === "openai" || value.provider === "elevenlabs"
+      value.provider === "piper" ||
+      value.provider === "chatterbox" ||
+      value.provider === "chatterbox-multilingual" ||
+      value.provider === "openai" ||
+      value.provider === "elevenlabs"
         ? value.provider
         : undefined,
     voice: typeof value.voice === "string" ? value.voice : undefined,
     voicePath: typeof value.voicePath === "string" ? value.voicePath : undefined,
+    language: typeof value.language === "string" ? value.language : undefined,
     speed: typeof value.speed === "number" ? value.speed : undefined,
     pronunciation:
       typeof value.pronunciation === "object" && value.pronunciation !== null
@@ -76,6 +82,7 @@ export async function main() {
   // CLI overrides (undefined means "not set, use lower priority")
   let cliProvider: string | undefined;
   let cliVoice: string | undefined;
+  let cliLanguage: string | undefined;
   let cliSpeed: number | undefined;
   let cliPronunciation: Record<string, string> | undefined;
   let cliOutput: string | undefined;
@@ -85,6 +92,8 @@ export async function main() {
       cliProvider = args[++i];
     } else if (args[i] === "--voice") {
       cliVoice = args[++i];
+    } else if (args[i] === "--language") {
+      cliLanguage = args[++i];
     } else if (args[i] === "--speed") {
       cliSpeed = parseFloat(args[++i]);
     } else if (args[i] === "--output" || args[i] === "-o") {
@@ -130,6 +139,7 @@ export async function main() {
         productConfig.provider,
       voicePath: scriptVoice.voicePath ?? productConfig.voicePath,
       voice: cliVoice ?? scriptVoice.voice ?? productConfig.voice,
+      language: cliLanguage ?? scriptVoice.language ?? productConfig.language,
       speed: cliSpeed ?? scriptVoice.speed ?? productConfig.speed,
       pronunciation: cliPronunciation ?? scriptVoice.pronunciation ?? productConfig.pronunciation,
     });

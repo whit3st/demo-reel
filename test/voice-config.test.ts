@@ -73,6 +73,58 @@ describe("voice-config", () => {
     });
   });
 
+  it("resolves chatterbox default voice", () => {
+    expect(resolveVoiceConfig({ provider: "chatterbox" })).toEqual({
+      provider: "chatterbox",
+      voice: "default",
+      speed: 1,
+    });
+  });
+
+  it("resolves chatterbox with a reference clip to clone", () => {
+    expect(
+      resolveVoiceConfig({
+        provider: "chatterbox",
+        voicePath: "./voices/brand.wav",
+        speed: 1.25,
+      }),
+    ).toEqual({
+      provider: "chatterbox",
+      voicePath: "./voices/brand.wav",
+      speed: 1.25,
+    });
+  });
+
+  it("resolves chatterbox-multilingual with a default language", () => {
+    expect(resolveVoiceConfig({ provider: "chatterbox-multilingual" })).toEqual({
+      provider: "chatterbox-multilingual",
+      voice: "default",
+      language: "en",
+      speed: 1,
+    });
+  });
+
+  it("resolves chatterbox-multilingual with an explicit language and clone clip", () => {
+    expect(
+      resolveVoiceConfig({
+        provider: "chatterbox-multilingual",
+        voicePath: "./voices/brand.wav",
+        language: "nl",
+      }),
+    ).toEqual({
+      provider: "chatterbox-multilingual",
+      voicePath: "./voices/brand.wav",
+      language: "nl",
+      speed: 1,
+    });
+  });
+
+  it("rejects an unsupported chatterbox language", () => {
+    expect(() =>
+      resolveVoiceConfig({ provider: "chatterbox-multilingual", language: "xx" }),
+    ).toThrow();
+  });
+
   it("returns readable voice name for named and path-based configs", () => {
     expect(getVoiceName(resolveVoiceConfig({ provider: "openai", voice: "nova" }))).toBe("nova");
     expect(
