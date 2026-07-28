@@ -1,127 +1,16 @@
 {
-  "advisories": {
-    "1117064": {
-      "findings": [
-        {
-          "version": "0.80.0",
-          "paths": [
-            ".>@anthropic-ai/sdk"
-          ],
-          "dev": false,
-          "optional": false,
-          "bundled": false
-        }
-      ],
-      "id": 1117064,
-      "title": "Claude SDK for TypeScript: Memory Tool Path Validation Allows Sandbox Escape to Sibling Directories",
-      "module_name": "@anthropic-ai/sdk",
-      "vulnerable_versions": ">=0.79.0 <0.81.0",
-      "patched_versions": ">=0.81.0",
-      "severity": "moderate",
-      "cwe": "CWE-22, CWE-41",
-      "github_advisory_id": "GHSA-5474-4w2j-mq4c",
-      "url": "https://github.com/advisories/GHSA-5474-4w2j-mq4c"
-    },
-    "1119428": {
-      "findings": [
-        {
-          "version": "0.80.0",
-          "paths": [
-            ".>@anthropic-ai/sdk"
-          ],
-          "dev": false,
-          "optional": false,
-          "bundled": false
-        }
-      ],
-      "id": 1119428,
-      "title": "Claude SDK for TypeScript has Insecure Default File Permissions in Local Filesystem Memory Tool",
-      "module_name": "@anthropic-ai/sdk",
-      "vulnerable_versions": ">=0.79.0 <0.91.1",
-      "patched_versions": ">=0.91.1",
-      "severity": "moderate",
-      "cwe": "CWE-732",
-      "github_advisory_id": "GHSA-p7fg-763f-g4gf",
-      "url": "https://github.com/advisories/GHSA-p7fg-763f-g4gf"
-    },
-    "1120680": {
-      "findings": [
-        {
-          "version": "0.28.0",
-          "paths": [
-            ".>tsx>esbuild"
-          ],
-          "dev": false,
-          "optional": false,
-          "bundled": false
-        }
-      ],
-      "id": 1120680,
-      "title": "esbuild allows arbitrary file read when running the development server on Windows",
-      "module_name": "esbuild",
-      "vulnerable_versions": ">=0.27.3 <0.28.1",
-      "patched_versions": ">=0.28.1",
-      "severity": "low",
-      "cwe": "CWE-22",
-      "github_advisory_id": "GHSA-g7r4-m6w7-qqqr",
-      "url": "https://github.com/advisories/GHSA-g7r4-m6w7-qqqr"
-    },
-    "1123898": {
-      "findings": [
-        {
-          "version": "5.0.6",
-          "paths": [
-            ".>glob>minimatch>brace-expansion"
-          ],
-          "dev": false,
-          "optional": false,
-          "bundled": false
-        }
-      ],
-      "id": 1123898,
-      "title": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
-      "module_name": "brace-expansion",
-      "vulnerable_versions": ">=3.0.0 <5.0.7",
-      "patched_versions": ">=5.0.7",
-      "severity": "high",
-      "cwe": "CWE-400, CWE-407",
-      "github_advisory_id": "GHSA-3jxr-9vmj-r5cp",
-      "url": "https://github.com/advisories/GHSA-3jxr-9vmj-r5cp"
-    },
-    "1124334": {
-      "findings": [
-        {
-          "version": "5.0.6",
-          "paths": [
-            ".>glob>minimatch>brace-expansion"
-          ],
-          "dev": false,
-          "optional": false,
-          "bundled": false
-        }
-      ],
-      "id": 1124334,
-      "title": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
-      "module_name": "brace-expansion",
-      "vulnerable_versions": "<=5.0.7",
-      "patched_versions": ">=5.0.8",
-      "severity": "high",
-      "cwe": "CWE-400, CWE-770",
-      "github_advisory_id": "GHSA-mh99-v99m-4gvg",
-      "url": "https://github.com/advisories/GHSA-mh99-v99m-4gvg"
-    }
-  },
+  "advisories": {},
   "metadata": {
     "vulnerabilities": {
       "info": 0,
-      "low": 1,
-      "moderate": 2,
-      "high": 2,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
       "critical": 0
     },
-    "dependencies": 38,
+    "dependencies": 41,
     "devDependencies": 0,
     "optionalDependencies": 28,
-    "totalDependencies": 66
+    "totalDependencies": 69
   }
 }
