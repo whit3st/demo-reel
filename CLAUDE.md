@@ -52,7 +52,7 @@ Scene-owned steps (`scenes[].steps[]`) are normalized into the runtime format (f
 `generate()` flow:
 
 1. Validate and normalize config
-2. Generate voiceover via local TTS (Piper, Chatterbox, OpenAI, or ElevenLabs)
+2. Generate voiceover via local TTS (Piper, Chatterbox, Chatterbox Multilingual, OpenAI, or ElevenLabs)
 3. Narration auto-sync to audio timing
 4. Serialize config → execute recording via Playwright locally
 
@@ -74,9 +74,13 @@ Scene-owned steps (`scenes[].steps[]`) are normalized into the runtime format (f
 
 ### TTS Provider Abstraction
 
-Four providers with pluggable interface: **Piper** (local/free, default), **Chatterbox** (local/free, highest quality), **OpenAI**, **ElevenLabs**. Audio is cached by content hash.
+Five providers with pluggable interface: **Piper** (local/free, default), **Chatterbox** (local/free, English), **Chatterbox Multilingual** (local/free, 23 languages), **OpenAI**, **ElevenLabs**. Audio is cached by content hash.
 
-Chatterbox runs Resemble AI's Chatterbox Turbo through a persistent Python worker (`src/voice/chatterbox_worker.py`) spawned over a JSON-lines stdin/stdout protocol, so the ~15s model load is paid once per run rather than per narration line. It has no native pace control, so `speed` is applied via FFmpeg `atempo` in `src/voice/chatterbox.ts`.
+The two Chatterbox providers are deliberately separate rather than one provider with a language switch — they are different checkpoints (`ResembleAI/chatterbox-turbo` vs `ResembleAI/chatterbox`) with different sampling defaults, and the multilingual `generate()` takes `language_id` as a required positional argument while turbo has no such parameter.
+
+Both are driven by the same persistent Python worker (`src/voice/chatterbox_worker.py`) over a JSON-lines stdin/stdout protocol, selected via the `CHATTERBOX_MODEL` env var. The worker is spawned per checkpoint and reused for the whole run, so the model load is paid once rather than per narration line. Chatterbox has no native pace control, so `speed` is applied via FFmpeg `atempo` in `src/voice/chatterbox.ts`.
+
+`cacheKey()` appends `language` only when the config has one, keeping keys byte-identical for providers that don't — adding the multilingual provider does not invalidate existing cached audio.
 
 ### Narration Auto-Sync (`src/narration-sync.ts`)
 

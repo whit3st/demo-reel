@@ -27,7 +27,7 @@ await generate(
     outputFormat: "mp4",
 
     voice: {
-      provider: "piper", // "piper" (local/free) | "openai" | "elevenlabs"
+      provider: "piper", // "piper" | "chatterbox" | "chatterbox-multilingual" (local/free) | "openai" | "elevenlabs"
       voice: "en_US-amy-medium", // auto-downloaded on first use
     },
 
@@ -115,7 +115,7 @@ Output: `output/signup.mp4` + `.srt` + `.vtt` + `.meta.json`
 - **Playwright** — `pnpm exec playwright install chromium` (peer dependency)
 - **FFmpeg** — for video/audio processing (installed via `ffmpeg-static` or system package)
 - **Piper** (optional) — for local TTS voiceover (auto-downloaded on first use, no setup needed)
-- **Chatterbox** (optional) — highest-quality local TTS; needs a one-time Python env (see [Provider Details](#provider-details))
+- **Chatterbox** (optional) — highest-quality local TTS, English or 23 languages; needs a one-time Python env (see [Provider Details](#provider-details))
 - **API keys** (optional) — `ELEVENLABS_KEY` or `OPENAI_API_KEY` for cloud TTS
 
 ## Claude Code Integration
@@ -182,7 +182,7 @@ See `TRACKING.md` for the raw file format and guidance for AI tools that consume
 
 ```typescript
 voice: {
-  provider: "piper",             // "piper" | "chatterbox" | "openai" | "elevenlabs"
+  provider: "piper",             // "piper" | "chatterbox" | "chatterbox-multilingual" | "openai" | "elevenlabs"
   voice: "en_US-amy-medium",      // any voice name or ID supported by the provider
   speed: 1.0,
   pronunciation: {                // word replacements before TTS
@@ -205,19 +205,33 @@ voice: {
 }
 ```
 
-**Chatterbox** (local, free, highest quality) — Resemble AI's Chatterbox Turbo. Noticeably more natural than Piper on multi-sentence narration, and supports zero-shot voice cloning. Requires a one-time Python environment (see below). Use the built-in voice, or point `voicePath` at a 7-15s reference clip to clone:
+#### Chatterbox (local, free, highest quality)
+
+Resemble AI's Chatterbox ships as **two separate checkpoints**, exposed here as two providers. They are different models with different sampling defaults, not one model with a language switch — so picking between them is an explicit choice rather than something inferred from your config:
+
+| Provider                  | Model                   | Languages    | Use when                                             |
+| ------------------------- | ----------------------- | ------------ | ---------------------------------------------------- |
+| `chatterbox`              | Chatterbox Turbo        | English only | You want the English-tuned checkpoint                |
+| `chatterbox-multilingual` | Chatterbox Multilingual | 23           | Anything non-English, or one provider for everything |
+
+Both do zero-shot voice cloning: point `voicePath` at a 7-15s reference clip, or omit it for the built-in voice.
 
 ```typescript
 voice: {
-  provider: "chatterbox",
+  provider: "chatterbox-multilingual",
+  language: "nl",                         // required for multilingual; defaults to "en"
   voicePath: "./voices/brand-voice.wav",  // omit to use the built-in voice
   speed: 1.0,
 }
 ```
 
-Trade-offs versus Piper: ~3x slower than realtime on CPU (a 3-minute narration takes ~9 minutes to generate, once — results are cached by content hash), a ~4GB one-time model download, English-only, and output carries an inaudible Resemble watermark. `speed` is applied with FFmpeg `atempo` since Chatterbox has no native pace control.
+Supported `language` values: `ar` `da` `de` `el` `en` `es` `fi` `fr` `he` `hi` `it` `ja` `ko` `ms` `nl` `no` `pl` `pt` `ru` `sv` `sw` `tr` `zh`. Anything else is rejected at config-validation time.
 
-Setup:
+Cached audio is keyed on the language too, so switching languages regenerates rather than serving stale audio.
+
+Trade-offs versus Piper: ~3x slower than realtime on CPU (a 3-minute narration takes ~9 minutes to generate, once — results are cached by content hash), a multi-GB one-time model download per checkpoint, and output carries an inaudible Resemble watermark. `speed` is applied with FFmpeg `atempo` since Chatterbox has no native pace control.
+
+Setup (shared by both providers):
 
 ```bash
 uv venv --python 3.12 ~/.local/share/demo-reel-tts/venv
@@ -226,7 +240,7 @@ VIRTUAL_ENV=~/.local/share/demo-reel-tts/venv uv pip install \
 VIRTUAL_ENV=~/.local/share/demo-reel-tts/venv uv pip install chatterbox-tts
 ```
 
-The provider looks for `~/.local/share/demo-reel-tts/venv/bin/python`, then falls back to `python3`. Override with `DEMO_REEL_CHATTERBOX_PYTHON`.
+Both providers look for `~/.local/share/demo-reel-tts/venv/bin/python`, then fall back to `python3`. Override with `DEMO_REEL_CHATTERBOX_PYTHON`. Model weights download on first use and are cached under `~/.cache/huggingface`.
 
 **OpenAI** — voice is an OpenAI TTS voice name (e.g. `alloy`, `nova`, `shimmer`). Requires `OPENAI_API_KEY` env var.
 

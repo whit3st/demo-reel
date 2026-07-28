@@ -28,7 +28,9 @@ interface Worker {
   pending: Map<string, PendingRequest>;
 }
 
-let worker: Worker | null = null;
+type ChatterboxModel = "turbo" | "multilingual";
+
+const workers = new Map<ChatterboxModel, Worker>();
 let requestCounter = 0;
 
 function resolvePython(): string {
@@ -50,10 +52,13 @@ function resolveWorkerScript(): string {
   throw new Error(`chatterbox_worker.py not found. Looked in: ${candidates.join(", ")}`);
 }
 
-function startWorker(): Worker {
+function startWorker(model: ChatterboxModel): Worker {
   const python = resolvePython();
   const script = resolveWorkerScript();
-  const proc = spawn(python, [script], { stdio: ["pipe", "pipe", "pipe"] });
+  const proc = spawn(python, [script], {
+    stdio: ["pipe", "pipe", "pipe"],
+    env: { ...process.env, CHATTERBOX_MODEL: model },
+  });
 
   const pending = new Map<string, PendingRequest>();
   let stderr = "";
@@ -69,16 +74,20 @@ function startWorker(): Worker {
       reject(error);
       for (const [, request] of pending) request.reject(error);
       pending.clear();
-      worker = null;
+      workers.delete(model);
     };
 
     proc.on("error", (error) => {
-      failAll(new Error(`Failed to start Chatterbox worker via "${python}": ${error.message}`));
+      failAll(
+        new Error(`Failed to start Chatterbox ${model} worker via "${python}": ${error.message}`),
+      );
     });
 
     proc.on("close", (code) => {
       if (code !== 0) {
-        failAll(new Error(`Chatterbox worker exited with code ${code}.\n${stderr.slice(-1500)}`));
+        failAll(
+          new Error(`Chatterbox ${model} worker exited with code ${code}.\n${stderr.slice(-1500)}`),
+        );
       }
     });
 
@@ -118,9 +127,11 @@ function startWorker(): Worker {
   return { proc, ready, pending };
 }
 
-async function ensureWorker(): Promise<Worker> {
+async function ensureWorker(model: ChatterboxModel): Promise<Worker> {
+  let worker = workers.get(model);
   if (!worker) {
-    worker = startWorker();
+    worker = startWorker(model);
+    workers.set(model, worker);
     process.once("exit", () => shutdownChatterbox());
   }
   await worker.ready;
@@ -128,20 +139,34 @@ async function ensureWorker(): Promise<Worker> {
 }
 
 export function shutdownChatterbox(): void {
-  if (!worker) return;
-  try {
-    worker.proc.stdin?.write(`${JSON.stringify({ cmd: "shutdown" })}\n`);
-    worker.proc.kill();
-  } catch {}
-  worker = null;
+  for (const [model, worker] of workers) {
+    try {
+      worker.proc.stdin?.write(`${JSON.stringify({ cmd: "shutdown" })}\n`);
+      worker.proc.kill();
+    } catch {}
+    workers.delete(model);
+  }
 }
 
-function synthesize(w: Worker, text: string, outPath: string, audioPromptPath?: string) {
+interface SynthesizeOptions {
+  text: string;
+  outPath: string;
+  audioPromptPath?: string;
+  languageId?: string;
+}
+
+function synthesize(w: Worker, options: SynthesizeOptions) {
   const id = String(++requestCounter);
   return new Promise<string>((resolve, reject) => {
     w.pending.set(id, { resolve, reject });
     w.proc.stdin?.write(
-      `${JSON.stringify({ id, text, out: outPath, audio_prompt_path: audioPromptPath ?? null })}\n`,
+      `${JSON.stringify({
+        id,
+        text: options.text,
+        out: options.outPath,
+        audio_prompt_path: options.audioPromptPath ?? null,
+        language_id: options.languageId ?? null,
+      })}\n`,
     );
   });
 }
@@ -162,22 +187,35 @@ async function encodeMp3(wavPath: string, speed: number): Promise<Buffer> {
   return mp3;
 }
 
-export const chatterboxProvider: TTSProvider = {
-  name: "chatterbox",
-  generate: async (text, options) => {
-    const w = await ensureWorker();
+function createChatterboxProvider(name: string, model: ChatterboxModel): TTSProvider {
+  return {
+    name,
+    generate: async (text, options) => {
+      const w = await ensureWorker(model);
 
-    const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
-    await mkdir(tempDir, { recursive: true });
-    const wavPath = join(tempDir, `chatterbox-${Date.now()}-${requestCounter}.wav`);
+      const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
+      await mkdir(tempDir, { recursive: true });
+      const wavPath = join(tempDir, `${name}-${Date.now()}-${requestCounter}.wav`);
 
-    const voicePath = "voicePath" in options ? options.voicePath : undefined;
-    await synthesize(w, text, wavPath, voicePath);
+      await synthesize(w, {
+        text,
+        outPath: wavPath,
+        audioPromptPath: "voicePath" in options ? options.voicePath : undefined,
+        languageId: "language" in options ? options.language : undefined,
+      });
 
-    const audio = await encodeMp3(wavPath, options.speed);
-    await unlink(wavPath).catch(() => {});
-    const durationMs = await measureAudioDuration(audio);
+      const audio = await encodeMp3(wavPath, options.speed);
+      await unlink(wavPath).catch(() => {});
+      const durationMs = await measureAudioDuration(audio);
 
-    return { audio, durationMs };
-  },
-};
+      return { audio, durationMs };
+    },
+  };
+}
+
+export const chatterboxProvider = createChatterboxProvider("chatterbox", "turbo");
+
+export const chatterboxMultilingualProvider = createChatterboxProvider(
+  "chatterbox-multilingual",
+  "multilingual",
+);

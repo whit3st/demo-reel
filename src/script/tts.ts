@@ -44,12 +44,13 @@ import { registerTTSProvider, getTTSProvider } from "../voice/index.js";
 export { registerTTSProvider, getTTSProvider };
 
 import { piperProvider } from "../voice/piper.js";
-import { chatterboxProvider } from "../voice/chatterbox.js";
+import { chatterboxProvider, chatterboxMultilingualProvider } from "../voice/chatterbox.js";
 import { openaiProvider } from "../voice/openai.js";
 import { elevenlabsProvider } from "../voice/elevenlabs.js";
 
 registerTTSProvider(piperProvider);
 registerTTSProvider(chatterboxProvider);
+registerTTSProvider(chatterboxMultilingualProvider);
 registerTTSProvider(openaiProvider);
 registerTTSProvider(elevenlabsProvider);
 
