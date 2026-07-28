@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`chatterbox`: a local voice that no longer sounds synthetic.** Piper is fast and tiny, but its prosody flattens out over anything longer than a sentence — the pitch contour resets per clause, so a three-sentence scene reads as three unrelated fragments and the narration draws attention to itself instead of the product. Resemble AI's Chatterbox Turbo (MIT) is a different class of model: it carries intonation across sentence boundaries and is preferred over ElevenLabs in the vendor's blind listening tests. It also does zero-shot voice cloning — point `voicePath` at a 7-15s reference clip and every demo you ever generate shares one brand voice, which Piper's fixed model set cannot do at all. The cost is real and worth stating plainly: ~3x slower than realtime on CPU where Piper runs 8x faster than realtime, so a 3-minute narration takes ~9 minutes rather than ~20 seconds. That is a one-time cost per line, since the existing content-hash cache means editing one sentence re-synthesises only that sentence. It needs a Python environment (documented in the README) and a multi-GB model download, and output carries an inaudible Resemble watermark. Piper stays the default for exactly those reasons — a 4GB first run is a poor first impression for someone who just installed the package — so this is opt-in per demo.
+- **`chatterbox-multilingual`: the same voice quality in 23 languages.** Turbo is English-only, which left every non-English demo on Piper. The multilingual checkpoint covers `ar da de el en es fi fr he hi it ja ko ms nl no pl pt ru sv sw tr zh` at essentially the same speed (measured 3.46x realtime versus Turbo's 3.03x), so the broader coverage costs nothing but disk. It is deliberately a **separate provider** rather than a `language` field on `chatterbox`: these are two different checkpoints with different sampling defaults, and folding them together would mean `language: "en"` and omitting it silently produce different audio from the same config. `language` is required here and validated against the supported set, so a typo fails at config time instead of surfacing as mispronounced narration. Cached audio is keyed on the language too, so switching regenerates rather than serving the previous language's clips.
+
+### Changed
+
+- **Voice cache keys now include the language, without invalidating anything.** `cacheKey()` hashes the language segment only when the config actually has one, so keys for `piper`, `chatterbox`, `openai` and `elevenlabs` remain byte-identical to those written before this release and existing cached narration is reused untouched. `test/voice-cache.test.ts` pins this against a hand-computed pre-change hash, so a future refactor that quietly changes the key format fails the suite rather than silently re-synthesising every demo in the wild.
+
 ## [0.9.5] - 2026-07-28
 
 ### Fixed
