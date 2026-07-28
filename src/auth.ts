@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile, unlink } from "fs/promises";
-import { join } from "path";
+import { statSync } from "fs";
+import { dirname, join } from "path";
 import type { Page, BrowserContext } from "playwright";
 import type { AuthStorageConfig, AuthValidateConfig, StorageType } from "./schemas.js";
 
@@ -58,6 +59,24 @@ export async function saveSession(
 }
 
 /**
+ * Directory that holds `.demo-reel-sessions`.
+ *
+ * `configPath` is a config FILE when the CLI loads one, but `generate()` passes
+ * the working directory. Taking `dirname()` unconditionally therefore walked one
+ * level ABOVE the project, writing session state — including live auth cookies —
+ * next to it rather than inside it, where it is neither gitignored nor found by
+ * anyone looking for it.
+ */
+export function resolveSessionBaseDir(configPath: string): string {
+  try {
+    if (statSync(configPath).isDirectory()) return configPath;
+  } catch {
+    // Does not exist yet: treat it as a file path and use its parent.
+  }
+  return dirname(configPath);
+}
+
+/**
  * Delete session file
  */
 export async function clearSession(
@@ -70,6 +89,35 @@ export async function clearSession(
     await unlink(filePath);
   } catch {
     // File doesn't exist, ignore
+  }
+}
+
+/**
+ * Drop the browser's own auth state.
+ *
+ * Deleting the session file is not enough. A stored session carries cookies for
+ * the identity provider as well as the app, and those expire independently —
+ * when the app's session dies first, restoring leaves a LIVE IdP cookie behind.
+ * The login steps then click through to the IdP, which completes silently via
+ * SSO instead of rendering its login form, and the run times out waiting for a
+ * field that will never appear. Clearing here makes a re-login start from a
+ * genuinely clean state.
+ */
+export async function clearBrowserSession(context: BrowserContext, page?: Page): Promise<void> {
+  await context.clearCookies();
+
+  // Best-effort: storage is origin-scoped and only reachable on a real page.
+  if (page) {
+    await page
+      .evaluate(() => {
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch {
+          // Storage can be blocked; cookies are the part that matters here.
+        }
+      })
+      .catch(() => {});
   }
 }
 

@@ -16,6 +16,8 @@ import {
   loadSession,
   saveSession,
   clearSession,
+  clearBrowserSession,
+  resolveSessionBaseDir,
   validateSession,
   captureSession,
   restoreSession,
@@ -51,7 +53,7 @@ export async function handleAuth(
   configPath: string,
   verbose?: boolean,
 ): Promise<boolean> {
-  const configDir = dirname(configPath);
+  const configDir = resolveSessionBaseDir(configPath);
   const behavior = { ...DEFAULT_BEHAVIOR, ...authConfig.behavior };
   const { storage, validate, loginSteps } = authConfig;
 
@@ -91,8 +93,13 @@ export async function handleAuth(
 
     if (behavior.clearInvalid) {
       await clearSession(storage.name, configDir);
+      // Clear the BROWSER as well, not just the file. The restored session
+      // carries IdP cookies alongside the app's, and they expire separately —
+      // leaving a live IdP cookie makes the login steps below complete silently
+      // via SSO, so whichever field they wait for never renders.
+      await clearBrowserSession(context, page);
       if (verbose) {
-        console.log("→ Cleared invalid session");
+        console.log("→ Cleared invalid session (file + browser state)");
       }
     }
   }

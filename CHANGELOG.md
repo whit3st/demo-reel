@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.5] - 2026-07-28
+
+### Fixed
+
+- **Invalidating a session now clears the browser, not just the file.** A stored session carries cookies for the identity provider as well as the app, and the two expire independently. When the app's session died first, `clearSession` unlinked the file but left a live IdP cookie in the browser — so the login steps clicked through to the IdP, which completed silently via SSO instead of rendering its form, and the run timed out waiting for a login field that would never appear. Intermittent by nature, since it depends which session expires first. `clearBrowserSession` now drops the context's cookies (and best-effort page storage) whenever an invalid session is cleared, so a re-login starts clean.
+- **Session state is written inside the project again.** `handleAuth` took `dirname()` of its config path unconditionally, but `generate()` passes the working _directory_ rather than a config file — so `.demo-reel-sessions` was created one level ABOVE the project, next to it rather than in it, where it is not gitignored and contains live auth cookies. `resolveSessionBaseDir` now uses the path itself when it is a directory and its parent when it is a file, so both the CLI and `generate()` land in the right place.
+
 ## [0.9.4] - 2026-07-27
 
 ### Fixed

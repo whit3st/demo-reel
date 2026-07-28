@@ -13,6 +13,8 @@ const {
   loadSessionMock,
   saveSessionMock,
   clearSessionMock,
+  clearBrowserSessionMock,
+  resolveSessionBaseDirMock,
   validateSessionMock,
   captureSessionMock,
   restoreSessionMock,
@@ -35,6 +37,10 @@ const {
   loadSessionMock: vi.fn(),
   saveSessionMock: vi.fn(),
   clearSessionMock: vi.fn(),
+  clearBrowserSessionMock: vi.fn(),
+  // Mirrors the real resolver for these fixtures: the paths here do not exist
+  // on disk, and for a non-existent path it falls back to the parent.
+  resolveSessionBaseDirMock: vi.fn((p: string) => p.replace(/\/[^/]*$/, "")),
   validateSessionMock: vi.fn(),
   captureSessionMock: vi.fn(),
   restoreSessionMock: vi.fn(),
@@ -75,6 +81,8 @@ vi.mock("../src/auth.js", () => ({
   loadSession: loadSessionMock,
   saveSession: saveSessionMock,
   clearSession: clearSessionMock,
+  clearBrowserSession: clearBrowserSessionMock,
+  resolveSessionBaseDir: resolveSessionBaseDirMock,
   validateSession: validateSessionMock,
   captureSession: captureSessionMock,
   restoreSession: restoreSessionMock,
