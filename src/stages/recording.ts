@@ -1,10 +1,9 @@
-import { dirname } from "path";
 import type { Stage } from "../pipeline/types.js";
 import type { PipelineContext } from "../pipeline/context.js";
 import type { SceneTimestamp } from "../runner/types.js";
 import { handleAuth } from "../video-handler.js";
 import { runDemo } from "../runner/index.js";
-import { captureSession, saveSession } from "../auth.js";
+import { captureSession, resolveSessionBaseDir, saveSession } from "../auth.js";
 
 export class RecordingStage implements Stage {
   readonly name = "Recording";
@@ -42,7 +41,7 @@ export class RecordingStage implements Stage {
 
       const saveSessionFn = ctx.config.auth
         ? async () => {
-            const configDir = dirname(ctx.configPath);
+            const configDir = resolveSessionBaseDir(ctx.configPath);
             const sessionData = await captureSession(session.context, ctx.config.auth!.storage);
             await saveSession(sessionData, configDir);
             if (ctx.verbose) console.log("  Saved session state");

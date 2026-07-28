@@ -651,7 +651,7 @@ export async function runVideoScenario(
     // Prepare session save function if auth is configured
     const saveSessionFn = config.auth
       ? async () => {
-          const configDir = dirname(configPath);
+          const configDir = resolveSessionBaseDir(configPath);
           const sessionData = await captureSession(recording.context, config.auth!.storage);
           await saveSession(sessionData, configDir);
           if (verbose) {

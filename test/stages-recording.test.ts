@@ -9,8 +9,13 @@ const { handleAuth, runDemo, captureSession, saveSession } = vi.hoisted(() => ({
 
 vi.mock("../src/video-handler.js", () => ({ handleAuth }));
 vi.mock("../src/runner/index.js", () => ({ runDemo }));
-vi.mock("../src/auth.js", () => ({ captureSession, saveSession }));
+vi.mock("../src/auth.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../src/auth.js")>()),
+  captureSession,
+  saveSession,
+}));
 
+import { tmpdir } from "os";
 import { RecordingStage } from "../src/stages/recording.js";
 
 function makeCtx(dryRun: boolean) {
@@ -59,5 +64,29 @@ describe("RecordingStage", () => {
     // release(session, saveSessionFn) — the second arg is the save callback.
     expect(typeof release.mock.calls[0][1]).toBe("function");
     expect(ctx.tempVideoPath).toBe("/tmp/video.webm");
+  });
+
+  // generate() passes the working directory as configPath; the session must be
+  // saved inside it, not one level above (where it is neither gitignored nor
+  // found by handleAuth on the next run).
+  it("saves the session inside configPath when configPath is a directory", async () => {
+    const { ctx, release } = makeCtx(false);
+    ctx.configPath = tmpdir();
+    captureSession.mockResolvedValue({ cookies: [] });
+
+    await new RecordingStage().run(ctx);
+    await release.mock.calls[0][1]();
+
+    expect(saveSession).toHaveBeenCalledWith({ cookies: [] }, tmpdir());
+  });
+
+  it("saves the session next to configPath when configPath is a file", async () => {
+    const { ctx, release } = makeCtx(false);
+    captureSession.mockResolvedValue({ cookies: [] });
+
+    await new RecordingStage().run(ctx);
+    await release.mock.calls[0][1]();
+
+    expect(saveSession).toHaveBeenCalledWith({ cookies: [] }, "/proj");
   });
 });

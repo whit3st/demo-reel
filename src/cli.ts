@@ -171,6 +171,7 @@ async function runScenario(
       verbose: options.verbose,
       noCache: options.noCache,
       silent: options.silent,
+      headed: options.headed,
     });
     return;
   }
