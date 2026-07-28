@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-07-28
+
 ### Fixed
 
 - **`generate()` no longer hangs forever when Chatterbox is the voice provider.** The persistent worker is a child process holding three stdio pipes, and open handles keep Node's event loop alive — so its only cleanup, registered through `process.once("exit")`, could never run: the exit event it waited for was the one its own handles were preventing. The CLI hid this behind an explicit `process.exit()`, so the bug was invisible to anyone driving demo-reel from the terminal and total for anyone calling `generate()` from their own script, where the promise resolved, the video finished, and the process simply never returned. The worker is now reaped in `generate()`'s `finally` block next to the browser pool release, which runs on the success and failure paths alike.
