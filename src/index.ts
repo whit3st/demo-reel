@@ -17,6 +17,7 @@ import { AudioMixStage } from "./stages/audio-mix.js";
 import { OutputStage } from "./stages/output.js";
 import { PostStepsStage } from "./stages/post-steps.js";
 import { BrowserPool } from "./browser/pool.js";
+import { shutdownChatterbox } from "./voice/chatterbox.js";
 
 export type DemoConfig = DemoReelConfigInput;
 
@@ -134,6 +135,7 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
     await runPipeline(stages, ctx);
   } finally {
     await ctx.browserPool.releaseAll();
+    shutdownChatterbox();
   }
 
   for (const warning of ctx.warnings) {
