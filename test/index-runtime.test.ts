@@ -44,6 +44,10 @@ vi.mock("../src/video-handler.js", () => ({
   setOnBrowserCreated: vi.fn(),
 }));
 
+vi.mock("../src/voice/chatterbox.js", () => ({
+  shutdownChatterbox: vi.fn(),
+}));
+
 vi.mock("../src/browser/pool.js", () => ({
   BrowserPool: vi.fn().mockImplementation(function (this: any) {
     this.acquire = vi.fn().mockResolvedValue({
@@ -74,6 +78,7 @@ import { existsSync, mkdirSync, readFileSync } from "fs";
 import { loadConfig } from "../src/config-loader.js";
 import { runVideoScenario, processVideoWithAudio } from "../src/video-handler.js";
 import { generateVoiceSegments, generateNarrationAudio } from "../src/script/tts.js";
+import { shutdownChatterbox } from "../src/voice/chatterbox.js";
 
 function createConfig(overrides: Record<string, unknown> = {}) {
   return {
@@ -129,6 +134,34 @@ describe("index runtime", () => {
       [],
       "auto",
     );
+  });
+
+  // The persistent Chatterbox worker holds the event loop open, and its
+  // process.once("exit") hook can never fire while it does — generate() must
+  // reap it explicitly or programmatic callers hang after the video completes.
+  it("shuts down the Chatterbox worker when the pipeline completes", async () => {
+    const { generate } = await import("../src/index.js");
+
+    await generate(createConfig());
+
+    expect(shutdownChatterbox).toHaveBeenCalledTimes(1);
+  });
+
+  it("shuts down the Chatterbox worker when the pipeline throws", async () => {
+    vi.mocked(generateVoiceSegments).mockRejectedValue(new Error("TTS engine failure"));
+
+    const { generate } = await import("../src/index.js");
+
+    await expect(
+      generate(
+        createConfig({
+          scenes: [{ narration: "Hello world", stepIndex: 0 }],
+          voice: { provider: "piper", voice: "en_US-amy-medium", speed: 1 },
+        }),
+      ),
+    ).rejects.toThrow("TTS engine failure");
+
+    expect(shutdownChatterbox).toHaveBeenCalledTimes(1);
   });
 
   it("generates narration audio via local TTS", async () => {
