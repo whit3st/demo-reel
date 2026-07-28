@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-07-28
+
 ### Added
 
 - **`chatterbox`: a local voice that no longer sounds synthetic.** Piper is fast and tiny, but its prosody flattens out over anything longer than a sentence — the pitch contour resets per clause, so a three-sentence scene reads as three unrelated fragments and the narration draws attention to itself instead of the product. Resemble AI's Chatterbox Turbo (MIT) is a different class of model: it carries intonation across sentence boundaries and is preferred over ElevenLabs in the vendor's blind listening tests. It also does zero-shot voice cloning — point `voicePath` at a 7-15s reference clip and every demo you ever generate shares one brand voice, which Piper's fixed model set cannot do at all. The cost is real and worth stating plainly: ~3x slower than realtime on CPU where Piper runs 8x faster than realtime, so a 3-minute narration takes ~9 minutes rather than ~20 seconds. That is a one-time cost per line, since the existing content-hash cache means editing one sentence re-synthesises only that sentence. It needs a Python environment (documented in the README) and a multi-GB model download, and output carries an inaudible Resemble watermark. Piper stays the default for exactly those reasons — a 4GB first run is a poor first impression for someone who just installed the package — so this is opt-in per demo.
