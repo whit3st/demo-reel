@@ -27,3 +27,6 @@ PLAN.md
 # Python bytecode from the Chatterbox worker
 __pycache__/
 *.pyc
+
+# mise local overrides (personal tool versions)
+mise.local.toml
