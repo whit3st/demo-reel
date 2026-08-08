@@ -1,11 +1,34 @@
 {
-  "advisories": {},
+  "advisories": {
+    "1130734": {
+      "findings": [
+        {
+          "version": "5.0.8",
+          "paths": [
+            ".>glob>minimatch>brace-expansion"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1130734,
+      "title": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+      "module_name": "brace-expansion",
+      "vulnerable_versions": ">=4.0.0 <5.0.9",
+      "patched_versions": ">=5.0.9",
+      "severity": "high",
+      "cwe": "CWE-400, CWE-770",
+      "github_advisory_id": "GHSA-rgw5-rvv9-x895",
+      "url": "https://github.com/advisories/GHSA-rgw5-rvv9-x895"
+    }
+  },
   "metadata": {
     "vulnerabilities": {
       "info": 0,
       "low": 0,
       "moderate": 0,
-      "high": 0,
+      "high": 1,
       "critical": 0
     },
     "dependencies": 41,
