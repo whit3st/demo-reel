@@ -1,5 +1,8 @@
 allowBuilds:
   esbuild: true
   ffmpeg-static: true
+minimumReleaseAgeExclude:
+  - nanoid@3.3.18
 overrides:
   vite: 8.0.16
+  nanoid: ^3.3.18
