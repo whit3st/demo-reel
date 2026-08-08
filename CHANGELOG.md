@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-08-08
+
 ### Security
 
 - **Two high-severity advisories in transitive dependencies are closed.** `brace-expansion` ([GHSA-rgw5-rvv9-x895](https://github.com/advisories/GHSA-rgw5-rvv9-x895), denial of service via unbounded intermediate arrays) reached the published package through `glob` → `minimatch` and moves to 5.0.9. `nanoid` ([GHSA-2v37-7h3g-55p8](https://github.com/advisories/GHSA-2v37-7h3g-55p8), infinite loop when size is zero) was development-only, through `vitest` → `vite` → `postcss`, and moves to 3.3.18. The second needed an entry in `pnpm-workspace.yaml` `overrides` rather than a plain update: `postcss` already allowed the fixed version, but pnpm will not bump a dependency that appears in no manifest, so the lockfile would have kept resolving the vulnerable one indefinitely. That pin can be dropped once `postcss` raises its own floor.
