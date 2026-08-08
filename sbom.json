@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
-  "serialNumber": "urn:uuid:4cf5050c-24a7-4b9b-89ba-054c67fd05f1",
+  "serialNumber": "urn:uuid:711e2b83-063d-4036-93ef-354bad073016",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-08-08T10:22:52.071Z",
+    "timestamp": "2026-08-08T11:13:48.169Z",
     "lifecycles": [
       {
         "phase": "build"
@@ -633,17 +633,17 @@
     {
       "type": "library",
       "name": "brace-expansion",
-      "version": "5.0.8",
-      "purl": "pkg:npm/brace-expansion@5.0.8",
-      "bom-ref": "pkg:npm/brace-expansion@5.0.8",
+      "version": "5.0.9",
+      "purl": "pkg:npm/brace-expansion@5.0.9",
+      "bom-ref": "pkg:npm/brace-expansion@5.0.9",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.8.tgz",
+          "url": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.9.tgz",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "259c83caadc3e005227ca4cf381ec310b7fa5ec07759d3ee3710ada1bd6f1573ec49785d0221c1589fed27c1c073d687f3804afb924564b36424ac771bd93342"
+              "content": "49c43822ebc8105d533253fb66dfaf8c9ffff7394f6f64837315b13376e4f2ceade8619d27b28ed5d09c4e274e3c929e3d6df42c4ff6713ef00b23e1a3dfd6c6"
             }
           ]
         }
@@ -1305,6 +1305,25 @@
     },
     {
       "type": "library",
+      "name": "supports-color",
+      "version": "7.2.0",
+      "purl": "pkg:npm/supports-color@7.2.0",
+      "bom-ref": "pkg:npm/supports-color@7.2.0",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/supports-color/-/supports-color-7.2.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "aa9080bd197db2db8e1ef78ab27ec79dc251befe74d6a21a70acd094effe2f0c5cf7ed2adb02f2bf80dfbedf34fc33e7da9a8e06c25d0e2a205c647df8ebf047"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "balanced-match",
       "version": "4.0.4",
       "purl": "pkg:npm/balanced-match@4.0.4",
@@ -1355,6 +1374,25 @@
             {
               "alg": "SHA-512",
               "content": "10f0f9ab5b97c85c49a42acb9c27359c79eade039ae83641a1c008888d93692080ed5089d5424331a802cc891736c5187c3d5d68afff2d3110f318886eb1ed73"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "has-flag",
+      "version": "4.0.0",
+      "purl": "pkg:npm/has-flag@4.0.0",
+      "bom-ref": "pkg:npm/has-flag@4.0.0",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/has-flag/-/has-flag-4.0.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "1329094ff4352a34d672da698080207d23b4b4a56e6548e180caf5ee4a93ba6325e807efdc421295e53ba99533a170c54c01d30c2e0d3a81bf67153712f94c3d"
             }
           ]
         }
@@ -1485,7 +1523,7 @@
     {
       "ref": "pkg:npm/minimatch@10.2.5",
       "dependsOn": [
-        "pkg:npm/brace-expansion@5.0.8"
+        "pkg:npm/brace-expansion@5.0.9"
       ]
     },
     {
@@ -1587,11 +1625,12 @@
     {
       "ref": "pkg:npm/debug@4.4.3",
       "dependsOn": [
-        "pkg:npm/ms@2.1.3"
+        "pkg:npm/ms@2.1.3",
+        "pkg:npm/supports-color@7.2.0"
       ]
     },
     {
-      "ref": "pkg:npm/brace-expansion@5.0.8",
+      "ref": "pkg:npm/brace-expansion@5.0.9",
       "dependsOn": [
         "pkg:npm/balanced-match@4.0.4"
       ]
@@ -1732,6 +1771,12 @@
       "dependsOn": []
     },
     {
+      "ref": "pkg:npm/supports-color@7.2.0",
+      "dependsOn": [
+        "pkg:npm/has-flag@4.0.0"
+      ]
+    },
+    {
       "ref": "pkg:npm/balanced-match@4.0.4",
       "dependsOn": []
     },
@@ -1743,6 +1788,10 @@
     },
     {
       "ref": "pkg:npm/util-deprecate@1.0.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/has-flag@4.0.0",
       "dependsOn": []
     },
     {
