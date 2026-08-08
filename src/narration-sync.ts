@@ -158,16 +158,19 @@ function padLastStep(steps: Step[], padMs: number): Step[] {
   const lastIdx = result.length - 1;
   const last = result[lastIdx];
 
-  // For "wait" steps, just increase the ms directly
+  // For "wait" steps, just increase the ms directly. Replace rather than
+  // mutate: `result` is a shallow copy, so the step objects are still the
+  // caller's and padding in place would rewrite their config.
   if (last.action === "wait") {
-    (result[lastIdx] as Extract<Step, { action: "wait" }>).ms += padMs;
+    const waitStep = last as Extract<Step, { action: "wait" }>;
+    result[lastIdx] = { ...waitStep, ms: waitStep.ms + padMs };
     return result;
   }
 
   // For steps that support delayAfterMs, add to it
   if ("delayAfterMs" in last) {
     const current = (last as { delayAfterMs?: number }).delayAfterMs || 0;
-    (result[lastIdx] as { delayAfterMs: number }).delayAfterMs = current + padMs;
+    result[lastIdx] = { ...last, delayAfterMs: current + padMs } as Step;
     return result;
   }
 

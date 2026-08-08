@@ -16,19 +16,29 @@ const PIPER_CACHE_DIR = join(
 const PIPER_RELEASE_BASE = `https://github.com/rhasspy/piper/releases/download/${PIPER_VERSION}`;
 const PIPER_VOICES_BASE = "https://huggingface.co/rhasspy/piper-voices/resolve/main";
 
-function getPiperReleaseName(): string {
+/**
+ * Map the current platform to a release asset published by rhasspy/piper.
+ *
+ * The names are not derivable from process.platform: the release calls macOS
+ * "macos", and ships only an amd64 build for Windows (which runs fine on ARM
+ * under emulation). Exported so every platform can be covered by tests rather
+ * than only the one the developer happens to be on.
+ */
+export function getPiperReleaseName(): string {
+  if (process.platform === "win32") {
+    return "piper_windows_amd64.zip";
+  }
+
+  const os = process.platform === "darwin" ? "macos" : process.platform;
+
   const cpu = (() => {
     if (process.arch === "arm64") return "aarch64";
     if (process.arch === "arm") return "armv7l";
     if (process.platform === "darwin") return "x64";
-    if (process.platform === "win32") return "amd64";
     return "x86_64";
   })();
 
-  if (process.platform === "win32") {
-    return `piper_windows_${cpu}.zip`;
-  }
-  return `piper_${process.platform}_${cpu}.tar.gz`;
+  return `piper_${os}_${cpu}.tar.gz`;
 }
 
 function getPiperBinaryPath(): string {

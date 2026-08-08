@@ -259,51 +259,54 @@ export const runStep = async (
 
     await humanMoveToLocator(page, source, state, config.motion, cursorStart, rng);
     await page.waitForTimeout(config.motion.clickDelayMs);
-    await page.mouse.down();
 
+    // Resolve both handles before touching the mouse. Skipping the drag events
+    // when a handle is null used to leave mouse.down() pressed with nothing
+    // dragged, so the demo carried on "successfully" — and diverged from
+    // runStepSimple, which throws for the same condition.
     const sourceElement = await source.elementHandle();
     const targetElement = await target.elementHandle();
-    if (sourceElement) {
-      await page.evaluate((src) => {
-        src.dispatchEvent(
-          new DragEvent("dragstart", {
-            dataTransfer: new DataTransfer(),
-            bubbles: true,
-            cancelable: true,
-          }),
-        );
-      }, sourceElement);
+    if (!sourceElement || !targetElement) {
+      throw new Error("Drag source or target element not found");
     }
+
+    await page.mouse.down();
+
+    await page.evaluate((src) => {
+      src.dispatchEvent(
+        new DragEvent("dragstart", {
+          dataTransfer: new DataTransfer(),
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    }, sourceElement);
 
     const targetPoint = await getLocatorCenter(target);
     await moveMouseBezier(page, state, targetPoint.x, targetPoint.y, config.motion, rng);
     await page.waitForTimeout(config.motion.clickDelayMs);
 
-    if (targetElement) {
-      await page.evaluate((tgt) => {
-        tgt.dispatchEvent(
-          new DragEvent("drop", {
-            dataTransfer: new DataTransfer(),
-            bubbles: true,
-            cancelable: true,
-          }),
-        );
-      }, targetElement);
-    }
+    await page.evaluate((tgt) => {
+      tgt.dispatchEvent(
+        new DragEvent("drop", {
+          dataTransfer: new DataTransfer(),
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    }, targetElement);
 
     await page.mouse.up();
 
-    if (sourceElement) {
-      await page.evaluate((src) => {
-        src.dispatchEvent(
-          new DragEvent("dragend", {
-            dataTransfer: new DataTransfer(),
-            bubbles: true,
-            cancelable: true,
-          }),
-        );
-      }, sourceElement);
-    }
+    await page.evaluate((src) => {
+      src.dispatchEvent(
+        new DragEvent("dragend", {
+          dataTransfer: new DataTransfer(),
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    }, sourceElement);
 
     await applyStepDelay(page, step.delayAfterMs);
     return delayApplied;

@@ -22,9 +22,13 @@ export class BrowserPool {
     session: BrowserSession,
     saveSessionFn?: () => Promise<void>,
   ): Promise<string | null> {
+    // Only stop tracking the session once it has actually closed. Dropping it
+    // first meant a closeSession failure (launcher throws "No video was
+    // recorded") left the browser running and invisible to releaseAll.
+    const videoPath = await closeSession(session, saveSessionFn);
     const idx = this.sessions.indexOf(session);
     if (idx >= 0) this.sessions.splice(idx, 1);
-    return closeSession(session, saveSessionFn);
+    return videoPath;
   }
 
   async releaseAll(): Promise<void> {

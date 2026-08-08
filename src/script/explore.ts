@@ -92,13 +92,47 @@ export async function extractPage(page: Page): Promise<PageInfo> {
   const path = new URL(url).pathname;
   const title = await page.title();
 
-  const headings = await page.evaluate(() =>
-    filterHeadings(Array.from(document.querySelectorAll("h1,h2,h3,h4")) as unknown as RawHeading[]),
+  // page.evaluate serialises the callback and runs it in the browser realm,
+  // where nothing from this module exists. Only plain, serialisable DOM data
+  // may cross the boundary; filterHeadings/processElements run here in Node.
+  const rawHeadings = await page.evaluate(() =>
+    Array.from(document.querySelectorAll("h1,h2,h3,h4")).map((el) => ({
+      innerText: (el as HTMLElement).innerText,
+    })),
   );
 
-  const elements = await page.evaluate(
-    (sel) => processElements(Array.from(document.querySelectorAll(sel)) as unknown as RawElement[]),
-    INTERACTIVE_SELECTOR,
+  const rawElements = await page.evaluate((sel) => {
+    const ATTRS = [
+      "type",
+      "id",
+      "data-testid",
+      "name",
+      "placeholder",
+      "class",
+      "href",
+      "aria-label",
+    ];
+    return Array.from(document.querySelectorAll(sel)).map((el) => {
+      const rect = el.getBoundingClientRect();
+      const attributes: Record<string, string | null> = {};
+      for (const attr of ATTRS) attributes[attr] = el.getAttribute(attr);
+      return {
+        tagName: el.tagName,
+        attributes,
+        innerText: (el as HTMLElement).innerText ?? "",
+        rect: { width: rect.width, height: rect.height },
+      };
+    });
+  }, INTERACTIVE_SELECTOR);
+
+  const headings = filterHeadings(rawHeadings);
+  const elements = processElements(
+    rawElements.map((raw) => ({
+      tagName: raw.tagName,
+      innerText: raw.innerText,
+      getAttribute: (name: string) => raw.attributes[name] ?? null,
+      getBoundingClientRect: () => raw.rect,
+    })),
   );
 
   return { url, path, title, headings, elements };
