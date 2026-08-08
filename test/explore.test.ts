@@ -447,88 +447,110 @@ describe("formatPage", () => {
   });
 });
 
+/**
+ * These used to stub page.evaluate by stringifying the callback and calling the
+ * Node implementations, which hid a real bug: the callbacks referenced
+ * filterHeadings/processElements, module-scope functions that do not exist in
+ * the browser realm, so every real run threw a ReferenceError.
+ *
+ * page.evaluate now returns plain serialisable DOM data and the filtering
+ * happens in Node, so these stubs return raw data and assert the wiring.
+ * The end-to-end behaviour is covered against real Chromium in
+ * test/explore-extract.browser.test.ts.
+ */
 describe("extractPage", () => {
-  it("extracts url path, title, headings and elements from page", async () => {
-    const evaluateImpl = vi.fn().mockImplementation((fn: () => unknown) => {
-      if (fn.toString().includes("filterHeadings")) {
-        const rawHeadings = [{ innerText: "Dashboard" }, { innerText: "Welcome User" }];
-        return Promise.resolve(filterHeadings(rawHeadings));
-      }
-      const rawElements = [
-        {
-          tagName: "BUTTON",
-          getAttribute: () => "primary",
-          innerText: "Click me",
-          getBoundingClientRect: () => ({ width: 100, height: 40 }),
-        },
-      ];
-      return Promise.resolve(processElements(rawElements));
-    });
-    const mockPage = {
-      url: vi.fn(() => "https://example.com/dashboard"),
-      title: vi.fn(() => "Dashboard"),
-      evaluate: evaluateImpl,
-    } as unknown as Page;
+  const rawHeading = (innerText: string) => ({ innerText });
 
-    const result = await extractPage(mockPage);
+  // `attributes` is merged after the spread, so an override can set individual
+  // attributes without dropping the defaults.
+  const rawElement = (overrides: Record<string, unknown> = {}) => ({
+    tagName: "BUTTON",
+    innerText: "Click me",
+    rect: { width: 100, height: 40 },
+    ...overrides,
+    attributes: { class: "primary", ...(overrides.attributes as object) },
+  });
+
+  const mockPageReturning = (headings: unknown[], elements: unknown[]) => {
+    const evaluate = vi
+      .fn()
+      .mockResolvedValueOnce(headings)
+      .mockResolvedValueOnce(elements) as unknown;
+    return {
+      page: {
+        url: vi.fn(() => "https://example.com/dashboard"),
+        title: vi.fn(() => "Dashboard"),
+        evaluate,
+      } as unknown as Page,
+      evaluate: evaluate as ReturnType<typeof vi.fn>,
+    };
+  };
+
+  it("extracts url path, title, headings and elements from page", async () => {
+    const { page } = mockPageReturning(
+      [rawHeading("Dashboard"), rawHeading("Welcome User")],
+      [rawElement()],
+    );
+
+    const result = await extractPage(page);
 
     expect(result.url).toBe("https://example.com/dashboard");
     expect(result.path).toBe("/dashboard");
     expect(result.title).toBe("Dashboard");
     expect(result.headings).toContain("Dashboard");
     expect(result.elements).toHaveLength(1);
+    expect(result.elements[0]).toMatchObject({ tag: "button", text: "Click me" });
   });
 
-  it("uses filterHeadings on evaluate results (filters Session/Logged Out)", async () => {
-    const evaluateImpl = vi.fn().mockImplementation((fn: () => unknown) => {
-      if (fn.toString().includes("filterHeadings")) {
-        const rawHeadings = [
-          { innerText: "Valid" },
-          { innerText: "Session Ended" },
-          { innerText: "Logged Out Page" },
-          { innerText: "Also Valid" },
-        ];
-        return Promise.resolve(filterHeadings(rawHeadings));
-      }
-      return Promise.resolve([]);
-    });
-    const mockPage = {
-      url: vi.fn(() => "https://example.com/page"),
-      title: vi.fn(() => "Page"),
-      evaluate: evaluateImpl,
-    } as unknown as Page;
+  it("applies filterHeadings in Node to the raw headings from the page", async () => {
+    const { page } = mockPageReturning(
+      [
+        rawHeading("Valid"),
+        rawHeading("Session Ended"),
+        rawHeading("Logged Out Page"),
+        rawHeading("Also Valid"),
+      ],
+      [],
+    );
 
-    const result = await extractPage(mockPage);
+    const result = await extractPage(page);
 
-    expect(result.headings).not.toContain("Session Ended");
-    expect(result.headings).not.toContain("Logged Out Page");
-    expect(result.headings).toContain("Valid");
+    expect(result.headings).toEqual(["Valid", "Also Valid"]);
   });
 
-  it("passes INTERACTIVE_SELECTOR to processElements", async () => {
-    const evaluateImpl = vi.fn().mockImplementation((fn: () => unknown) => {
-      if (fn.toString().includes("filterHeadings")) {
-        return Promise.resolve(filterHeadings([{ innerText: "Heading" }]));
-      }
-      return Promise.resolve(
-        processElements([
-          {
-            tagName: "DIV",
-            getAttribute: () => null,
-            innerText: "",
-            getBoundingClientRect: () => ({ width: 10, height: 10 }),
-          },
-        ]),
-      );
-    });
-    const mockPage = {
-      url: vi.fn(() => "https://example.com/"),
-      title: vi.fn(() => "Home"),
-      evaluate: evaluateImpl,
-    } as unknown as Page;
+  it("applies processElements in Node, dropping zero-size elements", async () => {
+    const { page } = mockPageReturning(
+      [],
+      [rawElement(), rawElement({ rect: { width: 0, height: 0 }, innerText: "Invisible" })],
+    );
 
-    await extractPage(mockPage);
+    const result = await extractPage(page);
 
-    expect(evaluateImpl).toHaveBeenCalledTimes(2);
+    expect(result.elements).toHaveLength(1);
+    expect(result.elements[0].text).toBe("Click me");
+  });
+
+  it("evaluates once for headings and once for interactive elements", async () => {
+    const { page, evaluate } = mockPageReturning([], []);
+
+    await extractPage(page);
+
+    expect(evaluate).toHaveBeenCalledTimes(2);
+    // The element query is parameterised by the interactive selector.
+    expect(evaluate.mock.calls[1][1]).toContain("button");
+  });
+
+  // The callbacks are serialised and run in the browser, so they must not close
+  // over anything from this module — that is precisely what broke before.
+  it("passes browser callbacks that reference no Node-scope helpers", async () => {
+    const { page, evaluate } = mockPageReturning([], []);
+
+    await extractPage(page);
+
+    for (const call of evaluate.mock.calls) {
+      const source = String(call[0]);
+      expect(source).not.toContain("filterHeadings");
+      expect(source).not.toContain("processElements");
+    }
   });
 });
