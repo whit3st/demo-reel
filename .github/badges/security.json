@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "label": "vulnerabilities",
-  "message": "1 high",
-  "color": "orange"
+  "message": "none",
+  "color": "brightgreen"
 }
