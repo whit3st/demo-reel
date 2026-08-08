@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Two high-severity advisories in transitive dependencies are closed.** `brace-expansion` ([GHSA-rgw5-rvv9-x895](https://github.com/advisories/GHSA-rgw5-rvv9-x895), denial of service via unbounded intermediate arrays) reached the published package through `glob` → `minimatch` and moves to 5.0.9. `nanoid` ([GHSA-2v37-7h3g-55p8](https://github.com/advisories/GHSA-2v37-7h3g-55p8), infinite loop when size is zero) was development-only, through `vitest` → `vite` → `postcss`, and moves to 3.3.18. The second needed an entry in `pnpm-workspace.yaml` `overrides` rather than a plain update: `postcss` already allowed the fixed version, but pnpm will not bump a dependency that appears in no manifest, so the lockfile would have kept resolving the vulnerable one indefinitely. That pin can be dropped once `postcss` raises its own floor.
+
+### Changed
+
+- **Dependencies updated to latest, including TypeScript 6 → 7.** Both build paths were checked rather than just the default one, since `make verify` only exercises `tsgo` and a compiler major is precisely where the documented `tsc` fallback would rot unnoticed; both compile clean on 7.0.2. `vite` remains pinned at 8.0.16 through the existing override.
+
 ## [0.10.1] - 2026-07-28
 
 ### Fixed
