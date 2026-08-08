@@ -48,26 +48,26 @@ User Input (presets allowed) → demoReelConfigInputSchema → demoReelConfigSch
 
 ### Exported Types and Schemas
 
-| Export                      | Kind                | Purpose                                             |
+| Export | Kind | Purpose |
 | --------------------------- | ------------------- | --------------------------------------------------- | -------- | ------- | ------ | -------------- | --------- |
-| `demoReelConfigInputSchema` | Zod schema          | Validates user input (presets allowed)              |
-| `demoReelConfigSchema`      | Zod schema          | Validates resolved config (no presets)              |
-| `DemoReelConfig`            | Type                | Fully-validated, normalized config                  |
-| `DemoReelConfigInput`       | Type                | User-provided config with presets                   |
-| `CursorConfig`              | Type                | Resolved cursor: type, size, colors, start position |
-| `CursorPresetOrConfig`      | Type                | Preset string or full config                        |
-| `MotionConfig`              | Type                | Resolved motion: duration, steps, curve params      |
-| `TypingConfig`              | Type                | Resolved typing: delays per character type          |
-| `TimingConfig`              | Type                | Resolved timing: goto delay, end delay, sync mode   |
-| `VideoConfig`               | Type                | Resolution + format                                 |
-| `AudioConfig`               | Type                | Narration/background paths + volumes                |
-| `AuthConfig`                | Type                | Storage, validation, login steps, behavior          |
-| `SelectorConfig`            | Type                | Strategy + value + optional index                   |
-| `SelectorStrategy`          | Type                | `"testId"                                           | "id"     | "class" | "href" | "data-node-id" | "custom"` |
-| `Step`                      | Discriminated union | All 17 step action types                            |
-| `NarrationSyncMode`         | Type                | `"auto"                                             | "strict" | "off"`  |
-| `ResolutionPreset`          | Type                | `"HD"                                               | "FHD"    | "2K"    | "4K"`  |
-| `RandomizationConfig`       | Type                | Seed for deterministic randomness                   |
+| `demoReelConfigInputSchema` | Zod schema | Validates user input (presets allowed) |
+| `demoReelConfigSchema` | Zod schema | Validates resolved config (no presets) |
+| `DemoReelConfig` | Type | Fully-validated, normalized config |
+| `DemoReelConfigInput` | Type | User-provided config with presets |
+| `CursorConfig` | Type | Resolved cursor: type, size, colors, start position |
+| `CursorPresetOrConfig` | Type | Preset string or full config |
+| `MotionConfig` | Type | Resolved motion: duration, steps, curve params |
+| `TypingConfig` | Type | Resolved typing: delays per character type |
+| `TimingConfig` | Type | Resolved timing: goto delay, end delay, sync mode |
+| `VideoConfig` | Type | Resolution + format |
+| `AudioConfig` | Type | Narration/background paths + volumes |
+| `AuthConfig` | Type | Storage, validation, login steps, behavior |
+| `SelectorConfig` | Type | Strategy + value + optional index |
+| `SelectorStrategy` | Type | `"testId"                                           | "id"     | "class" | "href" | "data-node-id" | "custom"` |
+| `Step` | Discriminated union | All 17 step action types |
+| `NarrationSyncMode` | Type | `"auto"                                             | "strict" | "off"` |
+| `ResolutionPreset` | Type | `"HD"                                               | "FHD"    | "2K"    | "4K"` |
+| `RandomizationConfig` | Type | Seed for deterministic randomness |
 
 ### Preset Resolution
 

@@ -133,9 +133,7 @@ export class TTSStage implements Stage {
     }
 
     const narratedScenes = getNarratedScenesInPlaybackOrder(ctx.config);
-    const script = {
-      /* ... build script object */
-    };
+    const script = {/* ... build script object */};
     const segments = await generateVoiceSegments(script, resolvedVoice, { verbose: ctx.verbose });
     await generateNarrationAudio(segments, audioPath, { verbose: ctx.verbose });
 
@@ -304,9 +302,7 @@ export class AudioMixStage implements Stage {
     const finalPath = await mergeAudioVideo({
       videoPath: ctx.tempVideoPath,
       outputPath: ctx.outputPath,
-      audio: {
-        /* ... */
-      },
+      audio: {/* ... */},
     });
 
     ctx.finalVideoPath = finalPath;
