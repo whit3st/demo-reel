@@ -1,0 +1,61 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "timezone": "UTC",
+  "schedule": ["before 06:00 on monday"],
+  "semanticCommits": "enabled",
+  "rangeStrategy": "bump",
+  "postUpdateOptions": ["pnpmDedupe"],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 06:00 on the first day of the month"]
+  },
+  "packageRules": [
+    {
+      "matchDepTypes": ["dependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "production dependencies",
+      "semanticCommitType": "chore"
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "dev dependencies",
+      "semanticCommitType": "chore"
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "platformAutomerge": true
+    },
+    {
+      "matchDepTypes": ["peerDependencies"],
+      "rangeStrategy": "widen",
+      "semanticCommitType": "chore"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "github actions",
+      "semanticCommitType": "ci"
+    },
+    {
+      "matchDepTypes": ["pnpm-workspace.overrides"],
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "overrides"
+    },
+    {
+      "matchPackageNames": ["@typescript/native-preview"],
+      "groupName": "tsgo preview",
+      "schedule": ["before 06:00 on the first day of the month"]
+    },
+    {
+      "matchPackageNames": ["@types/node"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ]
+}
