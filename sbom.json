@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
-  "serialNumber": "urn:uuid:711e2b83-063d-4036-93ef-354bad073016",
+  "serialNumber": "urn:uuid:1bdc4f41-c33e-4246-a04b-b7c50d94f654",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-08-08T11:13:48.169Z",
+    "timestamp": "2026-08-08T11:40:53.272Z",
     "lifecycles": [
       {
         "phase": "build"
@@ -155,17 +155,17 @@
     {
       "type": "library",
       "name": "tsx",
-      "version": "4.23.1",
-      "purl": "pkg:npm/tsx@4.23.1",
-      "bom-ref": "pkg:npm/tsx@4.23.1",
+      "version": "4.23.10",
+      "purl": "pkg:npm/tsx@4.23.10",
+      "bom-ref": "pkg:npm/tsx@4.23.10",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/tsx/-/tsx-4.23.1.tgz",
+          "url": "https://registry.npmjs.org/tsx/-/tsx-4.23.10.tgz",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "1901e79087f1cb1d70602392ff0a278a4e4c551654f618b54c4666cc6652089075cbd620a19f07ea2b4d13fbb8b2e13ec8b98ecee1381394b84d9fd95f6c1c59"
+              "content": "d156fd78a538ee78e4c6fffa07c0916510ecc4d0d3fcfcfe04853e3398f0ef12f74ddcc08d2c65654c6ed3114bfe42e9686dec1d9d0b1f6c1b2b54f5ca8ec251"
             }
           ]
         }
@@ -308,17 +308,17 @@
     {
       "type": "library",
       "name": "minimatch",
-      "version": "10.2.5",
-      "purl": "pkg:npm/minimatch@10.2.5",
-      "bom-ref": "pkg:npm/minimatch@10.2.5",
+      "version": "10.2.6",
+      "purl": "pkg:npm/minimatch@10.2.6",
+      "bom-ref": "pkg:npm/minimatch@10.2.6",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/minimatch/-/minimatch-10.2.5.tgz",
+          "url": "https://registry.npmjs.org/minimatch/-/minimatch-10.2.6.tgz",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "3142e454b7ca1980c561e8cfd3b40ebab0cb2d0a5c8e4ec5c3eee35d2d91d9ccd1433479eb21d1bde5393432443af887fa111364a4a4224e5cf93db71a315432"
+              "content": "be92d012cf952c2af59d4d015d2d3b99a628170943007d209e042ebadb71230bad0c510c1ead9b957fbcbe98310dd2b72753f08c22627a9efb3a2b536782e5d4"
             }
           ]
         }
@@ -1428,7 +1428,7 @@
         "pkg:npm/glob@13.0.6",
         "pkg:npm/openai@5.23.2",
         "pkg:npm/playwright@1.62.0",
-        "pkg:npm/tsx@4.23.1",
+        "pkg:npm/tsx@4.23.10",
         "pkg:npm/zod@4.4.3"
       ]
     },
@@ -1455,7 +1455,7 @@
     {
       "ref": "pkg:npm/glob@13.0.6",
       "dependsOn": [
-        "pkg:npm/minimatch@10.2.5",
+        "pkg:npm/minimatch@10.2.6",
         "pkg:npm/minipass@7.1.3",
         "pkg:npm/path-scurry@2.0.2"
       ]
@@ -1472,7 +1472,7 @@
       ]
     },
     {
-      "ref": "pkg:npm/tsx@4.23.1",
+      "ref": "pkg:npm/tsx@4.23.10",
       "dependsOn": [
         "pkg:npm/esbuild@0.28.1",
         "pkg:npm/fsevents@2.3.3"
@@ -1521,7 +1521,7 @@
       "dependsOn": []
     },
     {
-      "ref": "pkg:npm/minimatch@10.2.5",
+      "ref": "pkg:npm/minimatch@10.2.6",
       "dependsOn": [
         "pkg:npm/brace-expansion@5.0.9"
       ]
