@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdir, rm } from "fs/promises";
+import { mkdtemp, rm } from "fs/promises";
+import { tmpdir } from "os";
 import { join } from "path";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import {
@@ -14,7 +15,9 @@ import {
 } from "../src/auth.js";
 import type { AuthStorageConfig, AuthValidateConfig } from "../src/schemas.js";
 
-const TEST_DIR = join(process.cwd(), ".test-sessions");
+// Per-run temp dir. A fixed path under process.cwd() is unsafe for concurrent
+// runs and leaves debris in the repo whenever a run is killed.
+let TEST_DIR: string;
 
 // Create a simple test HTML page
 const TEST_HTML = `
@@ -31,15 +34,37 @@ const TEST_HTML = `
 </html>
 `;
 
+/**
+ * Serve example.com from the local process.
+ *
+ * These tests need a real http(s) ORIGIN — for cookie domains, for
+ * localStorage (which throws on the opaque origin of about:blank and data:
+ * URLs), and for the URL-shape checks in isAuthenticated. They never needed the
+ * actual site. Routing it keeps every URL and cookie domain exactly as before
+ * while removing the real DNS + TLS round-trips that have already caused CI
+ * timeouts (commit 1d74d0b bumped these to 30s for that reason).
+ */
+async function stubExampleCom(ctx: BrowserContext): Promise<void> {
+  await ctx.route("https://example.com/**", (route) =>
+    route.fulfill({ status: 200, contentType: "text/html", body: TEST_HTML }),
+  );
+}
+
+async function newStubbedContext(browser: Browser): Promise<BrowserContext> {
+  const ctx = await browser.newContext();
+  await stubExampleCom(ctx);
+  return ctx;
+}
+
 describe("Auth Persistence", () => {
   let browser: Browser;
   let context: BrowserContext;
   let page: Page;
 
   beforeEach(async () => {
-    await mkdir(TEST_DIR, { recursive: true });
+    TEST_DIR = await mkdtemp(join(tmpdir(), "demo-reel-auth-"));
     browser = await chromium.launch({ headless: true });
-    context = await browser.newContext();
+    context = await newStubbedContext(browser);
     page = await context.newPage();
   });
 
@@ -98,17 +123,60 @@ describe("Auth Persistence", () => {
   });
 
   describe("Cookie Capture", () => {
-    // Skipped: depends on the external httpbin.org service, which is flaky and
-    // has timed out in CI (503s), failing the publish. Re-enable once it no
-    // longer relies on a third-party endpoint to set the cookie.
-    it.skip("should capture cookies from browser context", async () => {
-      await page.goto("https://httpbin.org/cookies/set/testCookie/testValue");
+    // Previously skipped because it drove httpbin.org to set the cookie, which
+    // 503'd in CI (commit e45e72a). captureCookies only reads the context's
+    // cookie jar, so addCookies populates it just as well and the whole
+    // describe block stops being dead.
+    it("should capture cookies from browser context", async () => {
+      await context.addCookies([
+        { name: "testCookie", value: "testValue", domain: ".example.com", path: "/" },
+      ]);
 
       const cookies = await captureCookies(context);
 
       expect(cookies.length).toBeGreaterThan(0);
       expect(cookies.some((c) => c.name === "testCookie" && c.value === "testValue")).toBe(true);
-    }, 30000);
+    });
+
+    it("should capture every attribute needed to restore a session cookie", async () => {
+      await context.addCookies([
+        {
+          name: "sessionId",
+          value: "abc123",
+          domain: ".example.com",
+          path: "/app",
+          httpOnly: true,
+          secure: true,
+          sameSite: "Lax",
+        },
+      ]);
+
+      const cookie = (await captureCookies(context)).find((c) => c.name === "sessionId");
+
+      expect(cookie).toMatchObject({
+        value: "abc123",
+        domain: ".example.com",
+        path: "/app",
+        httpOnly: true,
+        secure: true,
+        sameSite: "Lax",
+      });
+    });
+
+    it("should capture cookies from more than one domain", async () => {
+      await context.addCookies([
+        { name: "a", value: "1", domain: ".example.com", path: "/" },
+        { name: "b", value: "2", domain: ".other.test", path: "/" },
+      ]);
+
+      const names = (await captureCookies(context)).map((c) => c.name);
+
+      expect(names).toEqual(expect.arrayContaining(["a", "b"]));
+    });
+
+    it("should return an empty list for a context with no cookies", async () => {
+      await expect(captureCookies(context)).resolves.toEqual([]);
+    });
   });
 
   describe("LocalStorage Capture", () => {
@@ -152,7 +220,7 @@ describe("Auth Persistence", () => {
       expect(session.cookies[0].name).toBe("testCookie");
 
       // Create new context and restore
-      const newContext = await browser.newContext();
+      const newContext = await newStubbedContext(browser);
       const newPage = await newContext.newPage();
 
       await restoreSession(newContext, newPage, session, storageConfig);
@@ -365,7 +433,7 @@ describe("Auth Persistence", () => {
       await saveCookies(context, "test-cookies.json", TEST_DIR);
 
       // Create new context and load cookies
-      const newContext = await browser.newContext();
+      const newContext = await newStubbedContext(browser);
       const loaded = await loadCookies(newContext, "test-cookies.json", TEST_DIR);
       expect(loaded).toBe(true);
 
@@ -382,7 +450,7 @@ describe("Auth Persistence", () => {
     it("should return false when cookie file does not exist", async () => {
       const { loadCookies } = await import("../src/auth.js");
 
-      const newContext = await browser.newContext();
+      const newContext = await newStubbedContext(browser);
       const loaded = await loadCookies(newContext, "non-existent-cookies.json", TEST_DIR);
       expect(loaded).toBe(false);
       await newContext.close();
@@ -394,7 +462,7 @@ describe("Auth Persistence", () => {
       // Save empty context (no cookies)
       await saveCookies(context, "empty-cookies.json", TEST_DIR);
 
-      const newContext = await browser.newContext();
+      const newContext = await newStubbedContext(browser);
       const loaded = await loadCookies(newContext, "empty-cookies.json", TEST_DIR);
       expect(loaded).toBe(false);
       await newContext.close();
@@ -532,7 +600,7 @@ describe("Auth Persistence", () => {
       expect(session.localStorage).toBeDefined();
 
       // Create new context and restore
-      const newContext = await browser.newContext();
+      const newContext = await newStubbedContext(browser);
       const newPage = await newContext.newPage();
       await newPage.goto("https://example.com");
 

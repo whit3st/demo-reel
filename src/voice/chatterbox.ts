@@ -83,12 +83,13 @@ function startWorker(model: ChatterboxModel): Worker {
       );
     });
 
+    // Any exit ends every in-flight request. Failing only on a non-zero code
+    // left callers awaiting a reply that could no longer arrive when the worker
+    // shut itself down cleanly mid-request, hanging the CLI indefinitely.
     proc.on("close", (code) => {
-      if (code !== 0) {
-        failAll(
-          new Error(`Chatterbox ${model} worker exited with code ${code}.\n${stderr.slice(-1500)}`),
-        );
-      }
+      failAll(
+        new Error(`Chatterbox ${model} worker exited with code ${code}.\n${stderr.slice(-1500)}`),
+      );
     });
 
     proc.stdout?.on("data", (chunk: Buffer) => {
@@ -112,7 +113,20 @@ function startWorker(model: ChatterboxModel): Worker {
           continue;
         }
 
-        const request = message.id ? pending.get(message.id) : undefined;
+        // The worker replies without an id when it could not even parse the
+        // request. Such a frame names no request to settle, so treat it as a
+        // failure of everything in flight rather than dropping it and leaving
+        // the caller waiting for a reply that will never come.
+        if (!message.id) {
+          if (message.ok === false) {
+            const error = new Error(`Chatterbox generation failed: ${message.error}`);
+            for (const [, request] of pending) request.reject(error);
+            pending.clear();
+          }
+          continue;
+        }
+
+        const request = pending.get(message.id);
         if (!request) continue;
         pending.delete(message.id);
         if (message.ok) {

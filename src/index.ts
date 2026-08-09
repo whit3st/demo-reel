@@ -87,7 +87,15 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
 
   let finalConfig = config;
   if (silent) {
-    finalConfig = { ...finalConfig, voice: undefined, outputFormat: "webm" as const };
+    // `audio` has to go along with `voice`: silent forces webm, and the schema
+    // rejects webm whenever audio.narration or audio.background is set. Leaving
+    // it in place made `silent` throw outright for any config with music.
+    finalConfig = {
+      ...finalConfig,
+      voice: undefined,
+      audio: undefined,
+      outputFormat: "webm" as const,
+    };
 
     if (finalConfig.outputPath?.endsWith(".mp4")) {
       finalConfig = {
@@ -120,7 +128,11 @@ export async function generate(config: DemoConfig, options: GenerateOptions = {}
     config: resolvedConfig,
     configPath: process.cwd(),
     outputPath:
-      resolvedConfig.outputPath ?? join(resolve("./output"), `${getBaseName(resolvedConfig)}.mp4`),
+      resolvedConfig.outputPath ??
+      join(
+        resolve("./output"),
+        `${getBaseName(resolvedConfig)}.${resolvedConfig.outputFormat === "webm" ? "webm" : "mp4"}`,
+      ),
     verbose,
     dryRun,
     headed,

@@ -26,7 +26,8 @@ export const formatStepForLog = (step: Step): string => {
     step.action === "scroll" ||
     step.action === "select" ||
     step.action === "check" ||
-    step.action === "upload"
+    step.action === "upload" ||
+    step.action === "fill"
   ) {
     return `${step.action} ${JSON.stringify(step.selector)}`;
   }

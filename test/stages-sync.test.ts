@@ -76,6 +76,42 @@ describe("pipeline wiring", () => {
     expect(names.indexOf("NarrationSyncStage")).toBeGreaterThan(names.indexOf("TTSStage"));
     expect(names.indexOf("NarrationSyncStage")).toBeLessThan(names.indexOf("RecordingStage"));
   });
+
+  // buildStages() is exported specifically so the whole ordering can be
+  // asserted (see the doc comment on it in src/index.ts). Checking one stage's
+  // position left every other reordering — or removal — undetected.
+  it("builds the full pipeline in execution order", () => {
+    const names = buildStages().map((s) => s.constructor.name);
+
+    expect(names).toEqual([
+      "TTSStage",
+      "NarrationSyncStage",
+      "AuthStage",
+      "PreStepsStage",
+      "RecordingStage",
+      "AudioMixStage",
+      "OutputStage",
+      "PostStepsStage",
+    ]);
+  });
+
+  it("gives every stage a human-readable name for progress output", () => {
+    for (const stage of buildStages()) {
+      expect(stage.name).toBeTruthy();
+    }
+  });
+
+  // Audio can only be mixed once there is a recording, and the output has to be
+  // written after the mix. These are the orderings that produce a silent or
+  // truncated video if swapped.
+  it("records before mixing audio and writes output last", () => {
+    const names = buildStages().map((s) => s.constructor.name);
+
+    expect(names.indexOf("RecordingStage")).toBeLessThan(names.indexOf("AudioMixStage"));
+    expect(names.indexOf("AudioMixStage")).toBeLessThan(names.indexOf("OutputStage"));
+    expect(names.indexOf("AuthStage")).toBeLessThan(names.indexOf("PreStepsStage"));
+    expect(names.indexOf("PreStepsStage")).toBeLessThan(names.indexOf("RecordingStage"));
+  });
 });
 
 describe("NarrationSyncStage", () => {
