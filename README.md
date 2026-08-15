@@ -338,7 +338,7 @@ video: {
 
 Recording starts when the browser context is created, which is before the first
 scene: with `auth` configured, the session restore navigates and the app loads
-inside the recording, and teardown runs on after the last scene. That footage is
+inside the recording, and teardown runs after the last scene. That footage is
 captured but was never asked for, and no step can reach it because it happens
 outside the scenes entirely.
 

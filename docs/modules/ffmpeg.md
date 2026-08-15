@@ -94,10 +94,37 @@ export function buildFfmpegArgs(
   videoPath: string,
   outputPath: string,
   audio: AudioConfig,
+  trim?: VideoTrim,
 ): string[];
 ```
 
 Pure function — builds the FFmpeg argument array without executing. Useful for testing and debugging.
+
+### Trimming
+
+```ts
+export interface VideoTrim {
+  startMs: number;
+  durationMs: number;
+}
+
+export async function trimVideo(
+  inputPath: string,
+  outputPath: string,
+  startMs: number,
+  durationMs: number,
+): Promise<void>;
+```
+
+`video.span: "scenes"` cuts the recording down to the scenes. When there is
+audio the cut rides along with the mix — `-ss` before the input so the decoder
+seeks, `-t` after it to bound the result — because that pass already re-encodes.
+`trimVideo()` exists for runs with no audio, where `mergeAudioVideo()` returns
+the input untouched and the cut would otherwise never happen.
+
+Trimming always re-encodes. Playwright's webm carries very few keyframes — a
+6.9s capture measured two, at 0.0s and 5.12s — so a stream copy would snap the
+cut to whichever is nearest and miss by seconds.
 
 ## Narration Placement
 

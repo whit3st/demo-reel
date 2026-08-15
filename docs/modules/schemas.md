@@ -90,6 +90,21 @@ User Input (presets allowed) → demoReelConfigInputSchema → demoReelConfigSch
 | `resolution: "2K"`    | 2560x1440                           | Built-in                                |
 | `resolution: "4K"`    | 3840x2160                           | Built-in                                |
 
+### Video Span
+
+`video.span` decides which part of the browser session becomes the video.
+
+| Value       | Meaning                                                                    |
+| ----------- | -------------------------------------------------------------------------- |
+| `"scenes"`  | Default. The span the scenes occupy; pre-roll and tail are cut.            |
+| `"session"` | Everything the recorder captured, including the app load and the teardown. |
+
+Recording starts when the context is created, so with `auth` configured the
+session restore navigates and the app boots inside the video, before any scene
+exists. It is a policy rather than a duration because the pre-roll is an app
+cold start and is not stable — over 15 consecutive runs of one real app it
+ranged from 3.7s to 9.5s. The pipeline measures it per run instead.
+
 ### Scene/Step Normalization
 
 Two config formats are supported:
