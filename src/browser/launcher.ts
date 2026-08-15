@@ -53,7 +53,11 @@ export async function launchRecordingBrowser(
   });
   context.setDefaultTimeout(DEFAULT_TIMEOUT_MS);
   const page = await context.newPage();
-  return { browser, context, page, isRecording: true };
+  // Stamped here rather than before newContext: the video begins with the page
+  // that records it, so this is the tightest signal the API offers for frame
+  // zero. Verified against encoded output — recorded duration tracks this clock
+  // to well under a percent.
+  return { browser, context, page, isRecording: true, recordingStartedAt: Date.now() };
 }
 
 export async function closeSession(
@@ -61,6 +65,10 @@ export async function closeSession(
   saveSessionFn?: () => Promise<void>,
 ): Promise<string | null> {
   const { page, context, browser, isRecording } = session;
+
+  // Before the close, so the tail measures footage that was actually captured
+  // rather than however long teardown happens to take.
+  session.recordingEndedAt = Date.now();
 
   await page.close();
 

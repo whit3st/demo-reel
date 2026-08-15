@@ -3,6 +3,7 @@ import type { NarrationPlacement } from "../audio-processor.js";
 import type { NarrationManifest } from "../narration-manifest.js";
 import type { SceneTimestamp } from "../runner/types.js";
 import type { BrowserPool } from "../browser/pool.js";
+import type { RecordingTimeline, VideoTimeMapping } from "../video-handler.js";
 
 export class PipelineContext {
   config: DemoReelConfig;
@@ -20,6 +21,10 @@ export class PipelineContext {
   tempVideoPath?: string;
   finalVideoPath?: string;
   sceneTimestamps?: SceneTimestamp[];
+  /** Where the scene clock sits inside the recording; absent on a dry run. */
+  recordingTimeline?: RecordingTimeline;
+  /** Resolved step-clock → video-time mapping, shared by audio and subtitles. */
+  videoTime?: VideoTimeMapping;
   warnings: string[] = [];
   browserPool?: BrowserPool;
 

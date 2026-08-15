@@ -200,6 +200,27 @@ export async function stopRecording(
   return tempVideoPath;
 }
 
+/**
+ * Where the scene clock sits inside the recording.
+ *
+ * Both are wall-clock measurements taken by the pipeline: `preRollMs` between
+ * the recording context opening and the first scene starting, `tailMs` between
+ * the last scene ending and the recording stopping.
+ */
+export interface RecordingTimeline {
+  preRollMs: number;
+  tailMs: number;
+}
+
+/** Maps a step-clock offset onto the finished video's timeline. */
+export interface VideoTimeMapping {
+  originMs: number;
+  scale: number;
+}
+
+export const sceneToVideoMs = (mapping: VideoTimeMapping, sceneMs: number): number =>
+  mapping.originMs + Math.round(sceneMs * mapping.scale);
+
 export async function processVideoWithAudio(
   tempVideoPath: string,
   outputPath: string,
@@ -207,15 +228,23 @@ export async function processVideoWithAudio(
   configPath: string,
   sceneTimestamps: SceneTimestamp[],
   narrationSyncMode: string = "auto",
-): Promise<{ finalPath: string; narrationPlacements: NarrationPlacement[]; warnings: string[] }> {
+  options: { timeline?: RecordingTimeline } = {},
+): Promise<{
+  finalPath: string;
+  narrationPlacements: NarrationPlacement[];
+  warnings: string[];
+  videoTime: VideoTimeMapping;
+}> {
   // Ensure output directory exists
   await mkdir(dirname(outputPath), { recursive: true });
+
+  let videoTime: VideoTimeMapping = { originMs: 0, scale: 1 };
 
   if (!audio || (!audio.narration && !audio.narrationManifest && !audio.background)) {
     // No audio - just copy video
     const { copyFile } = await import("fs/promises");
     await copyFile(tempVideoPath, outputPath);
-    return { finalPath: outputPath, narrationPlacements: [], warnings: [] };
+    return { finalPath: outputPath, narrationPlacements: [], warnings: [], videoTime };
   }
 
   const configDir = dirname(configPath);
@@ -229,31 +258,53 @@ export async function processVideoWithAudio(
       const manifest = narrationManifestSchema.parse(JSON.parse(rawManifest));
       const timestampsByScene = new Map(sceneTimestamps.map((scene) => [scene.sceneIndex, scene]));
 
-      // Scene timestamps come off the STEP clock — the elapsed time the runner
-      // measured while driving the page. The recorded video is not that long:
-      // the browser records on wall-clock at a fixed frame rate and runs longer
-      // under recording load, typically by a few percent. Placing narration at
-      // raw step-clock offsets therefore drifts progressively ahead of the
-      // picture, so by the end of a minute-long demo a line can land seconds
-      // before the thing it describes.
+      // Scene timestamps come off the STEP clock — elapsed time the runner
+      // measured while driving the page, starting at zero with the first scene.
+      // The recording starts earlier than that: `recordVideo` attaches when the
+      // context is created, and `handleAuth` then navigates and waits for the
+      // app inside it. The two clocks therefore share a UNIT but not an ORIGIN.
       //
-      // Measure the recording and rescale onto it. The two clocks share an
-      // origin, so a single ratio corrects the whole timeline.
+      // When the pipeline reports where the scenes sit (`timeline`), place cues
+      // at `preRoll + sceneStart` and use what is left over as a genuine scale
+      // check. Without it, fall back to the whole-recording ratio — which is
+      // the best guess available, but treats a constant head offset as a
+      // stretch and so drags early cues ahead of the picture.
       const stepClockMs = sceneTimestamps.reduce((max, scene) => Math.max(max, scene.endMs), 0);
-      let timeScale = 1;
+      const { timeline } = options;
       try {
         const recordedMs = await measureMediaDurationMs(tempVideoPath);
         if (stepClockMs > 0 && recordedMs > 0) {
-          timeScale = recordedMs / stepClockMs;
-          const driftMs = Math.round(recordedMs - stepClockMs);
-          if (Math.abs(driftMs) > 250) {
-            warnings.push(
-              `Recording ran ${driftMs}ms ${driftMs > 0 ? "longer" : "shorter"} than the step clock ` +
-                `(${stepClockMs}ms); narration rescaled by ${timeScale.toFixed(4)} to stay in sync.`,
-            );
+          if (timeline) {
+            const sceneSpanMs = recordedMs - timeline.preRollMs - timeline.tailMs;
+            // A pre-roll and tail that swallow the whole recording means the
+            // measurement is wrong; scaling by it would place every cue at a
+            // negative offset. Fall back to real time and say nothing more than
+            // the scale warning below already says.
+            const scale = sceneSpanMs > 0 ? sceneSpanMs / stepClockMs : 1;
+            videoTime = { originMs: Math.max(0, timeline.preRollMs), scale };
+            if (scale < 0.98 || scale > 1.02) {
+              warnings.push(
+                `Recorded scene span (${Math.round(sceneSpanMs)}ms) does not match the step clock ` +
+                  `(${stepClockMs}ms); narration scaled by ${scale.toFixed(4)}. The recording may ` +
+                  `have dropped frames or stalled.`,
+              );
+            }
+          } else {
+            const timeScale = recordedMs / stepClockMs;
+            videoTime = { originMs: 0, scale: timeScale };
+            const driftMs = Math.round(recordedMs - stepClockMs);
+            if (Math.abs(driftMs) > 250) {
+              warnings.push(
+                `Recording ran ${driftMs}ms ${driftMs > 0 ? "longer" : "shorter"} than the step clock ` +
+                  `(${stepClockMs}ms); narration rescaled by ${timeScale.toFixed(4)} to stay in sync.`,
+              );
+            }
           }
+        } else if (timeline) {
+          videoTime = { originMs: Math.max(0, timeline.preRollMs), scale: 1 };
         }
       } catch (error) {
+        if (timeline) videoTime = { originMs: Math.max(0, timeline.preRollMs), scale: 1 };
         warnings.push(
           `Could not measure recorded video duration, narration placed on the step clock and may drift: ${
             error instanceof Error ? error.message : String(error)
@@ -272,7 +323,7 @@ export async function processVideoWithAudio(
           }
 
           const startMs =
-            Math.round(scene.startMs * timeScale) + (resolvedAudio.narrationDelay ?? 0);
+            sceneToVideoMs(videoTime, scene.startMs) + (resolvedAudio.narrationDelay ?? 0);
           return {
             sceneIndex: clip.sceneIndex,
             narration: clip.narration,
@@ -322,7 +373,7 @@ export async function processVideoWithAudio(
     },
   });
 
-  return { finalPath, narrationPlacements, warnings };
+  return { finalPath, narrationPlacements, warnings, videoTime };
 }
 
 // --- Subtitle and metadata generation ---
@@ -378,6 +429,7 @@ export function buildSubtitleCuesWithNarrationPlacements(
   sceneTimestamps: SceneTimestamp[],
   config: DemoReelConfig,
   narrationPlacements: NarrationPlacement[],
+  videoTime?: VideoTimeMapping,
 ): SubtitleCue[] {
   if (narrationPlacements.length === 0) {
     return buildSubtitleCues(sceneTimestamps, config);
@@ -389,10 +441,14 @@ export function buildSubtitleCuesWithNarrationPlacements(
   return sceneTimestamps.map((scene) => {
     const placement = placementByScene.get(scene.sceneIndex);
     if (!placement) {
+      // No clip for this scene, so fall back to when it was on screen — which
+      // has to be converted, since placements are already on the video's clock
+      // and a subtitle file cannot mix the two.
+      const toVideo = (ms: number) => (videoTime ? sceneToVideoMs(videoTime, ms) : ms);
       return {
         narration: scene.narration,
-        startMs: scene.startMs,
-        endMs: scene.endMs,
+        startMs: toVideo(scene.startMs),
+        endMs: toVideo(scene.endMs),
         isIntro: scene.isIntro,
       };
     }
@@ -440,17 +496,24 @@ export function generateMetadata(
   sceneTimestamps: SceneTimestamp[],
   subtitleCues: SubtitleCue[],
   videoPath: string,
+  videoTime?: VideoTimeMapping,
 ) {
+  // Visual times are read as positions in the finished file. On the step clock
+  // they are short by however long the recording ran before the first scene, so
+  // anything seeking by them lands on the wrong frame.
+  const toVideo = (ms: number) => (videoTime ? sceneToVideoMs(videoTime, ms) : ms);
+
   const scenes = sceneTimestamps.map((t, i) => ({
     index: t.sceneIndex,
     narration: t.narration,
     isIntro: t.isIntro,
     // Visual timing (when things happen on screen)
-    visualStartMs: t.startMs,
-    visualEndMs: t.endMs,
-    // Audio timing (when narration is heard) — from subtitles
-    audioStartMs: subtitleCues[i]?.startMs ?? t.startMs,
-    audioEndMs: subtitleCues[i]?.endMs ?? t.endMs,
+    visualStartMs: toVideo(t.startMs),
+    visualEndMs: toVideo(t.endMs),
+    // Audio timing (when narration is heard) — from subtitles, already placed
+    // on the video's clock by processVideoWithAudio.
+    audioStartMs: subtitleCues[i]?.startMs ?? toVideo(t.startMs),
+    audioEndMs: subtitleCues[i]?.endMs ?? toVideo(t.endMs),
   }));
 
   const introScene = scenes.find((s) => s.isIntro);

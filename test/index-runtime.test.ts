@@ -133,6 +133,9 @@ describe("index runtime", () => {
       "/workspace/project",
       [],
       "auto",
+      // Where the scenes sit inside the recording; undefined here because this
+      // pipeline run never opened a real browser to stamp it.
+      { timeline: undefined },
     );
   });
 

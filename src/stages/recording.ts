@@ -29,8 +29,13 @@ export class RecordingStage implements Stage {
         );
       }
 
+      // The scene clock starts here, at zero. The recording started earlier —
+      // when the context was created, before the auth navigation above — and
+      // stops later, during release. Both gaps are filmed, so both are needed
+      // to place narration on the picture rather than on the step clock.
       const startTime = Date.now();
       const sceneTimestamps = await runDemo(session.page, ctx.config);
+      const demoEndedAt = Date.now();
       ctx.sceneTimestamps = sceneTimestamps;
 
       if (ctx.dryRun) {
@@ -50,6 +55,16 @@ export class RecordingStage implements Stage {
 
       const tempVideoPath = await ctx.browserPool.release(session, saveSessionFn);
       if (tempVideoPath) ctx.tempVideoPath = tempVideoPath;
+
+      // `release` closes the session, which is where the recording stops, so
+      // both stamps are only complete now. Clamped at zero: a clock that went
+      // backwards must not turn into a negative offset downstream.
+      if (session.recordingStartedAt !== undefined) {
+        ctx.recordingTimeline = {
+          preRollMs: Math.max(0, startTime - session.recordingStartedAt),
+          tailMs: Math.max(0, (session.recordingEndedAt ?? demoEndedAt) - demoEndedAt),
+        };
+      }
     } catch (error) {
       await ctx.browserPool.release(session).catch(() => {});
       throw error;

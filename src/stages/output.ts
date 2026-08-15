@@ -18,11 +18,17 @@ export class OutputStage implements Stage {
       ctx.sceneTimestamps,
       ctx.config,
       ctx.narrationPlacements ?? [],
+      ctx.videoTime,
     );
 
     const srt = generateSRT(subtitleCues);
     const vtt = generateVTT(subtitleCues);
-    const meta = generateMetadata(ctx.sceneTimestamps, subtitleCues, ctx.finalVideoPath);
+    const meta = generateMetadata(
+      ctx.sceneTimestamps,
+      subtitleCues,
+      ctx.finalVideoPath,
+      ctx.videoTime,
+    );
 
     await writeFile(`${basePath}.srt`, srt, "utf-8");
     await writeFile(`${basePath}.vtt`, vtt, "utf-8");
