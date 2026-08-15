@@ -74,7 +74,7 @@ export class TrackCommand implements Command {
       const sessionData = await loadSession(sessionName, ctx.cwd());
       if (sessionData) {
         await restoreCookies(context, sessionData.cookies);
-        await restoreLocalStorage(page, sessionData.localStorage || {});
+        await restoreLocalStorage(context, sessionData.localStorage || {});
         sessionLoaded = true;
         ctx.console.log(`Session loaded: ${sessionName}`);
       } else {

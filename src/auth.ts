@@ -186,23 +186,70 @@ export async function restoreCookies(
   }
 }
 
+/** Marks an origin as already restored, so the snapshot is applied once. */
+const RESTORE_SENTINEL = "__demo_reel_storage_restored";
+
 /**
- * Restore localStorage to a page
+ * Restore localStorage to every page the context opens.
+ *
+ * Registered as an init script rather than evaluated against a page, because at
+ * the only moment this is ever called — `restoreSession`, before `handleAuth`
+ * navigates — the page is still on `about:blank`. Reading `page.url()` there
+ * yields an empty hostname, so the lookup missed every captured domain and the
+ * restore silently did nothing, on every run, for every consumer who configured
+ * `types: ["localStorage"]`.
+ *
+ * An init script also lands the values before the target origin's first script
+ * runs, which is the point: an app that reads storage while bootstrapping is
+ * exactly the kind that needs its session back.
  */
 export async function restoreLocalStorage(
-  page: Page,
+  context: BrowserContext,
   storageData: Record<string, Record<string, string>>,
 ): Promise<void> {
-  const url = new URL(page.url());
-  const domain = url.hostname;
-  const domainStorage = storageData[domain];
+  if (Object.keys(storageData).length === 0) return;
 
-  if (domainStorage) {
-    await page.evaluate((data) => {
-      for (const [key, value] of Object.entries(data)) {
+  // Runs in the page. Shared by the init script and the immediate pass below so
+  // the two cannot drift on the sentinel or the hostname match.
+  const apply = ({
+    data,
+    sentinel,
+  }: {
+    data: Record<string, Record<string, string>>;
+    sentinel: string;
+  }) => {
+    try {
+      const entries = data[location.hostname];
+      if (!entries) return;
+      // Init scripts run on every document, so without this the captured
+      // snapshot would be re-applied after each navigation — reverting a token
+      // the app refreshed mid-run to the stale one it started with.
+      // sessionStorage is scoped to the same origin and dies with the context,
+      // which is exactly the lifetime this needs.
+      if (sessionStorage.getItem(sentinel)) return;
+      sessionStorage.setItem(sentinel, "1");
+      for (const [key, value] of Object.entries(entries)) {
         localStorage.setItem(key, value);
       }
-    }, domainStorage);
+    } catch {
+      // Opaque origins (data:, sandboxed frames) throw on storage access. A
+      // document the demo never asked for must not abort the run.
+    }
+  };
+
+  const arg = { data: storageData, sentinel: RESTORE_SENTINEL };
+
+  await context.addInitScript(apply, arg);
+
+  // Pages already sitting on a matching origin get the values now — the init
+  // script would not reach them until their next navigation, and a caller that
+  // restores after navigating is entitled to see the session take effect.
+  for (const page of context.pages()) {
+    try {
+      await page.evaluate(apply, arg);
+    } catch {
+      // Closed, crashed, or on an origin that refuses storage.
+    }
   }
 }
 
@@ -331,10 +378,14 @@ export function getSessionPath(
 
 /**
  * Restore session to browser context and page
+ *
+ * `_page` is unused since localStorage moved to a context-level init script,
+ * and is kept only so existing positional call sites do not silently pass
+ * `sessionData` into the wrong slot.
  */
 export async function restoreSession(
   context: BrowserContext,
-  page: Page,
+  _page: Page,
   sessionData: SessionData,
   storageConfig: AuthStorageConfig,
 ): Promise<void> {
@@ -345,7 +396,7 @@ export async function restoreSession(
 
   // Restore localStorage if configured and data exists
   if (hasStorageType(storageConfig, "localStorage") && sessionData.localStorage) {
-    await restoreLocalStorage(page, sessionData.localStorage);
+    await restoreLocalStorage(context, sessionData.localStorage);
   }
 }
 
