@@ -135,7 +135,7 @@ describe("index runtime", () => {
       "auto",
       // Where the scenes sit inside the recording; undefined here because this
       // pipeline run never opened a real browser to stamp it.
-      { timeline: undefined },
+      { timeline: undefined, span: "scenes" },
     );
   });
 

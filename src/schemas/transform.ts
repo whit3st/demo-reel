@@ -12,7 +12,10 @@ import {
   type SizeConfig,
 } from "./primitives.js";
 import type { Step } from "./steps.js";
+import type { videoSpanSchema } from "./config.js";
 import { demoReelConfigInputSchema, sceneOwnedSceneInputSchema } from "./scenes.js";
+
+export type VideoSpan = z.infer<typeof videoSpanSchema>;
 
 export interface RuntimeScene {
   narration: string;
@@ -28,7 +31,7 @@ export interface DemoReelConfig extends Omit<
 > {
   steps: Step[];
   scenes?: RuntimeScene[];
-  video: { resolution: SizeConfig };
+  video: { resolution: SizeConfig; span: VideoSpan };
   cursor: CursorConfig;
   motion: MotionConfig;
   typing: TypingConfig;

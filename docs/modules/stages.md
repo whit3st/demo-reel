@@ -107,12 +107,12 @@ TTSStage → AuthStage → PreStepsStage → RecordingStage → AudioMixStage �
 
 ### 4. RecordingStage (`recording.ts`)
 
-| Property          | Value                                      |
-| ----------------- | ------------------------------------------ |
-| **Purpose**       | Run the demo scenario with video recording |
-| **Precondition**  | Auth is done, pre-steps complete           |
-| **Never skips**   | This is the core stage                     |
-| **Writes to ctx** | `ctx.tempVideoPath`, `ctx.sceneTimestamps` |
+| Property          | Value                                                               |
+| ----------------- | ------------------------------------------------------------------- |
+| **Purpose**       | Run the demo scenario with video recording                          |
+| **Precondition**  | Auth is done, pre-steps complete                                    |
+| **Never skips**   | This is the core stage                                              |
+| **Writes to ctx** | `ctx.tempVideoPath`, `ctx.sceneTimestamps`, `ctx.recordingTimeline` |
 
 **Logic:**
 
@@ -124,25 +124,49 @@ TTSStage → AuthStage → PreStepsStage → RecordingStage → AudioMixStage �
 6. Stop recording → get temp video path
 7. Save session if auth configured
 8. Set `ctx.tempVideoPath` and `ctx.sceneTimestamps`
+9. Set `ctx.recordingTimeline` from the wall-clock stamps
+
+**The recording timeline.** The scene clock starts at zero when `runDemo` does.
+The recording started earlier — `recordVideo` attaches when the context is
+created, and step 2 then navigates and waits for the app inside it — and stops
+later, during release. The stage reports both gaps as `preRollMs` / `tailMs`,
+which is what lets `AudioMixStage` place narration at `preRoll + sceneStart`
+rather than scaling the whole timeline, and what `video.span: "scenes"` cuts.
+Absent on a dry run, which records nothing.
 
 **Dependencies:** `browser/*`, `runner/*`, `auth.ts`
 
 ### 5. AudioMixStage (`audio-mix.ts`)
 
-| Property          | Value                                                           |
-| ----------------- | --------------------------------------------------------------- |
-| **Purpose**       | Merge audio tracks with recorded video using FFmpeg             |
-| **Precondition**  | `ctx.tempVideoPath` exists                                      |
-| **Skip if**       | No audio config (narration or background)                       |
-| **Writes to ctx** | `ctx.finalVideoPath`, `ctx.narrationPlacements`, `ctx.warnings` |
+| Property          | Value                                                                            |
+| ----------------- | -------------------------------------------------------------------------------- |
+| **Purpose**       | Merge audio tracks with recorded video using FFmpeg                              |
+| **Precondition**  | `ctx.tempVideoPath` exists                                                       |
+| **Skip if**       | No audio config (narration or background)                                        |
+| **Writes to ctx** | `ctx.finalVideoPath`, `ctx.narrationPlacements`, `ctx.videoTime`, `ctx.warnings` |
 
 **Logic:**
 
 1. Skip if no audio config
 2. Parse narration manifest to build `NarrationPlacement[]` from real scene timestamps
 3. Auto-shift overlapping placements forward to prevent narration overlap (in `auto` mode), throw in `strict` mode, skip in `off` mode
-4. Call `mergeAudioVideo()` with video + narration placements + background
-5. Set `ctx.finalVideoPath`, `ctx.narrationPlacements`, push warnings to `ctx.warnings`
+4. Call `mergeAudioVideo()` with video + narration placements + background,
+   plus the trim implied by `video.span`
+5. Set `ctx.finalVideoPath`, `ctx.narrationPlacements`, `ctx.videoTime`, push
+   warnings to `ctx.warnings`
+
+**Placing cues.** Scene timestamps are step-clock offsets; the video has a
+different origin. With `ctx.recordingTimeline` available, cues go at
+`preRoll + sceneStart` and the leftover (`recorded - preRoll - tail` against the
+step clock) becomes a scale check that warns outside ~[0.98, 1.02]. Without one,
+the whole-recording ratio `recorded / stepClock` applies instead — the best
+guess available, but it treats a constant head offset as a stretch.
+
+`ctx.videoTime` is the resolved `{ originMs, scale }` and is what `OutputStage`
+uses, so subtitles and metadata cannot disagree with the audio about where a
+scene is. When `video.span` is `"scenes"` the pre-roll is cut here, before the
+mix — trimming afterwards would cut the narration that was just placed — and
+the origin becomes 0.
 
 **Dependencies:** `ffmpeg/*`, `narration-manifest.ts`
 

@@ -3,8 +3,22 @@ import { resolutionSchema } from "./primitives.js";
 import { selectorSchema } from "./selector.js";
 import { stepSchema } from "./steps.js";
 
+export const videoSpanSchema = z
+  .enum(["scenes", "session"])
+  .describe(
+    "Which part of the browser session becomes the video: 'scenes' (default) " +
+      "trims to the span the scenes occupy; 'session' keeps everything the " +
+      "recorder captured, including the navigation and app load that precede " +
+      "the first scene and the teardown after the last",
+  );
+
 export const videoConfigSchema = z.object({
   resolution: resolutionSchema.describe("Video resolution (also sets viewport)"),
+  // Expressed as a policy rather than a duration on purpose: the pre-roll is an
+  // app cold start and is not stable. Over 15 consecutive runs of one real app
+  // it ranged from 3.7s to 9.5s, so no number written in a config file could be
+  // right twice. The pipeline measures it per run instead.
+  span: videoSpanSchema.default("scenes"),
 });
 
 export const outputFormatSchema = z.enum(["webm", "mp4"]).describe("Output file format");

@@ -1,7 +1,7 @@
 import { mkdir, unlink, rmdir, writeFile as fsWriteFile, readFile } from "fs/promises";
 import { basename, dirname, join, resolve } from "path";
 import type { Browser, BrowserContext, Page } from "playwright";
-import type { DemoReelConfig, AuthConfig, AuthBehaviorConfig } from "./schemas.js";
+import type { DemoReelConfig, AuthConfig, AuthBehaviorConfig, VideoSpan } from "./schemas.js";
 import { runDemo, runSteps, runStepSimple, type SceneTimestamp } from "./runner.js";
 import { motionPresets, typingPresets, timingPresets } from "./presets.js";
 import {
@@ -11,7 +11,7 @@ import {
   type NarrationPlacement,
 } from "./audio-processor.js";
 import { narrationManifestSchema } from "./narration-manifest.js";
-import { measureMediaDurationMs } from "./ffmpeg/utils.js";
+import { measureMediaDurationMs, trimVideo, type VideoTrim } from "./ffmpeg/utils.js";
 import {
   loadSession,
   saveSession,
@@ -228,7 +228,7 @@ export async function processVideoWithAudio(
   configPath: string,
   sceneTimestamps: SceneTimestamp[],
   narrationSyncMode: string = "auto",
-  options: { timeline?: RecordingTimeline } = {},
+  options: { timeline?: RecordingTimeline; span?: VideoSpan } = {},
 ): Promise<{
   finalPath: string;
   narrationPlacements: NarrationPlacement[];
@@ -239,9 +239,25 @@ export async function processVideoWithAudio(
   await mkdir(dirname(outputPath), { recursive: true });
 
   let videoTime: VideoTimeMapping = { originMs: 0, scale: 1 };
+  // Explicit opt-in rather than a default here: the policy lives in the schema
+  // (`video.span`, default "scenes"), and a caller that says nothing should get
+  // the recording it handed over. Trimming also needs the scenes to have been
+  // located inside the recording — `span` alone cannot say where to cut.
+  const trimming = options.span === "scenes" && options.timeline !== undefined;
 
   if (!audio || (!audio.narration && !audio.narrationManifest && !audio.background)) {
-    // No audio - just copy video
+    // No audio to mix. mergeAudioVideo would return the input untouched here,
+    // so a trim has to be its own pass or `span` would silently do nothing for
+    // silent runs.
+    if (trimming) {
+      const recordedMs = await measureMediaDurationMs(tempVideoPath).catch(() => 0);
+      const { preRollMs, tailMs } = options.timeline!;
+      const durationMs = recordedMs - preRollMs - tailMs;
+      if (durationMs > 0) {
+        await trimVideo(tempVideoPath, outputPath, preRollMs, durationMs);
+        return { finalPath: outputPath, narrationPlacements: [], warnings: [], videoTime };
+      }
+    }
     const { copyFile } = await import("fs/promises");
     await copyFile(tempVideoPath, outputPath);
     return { finalPath: outputPath, narrationPlacements: [], warnings: [], videoTime };
@@ -251,6 +267,7 @@ export async function processVideoWithAudio(
   const resolvedAudio = resolveAudioPaths(audio, configDir) ?? {};
   const warnings: string[] = [];
   let narrationPlacements: NarrationPlacement[] = [];
+  let trim: VideoTrim | undefined;
 
   if (resolvedAudio.narrationManifest) {
     try {
@@ -281,7 +298,15 @@ export async function processVideoWithAudio(
             // negative offset. Fall back to real time and say nothing more than
             // the scale warning below already says.
             const scale = sceneSpanMs > 0 ? sceneSpanMs / stepClockMs : 1;
-            videoTime = { originMs: Math.max(0, timeline.preRollMs), scale };
+            // When the pre-roll is being cut away the first scene lands at zero,
+            // so cues must not also be pushed forward by it — that would count
+            // the same offset twice.
+            if (trimming && sceneSpanMs > 0) {
+              trim = { startMs: timeline.preRollMs, durationMs: sceneSpanMs };
+              videoTime = { originMs: 0, scale };
+            } else {
+              videoTime = { originMs: Math.max(0, timeline.preRollMs), scale };
+            }
             if (scale < 0.98 || scale > 1.02) {
               warnings.push(
                 `Recorded scene span (${Math.round(sceneSpanMs)}ms) does not match the step clock ` +
@@ -365,6 +390,7 @@ export async function processVideoWithAudio(
 
   // Mix audio with video
   const finalPath = await mergeAudioVideo({
+    ...(trim ? { trim } : {}),
     videoPath: tempVideoPath,
     outputPath,
     audio: {

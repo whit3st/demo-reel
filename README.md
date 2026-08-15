@@ -330,8 +330,28 @@ typing: "humanlike" | "fast" | "instant";
 timing: "normal" | "fast" | "instant";
 video: {
   resolution: "HD" | "FHD" | "2K" | "4K";
+  span: "scenes" | "session";
 }
 ```
+
+### `video.span`
+
+Recording starts when the browser context is created, which is before the first
+scene: with `auth` configured, the session restore navigates and the app loads
+inside the recording, and teardown runs on after the last scene. That footage is
+captured but was never asked for, and no step can reach it because it happens
+outside the scenes entirely.
+
+- **`"scenes"`** (default) — the video is the span the scenes occupy. The
+  pre-roll and tail are measured per run and cut before the audio is mixed.
+- **`"session"`** — everything the recorder captured, including the load and the
+  teardown. Use it when the approach to the app is itself the subject, or to
+  keep the pre-0.12 behaviour.
+
+It is a policy rather than a duration on purpose. The pre-roll is an app cold
+start and is not stable — across 15 consecutive runs of one real app it ranged
+from 3.7s to 9.5s — so no number written here could be right twice. demo-reel
+measures it on each run instead.
 
 ## Modular Video Series
 

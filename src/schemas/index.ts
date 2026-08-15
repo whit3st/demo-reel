@@ -46,6 +46,7 @@ export {
 
 export {
   videoConfigSchema,
+  videoSpanSchema,
   outputFormatSchema,
   randomizationSchema,
   audioConfigSchema,
@@ -103,6 +104,7 @@ export {
 export {
   demoReelConfigSchema,
   type RuntimeScene,
+  type VideoSpan,
   type DemoReelConfigInput,
   type DemoReelConfig,
 } from "./transform.js";

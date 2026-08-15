@@ -22,10 +22,62 @@ interface MixAudioConfig extends AudioConfig {
   narrationPlacements?: NarrationPlacement[];
 }
 
+/**
+ * A cut applied to the recording as it is encoded.
+ *
+ * Playwright's webm carries very few keyframes — a 6.9s capture measured two,
+ * at 0.0s and 5.12s — so a stream copy would snap the cut to whichever is
+ * nearest and miss by seconds. Every trim therefore re-encodes: free when it
+ * rides along with the audio mix, an extra pass when there is no audio.
+ */
+export interface VideoTrim {
+  startMs: number;
+  durationMs: number;
+}
+
 export interface MergeOptions {
   videoPath: string;
   outputPath: string;
   audio?: MixAudioConfig;
+  trim?: VideoTrim;
+}
+
+/** ffmpeg takes seconds; keep it short rather than emitting 3.9000000000000004. */
+const toSeconds = (ms: number): string => String(Number((ms / 1000).toFixed(3)));
+
+/**
+ * Re-encode a slice of a video, for runs that have no audio to mix and so would
+ * otherwise copy the file through untouched.
+ */
+export async function trimVideo(
+  inputPath: string,
+  outputPath: string,
+  startMs: number,
+  durationMs: number,
+): Promise<void> {
+  const ffmpegPath = await getFfmpegPath();
+  if (!ffmpegPath) {
+    throw new Error("FFmpeg binary not found. Please ensure ffmpeg-static is installed correctly.");
+  }
+
+  // VP9 for webm, H.264 otherwise — matching the container the caller asked
+  // for, since the output extension is what decides how the file is played.
+  const isWebm = outputPath.toLowerCase().endsWith(".webm");
+
+  await runFFmpeg(ffmpegPath, [
+    "-y",
+    "-ss",
+    toSeconds(startMs),
+    "-i",
+    inputPath,
+    "-t",
+    toSeconds(durationMs),
+    "-c:v",
+    isWebm ? "libvpx-vp9" : "libx264",
+    ...(isWebm ? ["-b:v", "0", "-crf", "31"] : ["-preset", "fast", "-crf", "23"]),
+    "-an",
+    outputPath,
+  ]);
 }
 
 export async function getFfmpegPath(): Promise<string> {
@@ -231,7 +283,7 @@ export async function concatenateAudio(
 }
 
 export async function mergeAudioVideo(options: MergeOptions): Promise<string> {
-  const { videoPath, outputPath, audio } = options;
+  const { videoPath, outputPath, audio, trim } = options;
   const mixAudio = audio as MixAudioConfig | undefined;
 
   if (!audio || (!audio.narration && !audio.background && !mixAudio?.narrationPlacements?.length)) {
@@ -246,7 +298,7 @@ export async function mergeAudioVideo(options: MergeOptions): Promise<string> {
 
   const mp4OutputPath = outputPath.replace(/\.webm$/i, ".mp4");
 
-  const args = buildFfmpegArgs(videoPath, mp4OutputPath, audio);
+  const args = buildFfmpegArgs(videoPath, mp4OutputPath, audio, trim);
 
   return new Promise((resolve, reject) => {
     const child = spawn(ffmpegPath, args, {
@@ -277,9 +329,20 @@ export function buildFfmpegArgs(
   videoPath: string,
   outputPath: string,
   audio: AudioConfig,
+  trim?: VideoTrim,
 ): string[] {
   const mixAudio = audio as MixAudioConfig;
-  const args: string[] = ["-y", "-i", videoPath];
+  // `-ss` goes before `-i` so the decoder seeks rather than decoding and
+  // discarding everything up to the cut. `-t` is an output option and bounds
+  // the result; the audio inputs that follow are unaffected by either, which is
+  // what we want — narration is already placed relative to the trimmed start.
+  const args: string[] = [
+    "-y",
+    ...(trim ? ["-ss", toSeconds(trim.startMs)] : []),
+    "-i",
+    videoPath,
+    ...(trim ? ["-t", toSeconds(trim.durationMs)] : []),
+  ];
 
   let filterComplex = "";
   const narrationDelay = audio.narrationDelay ?? 0;
