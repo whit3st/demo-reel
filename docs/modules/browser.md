@@ -18,10 +18,18 @@ export interface BrowserSession {
   context: BrowserContext;
   page: Page;
   isRecording: boolean;
+  recordingStartedAt?: number; // stamped right after the recorded page is created
+  recordingEndedAt?: number; // stamped in closeSession, before the page closes
 }
 ```
 
 A session bundles the three Playwright handles (browser, context, page) plus a flag indicating whether video recording is active.
+
+The two timestamps bracket the footage. Recording begins with the page that
+`recordVideo` captures — before auth navigates and before the first scene — and
+ends when the session closes. `RecordingStage` turns them into
+`ctx.recordingTimeline`, which is what lets narration be placed on the picture
+and what `video.span: "scenes"` cuts away.
 
 ### `pool.ts` — BrowserPool
 

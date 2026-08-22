@@ -48,6 +48,8 @@ export class PipelineContext {
   tempVideoPath?: string;
   finalVideoPath?: string;
   sceneTimestamps?: SceneTimestamp[];
+  recordingTimeline?: RecordingTimeline; // where the scenes sit in the recording
+  videoTime?: VideoTimeMapping; // step clock -> video time, shared by audio + subtitles
   warnings: string[] = [];
 
   // --- Supplied to stages that need them ---

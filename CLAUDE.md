@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## Project Overview
 
-demo-reel is a CLI tool (v0.6.0, MIT) for creating professional demo videos from web applications. Users write demo scripts in TypeScript (`.demo.ts` files), and the tool uses Playwright to automate a browser, records the video, generates voiceover narration via TTS, and outputs MP4 videos + SRT/VTT subtitles + scene metadata.
+demo-reel is a CLI tool (MIT) for creating professional demo videos from web applications. Users write demo scripts in TypeScript (`.demo.ts` files), and the tool uses Playwright to automate a browser, records the video, generates voiceover narration via TTS, and outputs MP4 videos + SRT/VTT subtitles + scene metadata.
 
 ## Build / Test / Lint Commands
 

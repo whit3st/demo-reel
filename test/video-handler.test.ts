@@ -238,6 +238,36 @@ describe("generateMetadata", () => {
     expect(meta.scenes[0].audioStartMs).toBe(100);
     expect(meta.scenes[0].audioEndMs).toBe(200);
   });
+
+  /**
+   * Visual times are consumed as positions in the finished file — chapter marks,
+   * "skip the intro". Left on the step clock they are short by however long the
+   * recording ran before the first scene, so every one of them points at the
+   * wrong frame.
+   */
+  it("reports visual times as positions in the video, not on the step clock", () => {
+    const timestamps = [
+      { sceneIndex: 0, narration: "Intro", startMs: 0, endMs: 1000, isIntro: true },
+      { sceneIndex: 1, narration: "Body", startMs: 1000, endMs: 3000, isIntro: false },
+    ];
+    const meta = generateMetadata(timestamps, [], "/out/demo.mp4", { originMs: 4000, scale: 1 });
+
+    expect(meta.scenes[0].visualStartMs).toBe(4000);
+    expect(meta.scenes[0].visualEndMs).toBe(5000);
+    expect(meta.scenes[1].visualStartMs).toBe(5000);
+    expect(meta.introEndMs).toBe(5000);
+    expect(meta.totalDurationMs).toBe(7000);
+  });
+
+  it("leaves visual times on the step clock when no mapping is given", () => {
+    const timestamps = [
+      { sceneIndex: 0, narration: "Only", startMs: 100, endMs: 200, isIntro: false },
+    ];
+    const meta = generateMetadata(timestamps, [], "/out/video.mp4");
+
+    expect(meta.scenes[0].visualStartMs).toBe(100);
+    expect(meta.scenes[0].visualEndMs).toBe(200);
+  });
 });
 
 // ── setOnBrowserCreated ───────────────────────────────────────────

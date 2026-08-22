@@ -215,6 +215,9 @@ describe("processVideoWithAudio", () => {
       finalPath: "/out/demo.mp4",
       narrationPlacements: [],
       warnings: [],
+      // Nothing to place, so the identity mapping — subtitles and metadata
+      // still read this and must not get `undefined`.
+      videoTime: { originMs: 0, scale: 1 },
     });
   });
 
