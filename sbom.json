@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
-  "serialNumber": "urn:uuid:9522f355-b04c-48cd-a6bf-8f226d818c96",
+  "serialNumber": "urn:uuid:dce0cdec-700b-4ed7-8b52-0885372198a7",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-08-22T16:25:48.333Z",
+    "timestamp": "2026-08-23T10:35:05.560Z",
     "lifecycles": [
       {
         "phase": "build"
@@ -33,7 +33,17 @@
           }
         }
       ],
-      "description": "Create demo videos from web apps using Playwright"
+      "description": "Create demo videos from web apps using Playwright",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/whit3st/demo-reel.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/whit3st/demo-reel/issues"
+        }
+      ]
     }
   },
   "components": [
