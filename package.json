@@ -9,8 +9,16 @@
     "playwright",
     "video"
   ],
+  "homepage": "https://github.com/whit3st/demo-reel#readme",
+  "bugs": {
+    "url": "https://github.com/whit3st/demo-reel/issues"
+  },
   "license": "MIT",
   "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/whit3st/demo-reel.git"
+  },
   "bin": {
     "demo-reel": "bin/demo-reel.mjs"
   },
