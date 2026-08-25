@@ -353,6 +353,45 @@ start and is not stable — across 15 consecutive runs of one real app it ranged
 from 3.7s to 9.5s — so no number written here could be right twice. demo-reel
 measures it on each run instead.
 
+### `video.zoom`
+
+The camera zooms the frame to a percentage and follows the synthetic pointer
+while it moves, then eases back out — Screen-Studio-style framing, baked into
+the recording itself, so every output format (mp4, webm, gif) inherits it.
+
+```ts
+video: {
+  resolution: "FHD",
+  zoom: {
+    mode: "auto",     // "off" (default) | "manual" | "auto"
+    percent: 150,     // zoom level when engaged (100–400)
+    deadZone: 0.3,    // fraction of the viewport the cursor may roam without panning
+    leadMs: 250,      // eased zoom-in before an auto-triggered action
+    settleMs: 600,    // hold on the target after the action before easing out
+  },
+},
+```
+
+- **`"off"`** records unzoomed, exactly as before.
+- **`"manual"`** responds only to explicit `{ action: "zoom" }` steps.
+- **`"auto"`** additionally eases onto every click/hover/type/fill/press/
+  select/check/drag target, holds through the action, and eases back out —
+  unless the next step works the same element, in which case the shot holds.
+
+The `zoom` step is author-directed camera work and runs under any mode:
+
+```ts
+{ action: "zoom", percent: 200, target: { strategy: "testId", value: "checkout" } },
+// ... steps play framed on checkout ...
+{ action: "zoom", direction: "out" },
+```
+
+Scenes can override camera settings for their span (`scenes[i].zoom`), merged
+over `video.zoom`; step parameters win over both. Zooming is browser-style:
+layout reflows like a real user pinching, text stays crisp, and clicks land
+exactly where Playwright aims them. Camera animation takes real time, which
+the recorded timeline already measures — narration placement is unaffected.
+
 ## Modular Video Series
 
 Demo videos are designed as standalone segments that also work as a series:

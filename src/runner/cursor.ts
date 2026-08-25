@@ -183,8 +183,18 @@ const cursorScript = (cursor: CursorConfig) => {
 
     const update = (x: number, y: number) => {
       const clamped = clampToViewport(x, y);
+      // Event clientX/Y are visual viewport pixels, but this element lives in
+      // the document root, which the camera may have CSS-zoomed: lengths
+      // written here are interpreted in zoomed space and rendered at written ×
+      // zoom. Divide by the active zoom so the drawn cursor stays under the
+      // real pointer at any zoom level.
+      const zoomFactor = Number(document.documentElement.style.zoom || 1) || 1;
       cursorEl.style.transform =
-        "translate(" + (clamped.x - offset.x) + "px, " + (clamped.y - offset.y) + "px)";
+        "translate(" +
+        (clamped.x / zoomFactor - offset.x) +
+        "px, " +
+        (clamped.y / zoomFactor - offset.y) +
+        "px)";
       writeStoredPosition(clamped.x, clamped.y);
       ensureTopLayer();
     };

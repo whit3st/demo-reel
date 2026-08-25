@@ -11,16 +11,18 @@ import {
   type TimingConfig,
   type SizeConfig,
 } from "./primitives.js";
+import { resolveZoom, type videoSpanSchema, type zoomOverrideSchema } from "./config.js";
 import type { Step } from "./steps.js";
-import type { videoSpanSchema } from "./config.js";
 import { demoReelConfigInputSchema, sceneOwnedSceneInputSchema } from "./scenes.js";
 
 export type VideoSpan = z.infer<typeof videoSpanSchema>;
+export type ZoomOverride = z.infer<typeof zoomOverrideSchema>;
 
 export interface RuntimeScene {
   narration: string;
   stepIndex: number;
   isIntro?: boolean;
+  zoom?: ZoomOverride;
 }
 
 export type DemoReelConfigInput = z.input<typeof demoReelConfigInputSchema>;
@@ -31,7 +33,11 @@ export interface DemoReelConfig extends Omit<
 > {
   steps: Step[];
   scenes?: RuntimeScene[];
-  video: { resolution: SizeConfig; span: VideoSpan };
+  video: {
+    resolution: SizeConfig;
+    span: VideoSpan;
+    zoom: ReturnType<typeof resolveZoom>;
+  };
   cursor: CursorConfig;
   motion: MotionConfig;
   typing: TypingConfig;
@@ -56,6 +62,7 @@ export const demoReelConfigSchema = demoReelConfigInputSchema.transform((val): D
         narration: scene.narration,
         stepIndex,
         isIntro: scene.isIntro,
+        zoom: scene.zoom,
       });
       flattenedSteps.push(...scene.steps);
       stepIndex += scene.steps.length;
@@ -72,6 +79,7 @@ export const demoReelConfigSchema = demoReelConfigInputSchema.transform((val): D
     video: {
       ...val.video,
       resolution: resolveResolution(val.video.resolution),
+      zoom: resolveZoom(val.video.zoom),
     },
     cursor: resolveCursor(val.cursor),
     motion: resolveMotion(val.motion),

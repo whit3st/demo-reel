@@ -13,6 +13,8 @@ Step execution engine for demo-reel. Handles cursor overlay rendering, human-lik
 | File                | Lines | Concern                                                                                             |
 | ------------------- | ----- | --------------------------------------------------------------------------------------------------- |
 | `index.ts`          | ~80   | Top-level entry: `runDemo()`, `runSteps()`, `runScenarioForTest()`                                  |
+| `camera.ts`         | ~330  | Virtual camera: injected zoom/follow script, `CameraController`, `ensureCameraOverlay()`            |
+| `camera-math.ts`    | ~90   | Pure camera arithmetic: `deadZoneOverflow()`, `capPan()`, easing, zoom conversion                   |
 | `cursor.ts`         | ~120  | Cursor overlay DOM injection, `installCursorOverlay()`, `ensureCursorOverlay()`                     |
 | `motion.ts`         | ~180  | Bezier mouse movement, `moveMouseBezier()`, `humanClick()`, `humanScroll()`, `humanMoveToLocator()` |
 | `typing.ts`         | ~40   | Human-like typing, `humanType()`, `getTypingDelay()`                                                |
@@ -34,8 +36,9 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
 Full production execution:
 
 1. Install cursor overlay
-2. For each step: track scene boundaries, run step with cursor animation, handle `confirm` pairs
-3. Return scene timestamps for audio placement + subtitles
+2. Install the camera when `video.zoom.mode` is not `"off"`, and feed it every synthetic pointer position
+3. For each step: track scene boundaries (applying scene-level zoom overrides), run step with cursor animation, handle `confirm` pairs
+4. Return scene timestamps for audio placement + subtitles
 
 ### `runSteps()` — Setup/Cleanup Entry
 
@@ -87,6 +90,32 @@ Fast execution for test runners (Vitest, Playwright Test):
 - **none** — Invisible (zero-size transparent dot)
 
 **Persistence:** If `cursor.persistPosition: true`, cursor position is stored in `localStorage` and restored across navigations.
+
+### `camera.ts` — Virtual Camera (Zoom & Mouse-Follow)
+
+An in-page camera that zooms the recording and follows the pointer, driven by
+`video.zoom`. Half the engine is pure Node-side arithmetic (`camera-math.ts`),
+embedded into the page by source so tests and runtime share one implementation;
+the page half executes decisions against live browser measurements rather than
+assumed CSS-zoom semantics (those are pinned by `test/camera.browser.test.ts`).
+
+**Mechanism:** CSS `zoom` on the document root (browser-zoom semantics: layout
+reflows, text stays crisp, Playwright clicks land natively). Panning is real
+scrolling; scroll units stay visual pixels under zoom, which the engage tween
+exploits to keep the anchored element centred frame-by-frame via its live rect.
+Disengage tweens back to 100% with the view centre pinned analytically, then
+restores the exact pre-engagement scroll.
+
+**Key functions:**
+
+- `CameraController.forPage(page, settings)` — One controller per page; `install()` registers the script for future documents too
+- `maybeEngage(locator, percent?)` — Ease onto an element before an interaction; resolves `false` when disabled or the element is gone
+- `follow(point)` — Dead-zone panning toward the pointer; capped per call so catch-up glides
+- `settle(chained)` — Hold `settleMs`, then ease out unless the next action continues on the same target
+- `applyZoomStep(step)` — Manual `{ action: "zoom" }` semantics; runs under every mode
+- `ensureCameraOverlay(page, settings)` — Lazy install/re-sync, used by zoom steps outside `runDemo`
+
+**Follow feed:** `motion.ts` fires `MouseState.onPointerMove` per synthetic pointer position; `runDemo` wires it to `controller.follow()` fire-and-forget, so CDP round-trips never pace the bezier loop.
 
 ### `motion.ts` — Mouse Movement
 

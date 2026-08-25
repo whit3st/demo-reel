@@ -1,6 +1,7 @@
 import type { Page } from "playwright";
 import {
   demoReelConfigSchema,
+  resolveZoom,
   type DemoReelConfig,
   type DemoReelConfigInput,
   type Step,
@@ -9,6 +10,7 @@ import { createRandom } from "../random.js";
 import type { SceneTimestamp, MouseState } from "./types.js";
 import { isConfirmStep } from "./utils.js";
 import { installCursorOverlay, ensureCursorOverlay } from "./cursor.js";
+import { CameraController } from "./camera.js";
 import { handleDialogForConfirmStep, runWithConfirmSimple, runStepSimple } from "./step-simple.js";
 import { runStep, runWithConfirm } from "./steps.js";
 import { buildSceneBoundaries } from "./scene-tracking.js";
@@ -33,6 +35,13 @@ export const formatStepForLog = (step: Step): string => {
   }
   if (step.action === "drag") {
     return `drag ${JSON.stringify(step.source)} -> ${JSON.stringify(step.target)}`;
+  }
+  if (step.action === "zoom") {
+    const parts: string[] = [];
+    if (step.direction) parts.push(step.direction);
+    if (step.percent !== undefined) parts.push(`${step.percent}%`);
+    if (step.target) parts.push(JSON.stringify(step.target));
+    return `zoom ${parts.length > 0 ? parts.join(" ") : "in"}`;
   }
   if (step.action === "assertText") {
     return `assertText ${JSON.stringify(step.selector)} ${step.text instanceof RegExp ? step.text.toString() : JSON.stringify(step.text)}`;
@@ -147,6 +156,14 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
     initialized: false,
     position: { x: 0, y: 0 },
   };
+  const globalZoom = config.video.zoom;
+  const camera = CameraController.forPage(page, globalZoom);
+  if (camera.enabled) {
+    // The follow feed rides on the pointer loop; fire-and-forget keeps CDP
+    // round-trips from pacing the bezier frames.
+    mouseState.onPointerMove = (point) => camera.follow(point);
+    await camera.install();
+  }
   let startDelayApplied = false;
   const rng = config.randomization ? createRandom(config.randomization.seed) : undefined;
 
@@ -165,6 +182,7 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
     const sceneIdx = sceneBoundaries.get(stepIdx);
     if (sceneIdx !== undefined && config.scenes) {
       const now = Date.now() - recordingStart;
+      const scene = config.scenes[sceneIdx];
 
       if (currentScene !== null) {
         const prevScene = config.scenes[currentScene.index];
@@ -177,10 +195,14 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
         });
       }
 
+      if (scene.zoom) {
+        camera.updateSettings(resolveZoom(globalZoom, scene.zoom));
+      }
       currentScene = { index: sceneIdx, startMs: now };
     }
 
     try {
+      const cameraCtx = camera.enabled ? { camera, nextStep } : undefined;
       if (step.action === "confirm") {
         await handleDialogForConfirmStep(page, step);
       } else if (isConfirmStep(nextStep)) {
@@ -194,6 +216,7 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
           resolvedCursor,
           startDelayApplied,
           rng,
+          cameraCtx,
         );
         stepIdx += 1;
       } else {
@@ -206,6 +229,7 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
           resolvedCursor,
           startDelayApplied,
           rng,
+          cameraCtx,
         );
       }
     } catch (error) {

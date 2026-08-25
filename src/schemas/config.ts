@@ -12,6 +12,44 @@ export const videoSpanSchema = z
       "the first scene and the teardown after the last",
   );
 
+export const zoomModeSchema = z
+  .enum(["off", "manual", "auto"])
+  .describe(
+    "Camera trigger policy: 'off' records unzoomed, 'manual' responds only to " +
+      "explicit zoom steps, 'auto' additionally eases onto every interaction target",
+  );
+
+export const zoomConfigSchema = z.object({
+  mode: zoomModeSchema.default("off"),
+  percent: z
+    .number()
+    .min(100)
+    .max(400)
+    .default(150)
+    .describe("Zoom level when engaged; 100 leaves the frame unzoomed"),
+  deadZone: z
+    .number()
+    .min(0)
+    .max(1)
+    .default(0.3)
+    .describe(
+      "Fraction of the viewport the pointer may cross without the camera " +
+        "panning — the frame rests while the cursor roams inside this box",
+    ),
+  leadMs: z
+    .number()
+    .int()
+    .min(0)
+    .default(250)
+    .describe("Eased zoom-in duration before an auto-triggered interaction"),
+  settleMs: z
+    .number()
+    .int()
+    .min(0)
+    .default(600)
+    .describe("How long the camera holds on a target after its action before easing back out"),
+});
+
 export const videoConfigSchema = z.object({
   resolution: resolutionSchema.describe("Video resolution (also sets viewport)"),
   // Expressed as a policy rather than a duration on purpose: the pre-roll is an
@@ -19,7 +57,50 @@ export const videoConfigSchema = z.object({
   // it ranged from 3.7s to 9.5s, so no number written in a config file could be
   // right twice. The pipeline measures it per run instead.
   span: videoSpanSchema.default("scenes"),
+  zoom: zoomConfigSchema
+    .optional()
+    .describe("Camera behaviour: zoom percentage and mouse following"),
 });
+
+export type ZoomMode = z.infer<typeof zoomModeSchema>;
+export type ZoomSettings = z.infer<typeof zoomConfigSchema>;
+export type ZoomOverride = Partial<ZoomSettings>;
+
+/**
+ * A scene-level camera override stays sparse on purpose: `.partial()` on
+ * zoomConfigSchema would still fire each field's default, turning "override
+ * two fields" into "restate all five" and burying which fields the author
+ * actually chose. Plain optionals keep the merge honest.
+ */
+export const zoomOverrideSchema = z.object({
+  mode: zoomModeSchema.optional(),
+  percent: z.number().min(100).max(400).optional(),
+  deadZone: z.number().min(0).max(1).optional(),
+  leadMs: z.number().int().min(0).optional(),
+  settleMs: z.number().int().min(0).optional(),
+});
+
+const ZOOM_DEFAULTS: ZoomSettings = {
+  mode: "off",
+  percent: 150,
+  deadZone: 0.3,
+  leadMs: 250,
+  settleMs: 600,
+};
+
+/**
+ * Layered resolution: global `video.zoom` defaults ← scene override ← step
+ * parameters all funnel through here, so one merge defines precedence for
+ * every layer.
+ */
+export function resolveZoom(...layers: Array<ZoomOverride | undefined>): ZoomSettings {
+  let resolved: ZoomSettings = { ...ZOOM_DEFAULTS };
+  for (const layer of layers) {
+    if (!layer) continue;
+    resolved = { ...resolved, ...layer };
+  }
+  return resolved;
+}
 
 export const outputFormatSchema = z.enum(["webm", "mp4"]).describe("Output file format");
 

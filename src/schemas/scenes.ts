@@ -13,18 +13,25 @@ import {
   audioConfigSchema,
   randomizationSchema,
   authConfigSchema,
+  zoomOverrideSchema,
 } from "./config.js";
 
 export const legacySceneInputSchema = z.object({
   narration: z.string().describe("Voiceover narration text for this scene"),
   stepIndex: z.number().int().min(0).describe("Index of the first step in this scene"),
   isIntro: z.boolean().optional().describe("Whether this scene is the intro/context scene"),
+  zoom: zoomOverrideSchema
+    .optional()
+    .describe("Camera overrides applied while this scene plays, merged over video.zoom"),
 });
 
 export const sceneOwnedSceneInputSchema = z.object({
   narration: z.string().describe("Voiceover narration text for this scene"),
   steps: z.array(stepSchema).min(1).describe("Steps belonging to this scene"),
   isIntro: z.boolean().optional().describe("Whether this scene is the intro/context scene"),
+  zoom: zoomOverrideSchema
+    .optional()
+    .describe("Camera overrides applied while this scene plays, merged over video.zoom"),
 });
 
 export const demoReelConfigInputSchema = z

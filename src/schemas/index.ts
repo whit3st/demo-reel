@@ -48,6 +48,10 @@ export {
   videoConfigSchema,
   videoSpanSchema,
   outputFormatSchema,
+  zoomModeSchema,
+  zoomConfigSchema,
+  zoomOverrideSchema,
+  resolveZoom,
   randomizationSchema,
   audioConfigSchema,
   storageTypeSchema,
@@ -63,6 +67,9 @@ export {
   type AuthValidateConfig,
   type AuthBehaviorConfig,
   type AuthConfig,
+  type ZoomMode,
+  type ZoomSettings,
+  type ZoomOverride,
 } from "./config.js";
 
 export {
@@ -78,6 +85,7 @@ export {
   checkStepSchema,
   uploadStepSchema,
   dragStepSchema,
+  zoomStepSchema,
   waitStepSchema,
   confirmStepSchema,
   waitForSelectorStepSchema,

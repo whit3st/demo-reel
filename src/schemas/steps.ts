@@ -87,6 +87,28 @@ export const dragStepSchema = stepDelaySchema.extend({
   target: selectorSchema.describe("Target element"),
 });
 
+export const zoomStepSchema = stepDelaySchema.extend({
+  action: z
+    .literal("zoom")
+    .describe("Move the camera: ease to a zoom level, optionally on a target"),
+  percent: z
+    .number()
+    .min(25)
+    .max(400)
+    .optional()
+    .describe(
+      "Zoom level to ease to as a percentage; omitting it uses video.zoom.percent. " +
+        "100 or direction 'out' returns the frame to full view",
+    ),
+  target: selectorSchema
+    .optional()
+    .describe("Element to centre the camera on; defaults to keeping the current view centre"),
+  direction: z
+    .enum(["in", "out"])
+    .optional()
+    .describe("Sugar for zooming to percent (in) or back to full view (out)"),
+});
+
 export const waitStepSchema = z.object({
   action: z.literal("wait").describe("Wait for duration"),
   ms: z.number().int().min(0).describe("Duration to wait in ms"),
@@ -224,6 +246,7 @@ export const stepSchema = z
     checkStepSchema,
     uploadStepSchema,
     dragStepSchema,
+    zoomStepSchema,
     waitStepSchema,
     confirmStepSchema,
     assertTextStepSchema,

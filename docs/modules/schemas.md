@@ -105,6 +105,31 @@ exists. It is a policy rather than a duration because the pre-roll is an app
 cold start and is not stable — over 15 consecutive runs of one real app it
 ranged from 3.7s to 9.5s. The pipeline measures it per run instead.
 
+### Video Zoom
+
+`video.zoom` configures the virtual camera; all fields carry defaults, so an
+omitted block parses to `{ mode: "off", percent: 150, deadZone: 0.3, leadMs:
+250, settleMs: 600 }`.
+
+| Field      | Type                          | Meaning                                                |
+| ---------- | ----------------------------- | ------------------------------------------------------ |
+| `mode`     | `"off" \| "manual" \| "auto"` | What may move the camera                               |
+| `percent`  | `100–400`, default `150`      | Zoom level while engaged                               |
+| `deadZone` | `0–1`, default `0.3`          | Viewport fraction the cursor roams without panning     |
+| `leadMs`   | int ms, default `250`         | Eased zoom-in before an auto-triggered action          |
+| `settleMs` | int ms, default `600`         | Hold on target after the action before easing back out |
+
+Precedence is layered and resolved by `resolveZoom(...layers)`:
+`video.zoom` ← `scenes[i].zoom` ← step parameters. Scene overrides use a
+dedicated sparse schema (`zoomOverrideSchema`) rather than `.partial()` on the
+main config, whose field defaults would otherwise restate unset fields and bury
+which ones the author chose.
+
+The `zoom` **step** (`zoomStepSchema`) is author-directed camera work valid in
+every mode: optional `percent` (25–400), optional `target` selector, optional
+`direction: "in" | "out"`. Direction `"out"`, or `percent ≤ 100` without a
+target, returns to full view.
+
 ### Scene/Step Normalization
 
 Two config formats are supported:

@@ -77,6 +77,7 @@ const ensureMouseStart = async (page: Page, state: MouseState, start: Point) => 
   await page.mouse.move(resolvedStart.x, resolvedStart.y);
   state.position = resolvedStart;
   state.initialized = true;
+  state.onPointerMove?.(resolvedStart);
 };
 
 export const moveMouseBezier = async (
@@ -98,6 +99,7 @@ export const moveMouseBezier = async (
   if (motion.moveDurationMs === 0) {
     await page.mouse.move(targetX, targetY);
     state.position = end;
+    state.onPointerMove?.(end);
     return;
   }
 
@@ -120,6 +122,7 @@ export const moveMouseBezier = async (
     const eased = easing(progress);
     const point = cubicBezierPoint(eased, start, control1, control2, end);
     await page.mouse.move(point.x, point.y);
+    state.onPointerMove?.(point);
 
     if (progress >= 1) {
       break;
