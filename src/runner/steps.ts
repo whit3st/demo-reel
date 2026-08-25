@@ -43,6 +43,18 @@ export const chainsToNextTarget = (
   return sameSelector(selector, (next as { selector?: SelectorConfig }).selector);
 };
 
+/**
+ * Wraps a pointer-motion segment so the camera stands down while it runs:
+ * gesture endpoints were computed from element positions before the motion
+ * began, and panning mid-flight would move content out from under those
+ * coordinates. With an anchor engaged the page side tracks the anchor
+ * instead, which holds the endpoint valid by definition.
+ */
+const runPointerGesture = <T>(
+  camera: CameraController | undefined,
+  run: () => Promise<T>,
+): Promise<T> => (camera ? camera.runGesture(run) : run());
+
 const applyStepDelay = async (page: Page, delayMs?: number) => {
   if (typeof delayMs === "number" && delayMs > 0) {
     await page.waitForTimeout(delayMs);
@@ -209,7 +221,9 @@ export const runStep = async (
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
     const engaged = camera?.auto ? await camera.maybeEngage(target) : false;
-    await humanClick(page, target, state, config.motion, cursorStart, rng);
+    await runPointerGesture(camera, () =>
+      humanClick(page, target, state, config.motion, cursorStart, rng),
+    );
     if (engaged && camera) {
       await camera.settle(chainsToNextTarget(cameraCtx, step.selector));
     }
@@ -224,7 +238,9 @@ export const runStep = async (
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
     const engaged = camera?.auto ? await camera.maybeEngage(target) : false;
-    await humanMoveToLocator(page, target, state, config.motion, cursorStart, rng);
+    await runPointerGesture(camera, () =>
+      humanMoveToLocator(page, target, state, config.motion, cursorStart, rng),
+    );
     if (engaged && camera) {
       await camera.settle(chainsToNextTarget(cameraCtx, step.selector));
     }
@@ -239,7 +255,9 @@ export const runStep = async (
     await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
     const engaged = camera?.auto ? await camera.maybeEngage(target) : false;
-    await humanClick(page, target, state, config.motion, cursorStart, rng);
+    await runPointerGesture(camera, () =>
+      humanClick(page, target, state, config.motion, cursorStart, rng),
+    );
     if (step.clear) {
       await target.fill("");
     }
@@ -263,7 +281,9 @@ export const runStep = async (
     // is under the pointer and typed digits fill that one, so keystroke entry
     // cannot reliably set them at all.
     const engaged = camera?.auto ? await camera.maybeEngage(target) : false;
-    await humanMoveToLocator(page, target, state, config.motion, cursorStart, rng);
+    await runPointerGesture(camera, () =>
+      humanMoveToLocator(page, target, state, config.motion, cursorStart, rng),
+    );
     await target.fill(step.value);
     if (engaged && camera) {
       await camera.settle(chainsToNextTarget(cameraCtx, step.selector));
@@ -311,7 +331,9 @@ export const runStep = async (
     // teleporting in. A native <select>'s option list is an OS popup outside the
     // DOM, so the value itself is still committed via selectOption.
     const engaged = camera?.auto ? await camera.maybeEngage(target) : false;
-    await humanClick(page, target, state, config.motion, cursorStart, rng);
+    await runPointerGesture(camera, () =>
+      humanClick(page, target, state, config.motion, cursorStart, rng),
+    );
     await target.selectOption(step.value);
     if (engaged && camera) {
       await camera.settle(chainsToNextTarget(cameraCtx, step.selector));
@@ -361,7 +383,9 @@ export const runStep = async (
     // A drag frames its whole gesture on the source; the drop point arrives as
     // the pointer travels there, so no separate engagement for the target.
     const engaged = camera?.auto ? await camera.maybeEngage(source) : false;
-    await humanMoveToLocator(page, source, state, config.motion, cursorStart, rng);
+    await runPointerGesture(camera, () =>
+      humanMoveToLocator(page, source, state, config.motion, cursorStart, rng),
+    );
     await page.waitForTimeout(config.motion.clickDelayMs);
 
     // Resolve both handles before touching the mouse. Skipping the drag events
@@ -387,7 +411,9 @@ export const runStep = async (
     }, sourceElement);
 
     const targetPoint = await getLocatorCenter(target);
-    await moveMouseBezier(page, state, targetPoint.x, targetPoint.y, config.motion, rng);
+    await runPointerGesture(camera, () =>
+      moveMouseBezier(page, state, targetPoint.x, targetPoint.y, config.motion, rng),
+    );
     await page.waitForTimeout(config.motion.clickDelayMs);
 
     await page.evaluate((tgt) => {

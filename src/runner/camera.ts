@@ -34,6 +34,9 @@ type CameraApi = {
   sync: (settings: ZoomSettings) => void;
   engage: (payload: EngagePayload) => Promise<void>;
   follow: (point: Point) => void;
+  beginGesture: () => void;
+  endGesture: () => void;
+  snapshot: () => ZoomSettings;
   leave: () => Promise<void>;
 };
 
@@ -47,9 +50,18 @@ const cameraPageScript = (
   },
   constants: { maxPanPx: number },
 ) => {
+  // Re-running the script (double init scripts, re-install after settings
+  // changes) must not stack a second rAF-driving API over the live one.
+  const existing = (window as unknown as { __dshCamera?: CameraApi }).__dshCamera;
+  if (existing?.version === 1) {
+    existing.sync(settings);
+    return;
+  }
+
   const state = {
     settings,
     engaged: false,
+    gesturing: false,
     anchor: null as Element | null,
     originalScroll: { x: 0, y: 0 },
   };
@@ -58,6 +70,9 @@ const cameraPageScript = (
 
   const setZoom = (z: number) => {
     document.documentElement.style.zoom = z === 1 ? "" : String(z);
+    // The cursor overlay compensates for root zoom at draw time; tell it the
+    // factor moved so it can redraw even though no mouse event will fire.
+    window.dispatchEvent(new CustomEvent("__dsh_camera_zoom"));
   };
 
   /**
@@ -151,6 +166,18 @@ const cameraPageScript = (
       if (!state.engaged) {
         return;
       }
+      // While a gesture is in flight toward an anchored element, the pointer
+      // path must not pan the page: interaction endpoints were computed once,
+      // and moving content under a fixed coordinate invalidates them. Holding
+      // an anchor keeps that element (and therefore the endpoint) centred, so
+      // anchor tracking is safe; raw pointer following is not.
+      if (state.anchor && state.anchor.isConnected) {
+        trackAnchor();
+        return;
+      }
+      if (state.gesturing) {
+        return;
+      }
       const overflow = fns.deadZoneOverflow(
         point,
         { width: window.innerWidth, height: window.innerHeight },
@@ -160,6 +187,18 @@ const cameraPageScript = (
       if (step.x !== 0 || step.y !== 0) {
         window.scrollBy(step.x, step.y);
       }
+    },
+
+    beginGesture() {
+      state.gesturing = true;
+    },
+
+    endGesture() {
+      state.gesturing = false;
+    },
+
+    snapshot() {
+      return { ...state.settings };
     },
 
     async leave() {
@@ -196,10 +235,18 @@ export const buildCameraScript = (settings: ZoomSettings): string =>
 const controllers = new WeakMap<Page, CameraController>();
 
 export class CameraController {
+  private gesturesInFlight = 0;
+  private installed = false;
+
   private constructor(
     private readonly page: Page,
     private settings: ZoomSettings,
   ) {}
+
+  /** Whether the camera script has been registered on this page. */
+  get isInstalled(): boolean {
+    return this.installed;
+  }
 
   /** One controller per page: settings updates flow through the live copy. */
   static forPage(page: Page, settings: ZoomSettings): CameraController {
@@ -223,30 +270,47 @@ export class CameraController {
 
   updateSettings(settings: ZoomSettings): void {
     this.settings = settings;
-    void this.page
+    void this.pushSettings();
+  }
+
+  private pushSettings(): Promise<void> {
+    return this.page
       .evaluate((next) => {
         (
           window as unknown as { __dshCamera?: { sync: (s: ZoomSettings) => void } }
         ).__dshCamera?.sync(next);
-      }, settings)
+      }, this.settings)
+      .then(() => {})
       .catch(() => {});
   }
 
   async install(): Promise<void> {
     await this.page.addInitScript(buildCameraScript(this.settings));
     await this.page.evaluate(buildCameraScript(this.settings));
+    this.installed = true;
   }
 
+  /**
+   * Guarantees a live API running THIS controller's settings. Both halves
+   * matter: after a navigation the init script recreates the API with
+   * whatever settings were current at install time, so presence alone does
+   * not mean the page agrees with the scene-level overrides resolved since.
+   */
   async ensureInstalled(): Promise<void> {
     try {
       const present = await this.page.evaluate(() =>
         Boolean((window as unknown as { __dshCamera?: unknown }).__dshCamera),
       );
-      if (!present) {
+      if (present) {
+        await this.pushSettings();
+        this.installed = true;
+      } else {
         await this.page.evaluate(buildCameraScript(this.settings));
+        this.installed = true;
       }
     } catch {
       await this.page.evaluate(buildCameraScript(this.settings)).catch(() => {});
+      this.installed = true;
     }
   }
 
@@ -258,6 +322,11 @@ export class CameraController {
     if (!this.enabled) {
       return false;
     }
+    return this.engageLocator(locator, percentOverride);
+  }
+
+  /** The ungated engagement core — manual zoom steps run under every mode. */
+  private async engageLocator(locator: Locator, percentOverride?: number): Promise<boolean> {
     let handle: ElementHandle | undefined;
     try {
       await locator.waitFor({ state: "visible", timeout: 5000 });
@@ -277,8 +346,32 @@ export class CameraController {
     }
   }
 
+  /**
+   * Marks synthetic pointer motion as part of an interaction gesture. While
+   * the counter is non-zero `follow()` stands down: gesture endpoints were
+   * computed from element positions before the motion started, and panning
+   * under them would invalidate the coordinates the click will use.
+   */
+  beginGesture(): void {
+    this.gesturesInFlight += 1;
+  }
+
+  endGesture(): void {
+    this.gesturesInFlight = Math.max(0, this.gesturesInFlight - 1);
+  }
+
+  /** Runs a pointer-motion segment with following suppressed for its span. */
+  async runGesture<T>(run: () => Promise<T>): Promise<T> {
+    this.beginGesture();
+    try {
+      return await run();
+    } finally {
+      this.endGesture();
+    }
+  }
+
   follow(point: Point): void {
-    if (!this.enabled) {
+    if (!this.enabled || this.gesturesInFlight > 0) {
       return;
     }
     void this.page
@@ -299,9 +392,9 @@ export class CameraController {
 
   async disengage(): Promise<void> {
     await this.page
-      .evaluate(() => {
-        (window as unknown as { __dshCamera?: CameraApi }).__dshCamera?.leave?.();
-      })
+      // Expression form on purpose: evaluate awaits the returned promise, so
+      // the caller cannot resume while the rAF zoom-out is still running.
+      .evaluate(() => (window as unknown as { __dshCamera?: CameraApi }).__dshCamera?.leave?.())
       .catch(() => {});
   }
 
@@ -326,7 +419,9 @@ export class CameraController {
     }
 
     if (step.target) {
-      await this.maybeEngage(resolveLocator(this.page, step.target), step.percent);
+      // Ungated on purpose: an author-written zoom step is camera direction,
+      // valid under every mode — only AUTO engagement is mode-gated.
+      await this.engageLocator(resolveLocator(this.page, step.target), step.percent);
       return;
     }
 

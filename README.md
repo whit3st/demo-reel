@@ -357,7 +357,8 @@ measures it on each run instead.
 
 The camera zooms the frame to a percentage and follows the synthetic pointer
 while it moves, then eases back out — Screen-Studio-style framing, baked into
-the recording itself, so every output format (mp4, webm, gif) inherits it.
+the recording itself, so every output format demo-reel renders today (mp4,
+webm), and the planned GIF export, inherits it.
 
 ```ts
 video: {

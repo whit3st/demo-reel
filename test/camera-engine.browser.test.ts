@@ -96,7 +96,10 @@ describe("camera controller in a real browser", () => {
     it("pans when the pointer leaves the dead zone and rests inside it", async () => {
       const camera = CameraController.forPage(page, settings());
       await camera.install();
-      await camera.maybeEngage(page.locator("#near"));
+      // Engage without an anchor so dead-zone panning applies. Anchor-tracked
+      // engagements centre the target instead and are covered elsewhere.
+      await camera.applyZoomStep({ percent: 150 });
+      await expect.poll(activeZoom).toBeCloseTo(1.5, 5);
       const scrollBefore = await page.evaluate(() => window.scrollY);
 
       // Deep into the bottom-right corner — well outside a 30% box.
@@ -111,6 +114,8 @@ describe("camera controller in a real browser", () => {
       }
       const afterRest = await page.evaluate(() => window.scrollY);
       expect(afterRest).toBe(afterPan);
+
+      await camera.disengage();
     });
   });
 
@@ -230,6 +235,171 @@ describe("camera controller in a real browser", () => {
       ); // within old 30% box? no — but within 90% box
 
       expect(followed).toBe(0);
+    });
+  });
+
+  describe("gesture gate", () => {
+    it("blocks follow() while a gesture is in flight", async () => {
+      const camera = CameraController.forPage(page, settings());
+      await camera.install();
+      // No-target zoom so anchor is null and dead-zone follow applies.
+      await camera.applyZoomStep({ percent: 150 });
+      await expect.poll(activeZoom).toBeCloseTo(1.5, 5);
+
+      // A wide dead zone means follow() WOULD scroll if it ran.
+      camera.updateSettings(settings({ deadZone: 0.9 }));
+
+      let scrollBefore: number;
+      let scrollAfter: number;
+
+      camera.beginGesture();
+      try {
+        scrollBefore = await page.evaluate(() => window.scrollY);
+        camera.follow({ x: 500, y: 320 });
+        await page.waitForTimeout(50);
+        scrollAfter = await page.evaluate(() => window.scrollY);
+      } finally {
+        camera.endGesture();
+      }
+
+      expect(scrollAfter).toBe(scrollBefore!);
+
+      // After the gesture ends, follow() works again.
+      // Use a point deep outside the dead zone so panning is guaranteed.
+      const pre = await page.evaluate(() => window.scrollY);
+      camera.follow({ x: 800, y: 600 });
+      await page.waitForTimeout(50);
+      const post = await page.evaluate(() => window.scrollY);
+      expect(post).not.toBe(pre);
+
+      await camera.disengage();
+    });
+
+    it("runGesture wraps an async block with begin/end symmetry", async () => {
+      const camera = CameraController.forPage(page, settings());
+      await camera.install();
+      // No-target zoom: anchor is null so dead-zone follow applies inside
+      // the gesture, making the gate's blocking effect observable.
+      await camera.applyZoomStep({ percent: 150 });
+      await expect.poll(activeZoom).toBeCloseTo(1.5, 5);
+      camera.updateSettings(settings({ deadZone: 0.9 }));
+
+      let scrollDuring: number | undefined;
+      await camera.runGesture(async () => {
+        const before = await page.evaluate(() => window.scrollY);
+        camera.follow({ x: 500, y: 320 });
+        await page.waitForTimeout(50);
+        scrollDuring = (await page.evaluate(() => window.scrollY)) - before;
+      });
+
+      expect(scrollDuring).toBe(0);
+      await camera.disengage();
+    });
+  });
+
+  describe("ungated manual zoom", () => {
+    it("engages a target even when mode is off", async () => {
+      const off = CameraController.forPage(page, settings({ mode: "off" }));
+      await off.install();
+
+      await off.applyZoomStep({
+        percent: 150,
+        target: { strategy: "id", value: "far" },
+      });
+
+      await expect.poll(activeZoom).toBeCloseTo(1.5, 5);
+      await off.disengage();
+    });
+  });
+
+  describe("disengage await", () => {
+    it("returns only after zoom is back to 1", async () => {
+      const camera = CameraController.forPage(page, settings());
+      await camera.install();
+      await camera.maybeEngage(page.locator("#near"));
+      await expect.poll(activeZoom).toBeCloseTo(1.5, 5);
+
+      await camera.disengage();
+
+      // If disengage had not awaited the tween, activeZoom would still be > 1.
+      expect(await page.evaluate(() => Number(document.documentElement.style.zoom || 1))).toBe(1);
+    });
+  });
+
+  describe("cursor zoom compensation", () => {
+    it("redraws the overlay when the root zoom changes via __dsh_camera_zoom", async () => {
+      const cursorStart = { x: 480, y: 340 };
+
+      await page.evaluate((start) => {
+        document.documentElement.style.zoom = "1.5";
+        document.documentElement.style.overflow = "auto";
+
+        const dot = document.createElement("div");
+        dot.id = "test-cursor";
+        Object.assign(dot.style, {
+          position: "fixed",
+          width: "10px",
+          height: "10px",
+          borderRadius: "50%",
+          background: "red",
+          pointerEvents: "none",
+          zIndex: "2147483647",
+        });
+        document.body.appendChild(dot);
+
+        let lastVisual = { x: start.x, y: start.y };
+        const update = (x: number, y: number) => {
+          lastVisual = { x, y };
+          const zoom = Number(document.documentElement.style.zoom || 1) || 1;
+          const cx = x / zoom - 5;
+          const cy = y / zoom - 5;
+          dot.style.transform = `translate(${cx}px, ${cy}px)`;
+        };
+
+        update(start.x, start.y);
+
+        window.addEventListener("__dsh_camera_zoom", () => update(lastVisual.x, lastVisual.y));
+        document.addEventListener("mousemove", (e: MouseEvent) => {
+          lastVisual = { x: e.clientX, y: e.clientY };
+          update(e.clientX, e.clientY);
+        });
+      }, cursorStart);
+
+      // Move the mouse so the overlay has a known position at zoom 1.5.
+      await page.mouse.move(480, 340);
+      await page.waitForTimeout(50);
+
+      const posBefore = await page.evaluate(() => {
+        const dot = document.getElementById("test-cursor")!;
+        const m = dot.style.transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/)!;
+        return { x: parseFloat(m[1]), y: parseFloat(m[2]) };
+      });
+
+      // Change zoom without a mouse event — the event handler should redraw.
+      await page.evaluate(() => {
+        document.documentElement.style.zoom = "1";
+        window.dispatchEvent(new CustomEvent("__dsh_camera_zoom"));
+      });
+      await page.waitForTimeout(50);
+
+      const posAfter = await page.evaluate(() => {
+        const dot = document.getElementById("test-cursor")!;
+        const m = dot.style.transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/)!;
+        return { x: parseFloat(m[1]), y: parseFloat(m[2]) };
+      });
+
+      // At zoom 1 the local coords should equal the viewport coords minus offset.
+      const expectedLocal = { x: cursorStart.x - 5, y: cursorStart.y - 5 };
+      expect(Math.abs(posAfter.x - expectedLocal.x)).toBeLessThan(2);
+      expect(Math.abs(posAfter.y - expectedLocal.y)).toBeLessThan(2);
+
+      // And the position must have changed from the zoom-1.5 rendering.
+      expect(posAfter.x).not.toBe(posBefore.x);
+
+      await page.evaluate(() => {
+        document.documentElement.style.zoom = "";
+        document.getElementById("test-cursor")?.remove();
+      });
     });
   });
 });

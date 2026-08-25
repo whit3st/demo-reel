@@ -24,6 +24,7 @@ const stubCamera = () =>
     settle: vi.fn().mockResolvedValue(undefined),
     disengage: vi.fn().mockResolvedValue(undefined),
     applyZoomStep: vi.fn().mockResolvedValue(undefined),
+    runGesture: vi.fn().mockImplementation((fn: () => Promise<unknown>) => fn()),
   }) as unknown as CameraController & Record<string, ReturnType<typeof vi.fn>>;
 
 const runWith = async (step: Step, camera?: CameraController, nextStep?: Step) => {

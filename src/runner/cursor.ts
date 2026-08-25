@@ -200,13 +200,27 @@ const cursorScript = (cursor: CursorConfig) => {
     };
 
     const stored = readStoredPosition();
+    let lastVisual = stored ?? { x: cursor.start.x, y: cursor.start.y };
+    const applyLast = () => {
+      update(lastVisual.x, lastVisual.y);
+    };
+
     if (stored) {
       update(stored.x, stored.y);
     } else {
       update(cursor.start.x, cursor.start.y);
     }
 
+    // The camera changes the root's CSS zoom frame-by-frame during its
+    // tweens. The transform above is written in zoomed-local pixels, so each
+    // change rescales it and the drawn cursor would drift off the real
+    // pointer until the next mouse event — which may be seconds away while a
+    // demo types or waits. Redraw from the last known pointer position on
+    // every zoom change.
+    window.addEventListener("__dsh_camera_zoom", applyLast);
+
     document.addEventListener("mousemove", (event: MouseEvent) => {
+      lastVisual = { x: event.clientX, y: event.clientY };
       update(event.clientX, event.clientY);
     });
   };

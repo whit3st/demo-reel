@@ -3,8 +3,8 @@
 Goal: demo-reel can render Screen-Studio-style demos — the frame zooms to a
 configurable percentage and follows the synthetic pointer while it moves, then
 returns to full view. Implemented as an **in-page virtual camera** driven by the
-runner during recording, so every output format (mp4/webm/gif) inherits it for
-free.
+runner during recording, so every output format demo-reel renders today
+(mp4/webm), and the planned GIF export, inherits it for free.
 
 ## Decisions locked
 
@@ -38,7 +38,7 @@ Facts the design relies on:
   pre-roll (v0.12 work). Camera animation time therefore lands safely in the
   timeline without touching any timing code.
 - Recording is Playwright's native webm; whatever the page shows is what gets
-  encoded — including GIF exports.
+  encoded — including the planned GIF export.
 
 ## Milestone 0 — Spike (gate before building)
 
