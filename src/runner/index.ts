@@ -1,6 +1,7 @@
 import type { Page } from "playwright";
 import {
   demoReelConfigSchema,
+  resolveZoom,
   type DemoReelConfig,
   type DemoReelConfigInput,
   type Step,
@@ -9,8 +10,9 @@ import { createRandom } from "../random.js";
 import type { SceneTimestamp, MouseState } from "./types.js";
 import { isConfirmStep } from "./utils.js";
 import { installCursorOverlay, ensureCursorOverlay } from "./cursor.js";
+import { CameraController } from "./camera.js";
 import { handleDialogForConfirmStep, runWithConfirmSimple, runStepSimple } from "./step-simple.js";
-import { runStep, runWithConfirm } from "./steps.js";
+import { runStep, runWithConfirm, type CameraRunContext } from "./steps.js";
 import { buildSceneBoundaries } from "./scene-tracking.js";
 
 export const formatStepForLog = (step: Step): string => {
@@ -33,6 +35,13 @@ export const formatStepForLog = (step: Step): string => {
   }
   if (step.action === "drag") {
     return `drag ${JSON.stringify(step.source)} -> ${JSON.stringify(step.target)}`;
+  }
+  if (step.action === "zoom") {
+    const parts: string[] = [];
+    if (step.direction) parts.push(step.direction);
+    if (step.percent !== undefined) parts.push(`${step.percent}%`);
+    if (step.target) parts.push(JSON.stringify(step.target));
+    return `zoom ${parts.length > 0 ? parts.join(" ") : "in"}`;
   }
   if (step.action === "assertText") {
     return `assertText ${JSON.stringify(step.selector)} ${step.text instanceof RegExp ? step.text.toString() : JSON.stringify(step.text)}`;
@@ -68,30 +77,36 @@ export const runScenarioForTest = async (
   const parsed = demoReelConfigSchema.parse(config);
 
   if (runAuth && parsed.auth) {
-    await runSteps(page, parsed.auth.loginSteps, { verbose, label: "auth" });
+    await runSteps(page, parsed.auth.loginSteps, { verbose, label: "auth", config: parsed });
   }
 
   const setup = parsed.setup ?? parsed.preSteps;
   if (setup && setup.length > 0) {
-    await runSteps(page, setup, { verbose, label: "setup" });
+    await runSteps(page, setup, { verbose, label: "setup", config: parsed });
   }
 
   const mainSteps = collectMainSteps(parsed);
   if (mainSteps.length > 0) {
-    await runSteps(page, mainSteps, { verbose, label: "main" });
+    await runSteps(page, mainSteps, { verbose, label: "main", config: parsed });
   }
 
   const cleanup = parsed.cleanup ?? parsed.postSteps;
   if (!skipCleanup && cleanup && cleanup.length > 0) {
-    await runSteps(page, cleanup, { tolerant: true, verbose, label: "cleanup" });
+    await runSteps(page, cleanup, { tolerant: true, verbose, label: "cleanup", config: parsed });
   }
 };
 
 export const runSteps = async (
   page: Page,
   preSteps: Step[],
-  options?: { tolerant?: boolean; verbose?: boolean; label?: string },
+  options?: {
+    tolerant?: boolean;
+    verbose?: boolean;
+    label?: string;
+    config?: DemoReelConfig;
+  },
 ) => {
+  const config = options?.config;
   for (let index = 0; index < preSteps.length; index++) {
     const step = preSteps[index];
     const nextStep = preSteps[index + 1];
@@ -106,7 +121,7 @@ export const runSteps = async (
         if (step.action === "confirm") {
           await handleDialogForConfirmStep(page, step);
         } else if (isConfirmStep(nextStep)) {
-          await runWithConfirmSimple(page, step, nextStep);
+          await runWithConfirmSimple(page, step, nextStep, config);
           index += 1;
           if (options?.verbose) {
             console.log(
@@ -114,7 +129,7 @@ export const runSteps = async (
             );
           }
         } else {
-          await runStepSimple(page, step);
+          await runStepSimple(page, step, config);
         }
       } catch (error) {
         if (options?.verbose) {
@@ -127,7 +142,7 @@ export const runSteps = async (
       if (step.action === "confirm") {
         await handleDialogForConfirmStep(page, step);
       } else if (isConfirmStep(nextStep)) {
-        await runWithConfirmSimple(page, step, nextStep);
+        await runWithConfirmSimple(page, step, nextStep, config);
         index += 1;
         if (options?.verbose) {
           console.log(
@@ -135,7 +150,7 @@ export const runSteps = async (
           );
         }
       } else {
-        await runStepSimple(page, step);
+        await runStepSimple(page, step, config);
       }
     }
   }
@@ -147,6 +162,16 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
     initialized: false,
     position: { x: 0, y: 0 },
   };
+  const globalZoom = config.video.zoom;
+  const camera = CameraController.forPage(page, globalZoom);
+  // The follow feed registers unconditionally: a scene override may enable
+  // the camera mid-demo, and follow() gates itself on the live mode anyway.
+  // Fire-and-forget keeps CDP round-trips from pacing the bezier frames.
+  mouseState.onPointerMove = (point) => camera.follow(point);
+  if (camera.enabled) {
+    await camera.install();
+  }
+  let prevCameraEnabled = camera.enabled;
   let startDelayApplied = false;
   const rng = config.randomization ? createRandom(config.randomization.seed) : undefined;
 
@@ -165,6 +190,7 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
     const sceneIdx = sceneBoundaries.get(stepIdx);
     if (sceneIdx !== undefined && config.scenes) {
       const now = Date.now() - recordingStart;
+      const scene = config.scenes[sceneIdx];
 
       if (currentScene !== null) {
         const prevScene = config.scenes[currentScene.index];
@@ -177,10 +203,24 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
         });
       }
 
+      // Resolve at every boundary, not only when an override exists — a
+      // scene without zoom must reset the camera to the global layer rather
+      // than silently inherit the previous scene's override. Mode flips also
+      // have to install or stand down the camera itself.
+      const resolvedZoom = resolveZoom(globalZoom, scene.zoom);
+      camera.updateSettings(resolvedZoom);
+      if (camera.enabled && !prevCameraEnabled) {
+        await camera.install();
+      } else if (!camera.enabled && prevCameraEnabled) {
+        await camera.disengage();
+      }
+      prevCameraEnabled = camera.enabled;
+
       currentScene = { index: sceneIdx, startMs: now };
     }
 
     try {
+      const cameraCtx: CameraRunContext = { camera, nextStep };
       if (step.action === "confirm") {
         await handleDialogForConfirmStep(page, step);
       } else if (isConfirmStep(nextStep)) {
@@ -194,6 +234,7 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
           resolvedCursor,
           startDelayApplied,
           rng,
+          cameraCtx,
         );
         stepIdx += 1;
       } else {
@@ -206,6 +247,7 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
           resolvedCursor,
           startDelayApplied,
           rng,
+          cameraCtx,
         );
       }
     } catch (error) {

@@ -1,8 +1,10 @@
 import type { Page } from "playwright";
-import type { Step, SelectorConfig } from "../schemas.js";
+import type { Step, SelectorConfig, DemoReelConfig } from "../schemas.js";
 import { resolveLocator } from "./selectors.js";
 import { runAssertion } from "./assertions.js";
 import { buildTimeoutOption } from "./utils.js";
+import { ensureCameraOverlay } from "./camera.js";
+import { resolveZoom } from "../schemas.js";
 
 export const handleDialogForConfirmStep = async (
   page: Page,
@@ -20,8 +22,12 @@ export const runWithConfirmSimple = async (
   page: Page,
   step: Step,
   confirmStep: Extract<Step, { action: "confirm" }>,
+  config?: DemoReelConfig,
 ): Promise<void> => {
-  await Promise.all([handleDialogForConfirmStep(page, confirmStep), runStepSimple(page, step)]);
+  await Promise.all([
+    handleDialogForConfirmStep(page, confirmStep),
+    runStepSimple(page, step, config),
+  ]);
 };
 
 export function getWaitFor(step: Step): boolean {
@@ -32,7 +38,11 @@ export function getWaitForSelector(step: Step): SelectorConfig {
   return (step as any).selector ?? (step as any).source;
 }
 
-export const runStepSimple = async (page: Page, step: Step): Promise<void> => {
+export const runStepSimple = async (
+  page: Page,
+  step: Step,
+  config?: DemoReelConfig,
+): Promise<void> => {
   if (step.action === "goto") {
     await page.goto(step.url, step.waitUntil ? { waitUntil: step.waitUntil } : undefined);
     return;
@@ -188,6 +198,13 @@ export const runStepSimple = async (page: Page, step: Step): Promise<void> => {
       },
       [sourceElement, targetElement],
     );
+    return;
+  }
+
+  if (step.action === "zoom") {
+    const settings = resolveZoom(config?.video.zoom);
+    const controller = await ensureCameraOverlay(page, settings);
+    await controller.applyZoomStep(step);
     return;
   }
 

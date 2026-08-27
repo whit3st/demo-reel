@@ -183,20 +183,44 @@ const cursorScript = (cursor: CursorConfig) => {
 
     const update = (x: number, y: number) => {
       const clamped = clampToViewport(x, y);
+      // Event clientX/Y are visual viewport pixels, but this element lives in
+      // the document root, which the camera may have CSS-zoomed: lengths
+      // written here are interpreted in zoomed space and rendered at written ×
+      // zoom. Divide by the active zoom so the drawn cursor stays under the
+      // real pointer at any zoom level.
+      const zoomFactor = Number(document.documentElement.style.zoom || 1) || 1;
       cursorEl.style.transform =
-        "translate(" + (clamped.x - offset.x) + "px, " + (clamped.y - offset.y) + "px)";
+        "translate(" +
+        (clamped.x / zoomFactor - offset.x) +
+        "px, " +
+        (clamped.y / zoomFactor - offset.y) +
+        "px)";
       writeStoredPosition(clamped.x, clamped.y);
       ensureTopLayer();
     };
 
     const stored = readStoredPosition();
+    let lastVisual = stored ?? { x: cursor.start.x, y: cursor.start.y };
+    const applyLast = () => {
+      update(lastVisual.x, lastVisual.y);
+    };
+
     if (stored) {
       update(stored.x, stored.y);
     } else {
       update(cursor.start.x, cursor.start.y);
     }
 
+    // The camera changes the root's CSS zoom frame-by-frame during its
+    // tweens. The transform above is written in zoomed-local pixels, so each
+    // change rescales it and the drawn cursor would drift off the real
+    // pointer until the next mouse event — which may be seconds away while a
+    // demo types or waits. Redraw from the last known pointer position on
+    // every zoom change.
+    window.addEventListener("__dsh_camera_zoom", applyLast);
+
     document.addEventListener("mousemove", (event: MouseEvent) => {
+      lastVisual = { x: event.clientX, y: event.clientY };
       update(event.clientX, event.clientY);
     });
   };
