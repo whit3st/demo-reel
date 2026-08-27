@@ -385,6 +385,15 @@ describe("Schema Validation", () => {
   });
 
   describe("Full Config Schema", () => {
+    const minimalConfig = (steps: unknown[]) => ({
+      video: { resolution: "FHD" },
+      cursor: "dot",
+      motion: "smooth",
+      typing: "humanlike",
+      timing: "normal",
+      steps,
+    });
+
     it("should validate minimal valid config", () => {
       const result = demoReelConfigSchema.safeParse({
         video: { resolution: { width: 1920, height: 1080 } },
@@ -422,6 +431,52 @@ describe("Schema Validation", () => {
         steps: [{ action: "goto", url: "https://example.com" }],
       });
       expect(result.success).toBe(true);
+    });
+
+    it("allows a config without a cover action", () => {
+      expect(
+        demoReelConfigSchema.safeParse(
+          minimalConfig([{ action: "goto", url: "https://example.com" }]),
+        ).success,
+      ).toBe(true);
+    });
+
+    it("allows one cover action", () => {
+      expect(
+        demoReelConfigSchema.safeParse(
+          minimalConfig([
+            { action: "goto", url: "https://example.com" },
+            {
+              action: "cover",
+              selector: { strategy: "testId", value: "ready" },
+            },
+          ]),
+        ).success,
+      ).toBe(true);
+    });
+
+    it("rejects more than one cover action", () => {
+      const result = demoReelConfigSchema.safeParse(
+        minimalConfig([
+          { action: "cover", selector: { strategy: "testId", value: "ready-one" } },
+          { action: "cover", selector: { strategy: "testId", value: "ready-two" } },
+        ]),
+      );
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues.some((issue) => issue.message.includes("Only one cover"))).toBe(
+          true,
+        );
+      }
+    });
+
+    it("rejects a cover action outside the recorded demo steps", () => {
+      const withSetup = demoReelConfigSchema.safeParse({
+        ...minimalConfig([{ action: "goto", url: "https://example.com" }]),
+        setup: [{ action: "cover", selector: { strategy: "testId", value: "ready" } }],
+      });
+      expect(withSetup.success).toBe(false);
     });
 
     it("should validate config with resolution preset", () => {

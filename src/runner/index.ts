@@ -156,7 +156,15 @@ export const runSteps = async (
   }
 };
 
-export const runDemo = async (page: Page, config: DemoReelConfig): Promise<SceneTimestamp[]> => {
+export interface RunDemoOptions {
+  captureCover?: (step: Extract<Step, { action: "cover" }>) => Promise<void>;
+}
+
+export const runDemo = async (
+  page: Page,
+  config: DemoReelConfig,
+  options: RunDemoOptions = {},
+): Promise<SceneTimestamp[]> => {
   const resolvedCursor = await installCursorOverlay(page, config.cursor);
   const mouseState: MouseState = {
     initialized: false,
@@ -248,6 +256,7 @@ export const runDemo = async (page: Page, config: DemoReelConfig): Promise<Scene
           startDelayApplied,
           rng,
           cameraCtx,
+          options.captureCover,
         );
       }
     } catch (error) {

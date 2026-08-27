@@ -114,6 +114,27 @@ export const waitStepSchema = z.object({
   ms: z.number().int().min(0).describe("Duration to wait in ms"),
 });
 
+export const coverStepSchema = stepDelaySchema.extend({
+  action: z.literal("cover").describe("Capture the deterministic video cover image"),
+  selector: selectorSchema.describe("Element whose presence makes the scene cover-ready"),
+  state: z
+    .enum(["attached", "visible"])
+    .optional()
+    .describe("Locator state required before capture"),
+  timeoutMs: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe("Maximum time to wait for the cover locator in ms"),
+  settleMs: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe("Additional time to wait after the locator is ready in ms"),
+});
+
 export const confirmStepSchema = z.object({
   action: z.literal("confirm").describe("Handle the next browser confirm/dialog"),
   accept: z.boolean().describe("True to accept the dialog, false to dismiss it"),
@@ -247,6 +268,7 @@ export const stepSchema = z
     uploadStepSchema,
     dragStepSchema,
     zoomStepSchema,
+    coverStepSchema,
     waitStepSchema,
     confirmStepSchema,
     assertTextStepSchema,

@@ -86,6 +86,7 @@ export {
   uploadStepSchema,
   dragStepSchema,
   zoomStepSchema,
+  coverStepSchema,
   waitStepSchema,
   confirmStepSchema,
   waitForSelectorStepSchema,
@@ -107,6 +108,7 @@ export {
   demoReelConfigInputSchema,
   legacySceneInputSchema,
   sceneOwnedSceneInputSchema,
+  type AtMostOneCover,
 } from "./scenes.js";
 
 export {

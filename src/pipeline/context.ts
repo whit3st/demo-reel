@@ -19,6 +19,8 @@ export class PipelineContext {
   narrationManifestPath?: string;
   narrationPlacements?: NarrationPlacement[];
   tempVideoPath?: string;
+  tempCoverPath?: string;
+  finalCoverPath?: string;
   finalVideoPath?: string;
   sceneTimestamps?: SceneTimestamp[];
   /** Where the scene clock sits inside the recording; absent on a dry run. */

@@ -1,4 +1,4 @@
-import { mkdir, unlink, rmdir, writeFile as fsWriteFile, readFile } from "fs/promises";
+import { mkdir, unlink, rmdir, writeFile as fsWriteFile, readFile, copyFile } from "fs/promises";
 import { basename, dirname, join, resolve } from "path";
 import type { Browser, BrowserContext, Page } from "playwright";
 import type { DemoReelConfig, AuthConfig, AuthBehaviorConfig, VideoSpan } from "./schemas.js";
@@ -715,6 +715,12 @@ export async function runVideoScenario(
   }
 
   const recording = await startRecording(config, headed);
+  const coverPath = join(
+    process.cwd(),
+    ".demo-reel-temp",
+    `cover-${process.pid}-${Date.now()}.png`,
+  );
+  let coverCaptured = false;
 
   try {
     if (config.auth) {
@@ -728,7 +734,18 @@ export async function runVideoScenario(
       console.log("Running demo scenario...");
     }
 
-    const sceneTimestamps = await runDemo(recording.page, config);
+    await mkdir(join(process.cwd(), ".demo-reel-temp"), { recursive: true });
+    const sceneTimestamps = await runDemo(recording.page, config, {
+      captureCover: async () => {
+        if (coverCaptured) throw new Error("Only one cover action is allowed per config");
+        coverCaptured = true;
+        await recording.page.screenshot({
+          path: coverPath,
+          animations: "disabled",
+          caret: "hide",
+        });
+      },
+    });
 
     if (verbose) {
       console.log("Stopping recording...");
@@ -769,9 +786,16 @@ export async function runVideoScenario(
     );
     const { finalPath, narrationPlacements, warnings } = processedVideo;
 
+    if (coverCaptured) {
+      const finalCoverPath = finalPath.replace(/\.[^.]+$/, ".png");
+      await copyFile(coverPath, finalCoverPath);
+      if (verbose) console.log(`✓ Cover: ${finalCoverPath}`);
+    }
+
     // Clean up temp video file and directory
     try {
       await unlink(tempVideoPath);
+      if (coverCaptured) await unlink(coverPath);
       await rmdir(join(process.cwd(), ".demo-reel-temp")).catch(() => {});
     } catch {
       // Ignore cleanup errors

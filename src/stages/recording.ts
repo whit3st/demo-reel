@@ -4,6 +4,8 @@ import type { SceneTimestamp } from "../runner/types.js";
 import { handleAuth } from "../video-handler.js";
 import { runDemo } from "../runner/index.js";
 import { captureSession, resolveSessionBaseDir, saveSession } from "../auth.js";
+import { mkdir } from "fs/promises";
+import { join } from "path";
 
 export class RecordingStage implements Stage {
   readonly name = "Recording";
@@ -34,7 +36,25 @@ export class RecordingStage implements Stage {
       // stops later, during release. Both gaps are filmed, so both are needed
       // to place narration on the picture rather than on the step clock.
       const startTime = Date.now();
-      const sceneTimestamps = await runDemo(session.page, ctx.config);
+      const coverPath = join(
+        process.cwd(),
+        ".demo-reel-temp",
+        `cover-${process.pid}-${Date.now()}.png`,
+      );
+      await mkdir(join(process.cwd(), ".demo-reel-temp"), { recursive: true });
+      let coverCaptured = false;
+      const sceneTimestamps = await runDemo(session.page, ctx.config, {
+        captureCover: async () => {
+          if (coverCaptured) throw new Error("Only one cover action is allowed per config");
+          coverCaptured = true;
+          await session.page.screenshot({
+            path: coverPath,
+            animations: "disabled",
+            caret: "hide",
+          });
+          ctx.tempCoverPath = coverPath;
+        },
+      });
       const demoEndedAt = Date.now();
       ctx.sceneTimestamps = sceneTimestamps;
 

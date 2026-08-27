@@ -1,4 +1,4 @@
-import { writeFile, unlink } from "fs/promises";
+import { writeFile, unlink, copyFile } from "fs/promises";
 import type { Stage } from "../pipeline/types.js";
 import type { PipelineContext } from "../pipeline/context.js";
 
@@ -7,12 +7,24 @@ export class OutputStage implements Stage {
 
   async run(ctx: PipelineContext): Promise<void> {
     if (ctx.dryRun) return;
-    if (!ctx.finalVideoPath || !ctx.sceneTimestamps || ctx.sceneTimestamps.length === 0) return;
+    if (!ctx.finalVideoPath) return;
+
+    const basePath = ctx.finalVideoPath.replace(/\.[^.]+$/, "");
+
+    if (ctx.tempCoverPath) {
+      ctx.finalCoverPath = `${basePath}.png`;
+      await copyFile(ctx.tempCoverPath, ctx.finalCoverPath);
+      if (ctx.verbose) console.log(`  Cover: ${ctx.finalCoverPath}`);
+      await unlink(ctx.tempCoverPath).catch(() => {});
+    }
+
+    if (!ctx.sceneTimestamps || ctx.sceneTimestamps.length === 0) {
+      if (ctx.tempVideoPath) await unlink(ctx.tempVideoPath).catch(() => {});
+      return;
+    }
 
     const { buildSubtitleCuesWithNarrationPlacements, generateSRT, generateVTT, generateMetadata } =
       await import("../video-handler.js");
-
-    const basePath = ctx.finalVideoPath.replace(/\.[^.]+$/, "");
 
     const subtitleCues = buildSubtitleCuesWithNarrationPlacements(
       ctx.sceneTimestamps,
