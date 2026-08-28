@@ -104,6 +104,22 @@ describe("runStepSimple", () => {
     expect(page.waitForTimeout).toHaveBeenCalledWith(500);
   });
 
+  it("validates a cover in simple-runner mode without writing an image", async () => {
+    await runStepSimple(page, {
+      action: "cover",
+      selector: { strategy: "testId", value: "ready" },
+      state: "attached",
+      timeoutMs: 1500,
+      delayBeforeMs: 100,
+      settleMs: 300,
+    });
+
+    expect(page.waitForTimeout).toHaveBeenNthCalledWith(1, 100);
+    expect(locatorMock.waitFor).toHaveBeenCalledWith({ state: "attached", timeout: 1500 });
+    expect(page.waitForTimeout).toHaveBeenNthCalledWith(2, 300);
+    expect((page as any).screenshot).toBeUndefined();
+  });
+
   it("handles click step", async () => {
     await runStepSimple(page, { action: "click", selector: { strategy: "id", value: "btn" } });
     expect(page.locator).toHaveBeenCalledWith("#btn");

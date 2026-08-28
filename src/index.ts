@@ -5,6 +5,7 @@ import {
   type DemoReelConfig,
   type DemoReelConfigInput,
 } from "./schemas.js";
+import type { AtMostOneCover } from "./schemas.js";
 import { runPipeline } from "./pipeline/orchestrator.js";
 import { PipelineContext } from "./pipeline/context.js";
 import type { Stage } from "./pipeline/types.js";
@@ -29,7 +30,9 @@ export interface GenerateOptions {
   silent?: boolean;
 }
 
-export function defineConfig(config: DemoConfig): DemoReelConfig {
+export function defineConfig<const T extends DemoConfig>(
+  config: T & AtMostOneCover<T>,
+): DemoReelConfig {
   return validateConfig(config);
 }
 
@@ -76,7 +79,10 @@ export function buildStages(): Stage[] {
   ];
 }
 
-export async function generate(config: DemoConfig, options: GenerateOptions = {}): Promise<void> {
+export async function generate<const T extends DemoConfig>(
+  config: T & AtMostOneCover<T>,
+  options: GenerateOptions = {},
+): Promise<void> {
   const {
     verbose = false,
     dryRun = false,

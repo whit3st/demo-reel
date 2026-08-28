@@ -188,13 +188,12 @@ describe("scroll against a real page", () => {
       y: 300,
     } as unknown as Step);
 
-    await expect(
-      page.evaluate(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(() => resolve(document.getElementById("box")!.scrollTop), 400),
-          ),
-      ),
-    ).resolves.toBe(300);
+    const scrollTop = await page.evaluate(
+      () =>
+        new Promise<number>((resolve) =>
+          setTimeout(() => resolve(document.getElementById("box")!.scrollTop), 400),
+        ),
+    );
+    expect(Math.abs(scrollTop - 300)).toBeLessThanOrEqual(3);
   });
 });

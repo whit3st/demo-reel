@@ -104,6 +104,23 @@ pnpm build && pnpm demo-reel demos/my-feature
 
 Output: `output/signup.mp4` + `.srt` + `.vtt` + `.meta.json`
 
+Add a deterministic cover image by placing one `cover` action in the recorded
+demo steps. The action waits for a meaningful ready marker instead of relying
+on a fixed timestamp:
+
+```typescript
+{
+  action: "cover",
+  selector: { strategy: "testId", value: "dashboard-ready" },
+  timeoutMs: 15000,
+  settleMs: 300,
+}
+```
+
+This produces `output/signup.png` beside the video. A config may contain zero
+or one cover action; more than one is rejected during validation. The locator
+should identify content that is rendered only when the desired scene is ready.
+
 ## How It Works
 
 1. **You write a `.demo.ts`** — TypeScript config with steps, scenes, and narration
@@ -309,6 +326,7 @@ Generates `.srt`, `.vtt` (subtitles) and `.meta.json` (scene timestamps for inte
 | `drag`    | Drag and drop                                                        |
 | `wait`    | Wait for duration                                                    |
 | `waitFor` | Wait for condition (selector, URL, load state, network, JS function) |
+| `cover`   | Wait for a ready locator and capture the deterministic cover image   |
 
 ### Selectors
 

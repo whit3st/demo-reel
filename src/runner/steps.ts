@@ -117,6 +117,7 @@ export const runStep = async (
   startDelayApplied: boolean,
   rng?: RandomSource,
   cameraCtx?: CameraRunContext,
+  captureCover?: (step: Extract<Step, { action: "cover" }>) => Promise<void>,
 ): Promise<boolean> => {
   if (step.action === "goto") {
     await page.goto(step.url, step.waitUntil ? { waitUntil: step.waitUntil } : undefined);
@@ -141,6 +142,22 @@ export const runStep = async (
 
   if (step.action === "wait") {
     await page.waitForTimeout(step.ms);
+    return startDelayApplied;
+  }
+
+  if (step.action === "cover") {
+    await applyStepDelay(page, step.delayBeforeMs);
+    const target = resolveLocator(page, step.selector);
+    await target.waitFor({
+      state: step.state ?? "visible",
+      ...(typeof step.timeoutMs === "number" ? { timeout: step.timeoutMs } : {}),
+    });
+    const settleMs = step.settleMs ?? 0;
+    if (settleMs > 0) await page.waitForTimeout(settleMs);
+    // Dry runs still validate the readiness locator and settle period, but do
+    // not write an image because there is no recording artifact to accompany.
+    if (captureCover) await captureCover(step);
+    await applyStepDelay(page, step.delayAfterMs);
     return startDelayApplied;
   }
 
