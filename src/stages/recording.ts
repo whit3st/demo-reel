@@ -36,25 +36,27 @@ export class RecordingStage implements Stage {
       // stops later, during release. Both gaps are filmed, so both are needed
       // to place narration on the picture rather than on the step clock.
       const startTime = Date.now();
-      const coverPath = join(
-        process.cwd(),
-        ".demo-reel-temp",
-        `cover-${process.pid}-${Date.now()}.png`,
-      );
-      await mkdir(join(process.cwd(), ".demo-reel-temp"), { recursive: true });
+      let coverPath: string | undefined;
       let coverCaptured = false;
-      const sceneTimestamps = await runDemo(session.page, ctx.config, {
-        captureCover: async () => {
-          if (coverCaptured) throw new Error("Only one cover action is allowed per config");
-          coverCaptured = true;
-          await session.page.screenshot({
-            path: coverPath,
-            animations: "disabled",
-            caret: "hide",
-          });
-          ctx.tempCoverPath = coverPath;
-        },
-      });
+      const captureCover = ctx.dryRun
+        ? undefined
+        : async () => {
+            coverPath = join(
+              process.cwd(),
+              ".demo-reel-temp",
+              `cover-${process.pid}-${Date.now()}.png`,
+            );
+            if (coverCaptured) throw new Error("Only one cover action is allowed per config");
+            coverCaptured = true;
+            await mkdir(join(process.cwd(), ".demo-reel-temp"), { recursive: true });
+            await session.page.screenshot({
+              path: coverPath,
+              animations: "disabled",
+              caret: "hide",
+            });
+            ctx.tempCoverPath = coverPath;
+          };
+      const sceneTimestamps = await runDemo(session.page, ctx.config, { captureCover });
       const demoEndedAt = Date.now();
       ctx.sceneTimestamps = sceneTimestamps;
 

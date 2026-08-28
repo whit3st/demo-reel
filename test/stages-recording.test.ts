@@ -47,6 +47,7 @@ describe("RecordingStage", () => {
     expect(acquire).toHaveBeenCalledWith(ctx.config, { recording: false, headed: false });
     expect(handleAuth).toHaveBeenCalledTimes(1);
     expect(runDemo).toHaveBeenCalledTimes(1);
+    expect(runDemo.mock.calls[0][2]).toEqual({ captureCover: undefined });
     expect(ctx.sceneTimestamps).toHaveLength(1);
     // Released with the session only — no session-save callback, no video.
     expect(release).toHaveBeenCalledWith(session);
@@ -61,6 +62,7 @@ describe("RecordingStage", () => {
     await new RecordingStage().run(ctx);
 
     expect(acquire).toHaveBeenCalledWith(ctx.config, { recording: true, headed: false });
+    expect(typeof runDemo.mock.calls[0][2].captureCover).toBe("function");
     // release(session, saveSessionFn) — the second arg is the save callback.
     expect(typeof release.mock.calls[0][1]).toBe("function");
     expect(ctx.tempVideoPath).toBe("/tmp/video.webm");

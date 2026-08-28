@@ -146,6 +146,7 @@ export const runStep = async (
   }
 
   if (step.action === "cover") {
+    await applyStepDelay(page, step.delayBeforeMs);
     const target = resolveLocator(page, step.selector);
     await target.waitFor({
       state: step.state ?? "visible",
@@ -153,8 +154,9 @@ export const runStep = async (
     });
     const settleMs = step.settleMs ?? 0;
     if (settleMs > 0) await page.waitForTimeout(settleMs);
-    if (!captureCover) throw new Error("Cover capture is unavailable outside a recording run");
-    await captureCover(step);
+    // Dry runs still validate the readiness locator and settle period, but do
+    // not write an image because there is no recording artifact to accompany.
+    if (captureCover) await captureCover(step);
     await applyStepDelay(page, step.delayAfterMs);
     return startDelayApplied;
   }

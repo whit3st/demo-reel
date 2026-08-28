@@ -53,6 +53,22 @@ export const runStepSimple = async (
     return;
   }
 
+  if (step.action === "cover") {
+    if (step.delayBeforeMs && step.delayBeforeMs > 0) {
+      await page.waitForTimeout(step.delayBeforeMs);
+    }
+    const target = resolveLocator(page, step.selector);
+    await target.waitFor({
+      state: step.state ?? "visible",
+      ...buildTimeoutOption(step.timeoutMs),
+    });
+    const settleMs = step.settleMs ?? 0;
+    if (settleMs > 0) {
+      await page.waitForTimeout(settleMs);
+    }
+    return;
+  }
+
   if (step.action === "confirm") {
     await handleDialogForConfirmStep(page, step);
     return;
