@@ -86,6 +86,13 @@ Both are driven by the same persistent Python worker (`src/voice/chatterbox_work
 
 Audio-first timing engine with three modes: `auto` (pads delays, warns), `strict` (fails on overflow), `off` (disabled).
 
+### Changelog Discipline
+
+- Every user-visible feature, fix, or behavior change must include a concise entry under `## [Unreleased]` in `CHANGELOG.md`.
+- Update the changelog in the same change as the implementation; do not wait for the release commit.
+- Group entries under the appropriate Keep a Changelog heading (`Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, or `Security`).
+- Release tooling moves the `[Unreleased]` entries into the versioned release section, so leave them there until a release is cut.
+
 ## Coding Conventions
 
 - **No comments** unless explicitly asked — keep code self-documenting
