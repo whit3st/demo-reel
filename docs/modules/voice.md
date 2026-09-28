@@ -10,16 +10,16 @@ TTS (Text-to-Speech) provider abstraction for generating voiceover narration aud
 
 ## Files
 
-| File            | Purpose                                        |
-| --------------- | ---------------------------------------------- |
-| `index.ts`      | `TTSProvider` interface + provider registry    |
-| `piper.ts`      | Piper provider (local, free, no API key)       |
-| `openai.ts`     | OpenAI TTS provider (cloud, requires API key)  |
-| `elevenlabs.ts` | ElevenLabs provider (cloud, curated voices)    |
-| `chatterbox.ts` | Chatterbox providers (turbo + multilingual, persistent Python worker) |
-| `chatterbox_worker.py` | Python inference worker (JSON-lines stdin/stdout protocol) |
-| `cache.ts`      | Voice audio caching by content hash            |
-| `types.ts`      | `VoiceSegment`, `VoiceGenerationOptions`, etc. |
+| File                   | Purpose                                                               |
+| ---------------------- | --------------------------------------------------------------------- |
+| `index.ts`             | `TTSProvider` interface + provider registry                           |
+| `piper.ts`             | Piper provider (local, free, no API key)                              |
+| `openai.ts`            | OpenAI TTS provider (cloud, requires API key)                         |
+| `elevenlabs.ts`        | ElevenLabs provider (cloud, curated voices)                           |
+| `chatterbox.ts`        | Chatterbox providers (turbo + multilingual, persistent Python worker) |
+| `chatterbox_worker.py` | Python inference worker (JSON-lines stdin/stdout protocol)            |
+| `cache.ts`             | Voice audio caching by content hash                                   |
+| `types.ts`             | `VoiceSegment`, `VoiceGenerationOptions`, etc.                        |
 
 ## Provider Interface
 

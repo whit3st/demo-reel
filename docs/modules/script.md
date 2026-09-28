@@ -10,19 +10,19 @@ AI script generation pipeline for demo-reel. Crawls a live page for stable selec
 
 ## File Map
 
-| File           | Concern                                                                          |
-| -------------- | -------------------------------------------------------------------------------- |
-| `crawler.ts`   | Playwright DOM crawl: interactive elements, stable selectors, `formatPageContext` |
-| `generator.ts` | LLM script draft: `generateScript`, `validateScript`, `fixBrokenSteps`           |
-| `timing.ts`    | Step duration estimates, `synchronizeTiming` pads steps to narration length      |
-| `tts.ts`       | `generateVoiceSegments`, `generateNarrationAudio` via `voice/` providers         |
-| `assembler.ts` | `writeDemoConfig`, `writeScriptJson` — emits `.demo.ts` + `.script.json`         |
-| `explore.ts`   | Interactive site explorer: click-through discovery as a standalone script        |
-| `crawl-cli.ts` | Standalone crawler entry (`dist/script/crawl-cli.js`, JSON or text output)       |
-| `voice-cli.ts` | Standalone voiceover entry (`dist/script/voice-cli.js`)                          |
-| `types.ts`     | Zod schemas: `CrawledPage`, `ScriptScene`, `DemoScript`, `TimedScript`           |
+| File           | Concern                                                                                   |
+| -------------- | ----------------------------------------------------------------------------------------- |
+| `crawler.ts`   | Playwright DOM crawl: interactive elements, stable selectors, `formatPageContext`         |
+| `generator.ts` | LLM script draft: `generateScript`, `validateScript`, `fixBrokenSteps`                    |
+| `timing.ts`    | Step duration estimates, `synchronizeTiming` pads steps to narration length               |
+| `tts.ts`       | `generateVoiceSegments`, `generateNarrationAudio` via `voice/` providers                  |
+| `assembler.ts` | `writeDemoConfig`, `writeScriptJson` — emits `.demo.ts` + `.script.json`                  |
+| `explore.ts`   | Interactive site explorer: click-through discovery as a standalone script                 |
+| `crawl-cli.ts` | Standalone crawler entry (`dist/script/crawl-cli.js`, JSON or text output)                |
+| `voice-cli.ts` | Standalone voiceover entry (`dist/script/voice-cli.js`)                                   |
+| `types.ts`     | Zod schemas: `CrawledPage`, `ScriptScene`, `DemoScript`, `TimedScript`                    |
 | `cli.ts`       | Orchestration: `scriptGenerate` / `Voice` / `Build` / `Validate` / `Fix` / `FullPipeline` |
-| `index.ts`     | Re-exports                                                                       |
+| `index.ts`     | Re-exports                                                                                |
 
 ## Subcommands
 

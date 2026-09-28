@@ -42,25 +42,25 @@
 
 ### Step Types (17 actions)
 
-| Action          | Description                                           | Cursor movement      |
-| --------------- | ----------------------------------------------------- | -------------------- |
-| `goto`          | Navigate to URL                                       | No                   |
-| `wait`          | Pause for ms                                          | No                   |
-| `waitFor`       | Wait for selector/url/state/request/response/function | No                   |
-| `click`         | Click element                                         | Yes (bezier)         |
-| `hover`         | Move cursor to element                                | Yes (bezier)         |
-| `type`          | Type text into element                                | Yes (click + type)   |
-| `press`         | Press keyboard key on element                         | No                   |
-| `scroll`        | Scroll element                                        | Yes (moveto + wheel) |
+| Action          | Description                                           | Cursor movement                     |
+| --------------- | ----------------------------------------------------- | ----------------------------------- |
+| `goto`          | Navigate to URL                                       | No                                  |
+| `wait`          | Pause for ms                                          | No                                  |
+| `waitFor`       | Wait for selector/url/state/request/response/function | No                                  |
+| `click`         | Click element                                         | Yes (bezier)                        |
+| `hover`         | Move cursor to element                                | Yes (bezier)                        |
+| `type`          | Type text into element                                | Yes (click + type)                  |
+| `press`         | Press keyboard key on element                         | No                                  |
+| `scroll`        | Scroll element                                        | Yes (moveto + wheel)                |
 | `select`        | Select option from dropdown                           | Yes (click, value via selectOption) |
-| `check`         | Check/uncheck checkbox                                | No                   |
-| `upload`        | Upload file to input                                  | No                   |
-| `drag`          | Drag source element to target                         | Yes (bezier)         |
-| `confirm`       | Accept/dismiss dialog                                 | No                   |
-| `assertText`    | Verify text content                                   | No                   |
-| `assertVisible` | Verify visibility                                     | No                   |
-| `assertUrl`     | Verify URL                                            | No                   |
-| `assertCount`   | Verify element count                                  | No                   |
+| `check`         | Check/uncheck checkbox                                | No                                  |
+| `upload`        | Upload file to input                                  | No                                  |
+| `drag`          | Drag source element to target                         | Yes (bezier)                        |
+| `confirm`       | Accept/dismiss dialog                                 | No                                  |
+| `assertText`    | Verify text content                                   | No                                  |
+| `assertVisible` | Verify visibility                                     | No                                  |
+| `assertUrl`     | Verify URL                                            | No                                  |
+| `assertCount`   | Verify element count                                  | No                                  |
 
 ## Design Patterns
 

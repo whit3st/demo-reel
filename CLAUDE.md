@@ -58,19 +58,19 @@ Scene-owned steps (`scenes[].steps[]`) are normalized into the runtime format (f
 
 ### Key Source Files
 
-| File                      | Purpose                                                            |
-| ------------------------- | ------------------------------------------------------------------ |
-| `src/index.ts`            | Main entry: `generate()`, `defineConfig()`                         |
-| `src/cli.ts`              | CLI parser and entry point                                         |
+| File                      | Purpose                                                               |
+| ------------------------- | --------------------------------------------------------------------- |
+| `src/index.ts`            | Main entry: `generate()`, `defineConfig()`                            |
+| `src/cli.ts`              | CLI parser and entry point                                            |
 | `src/schemas/`            | Zod schemas barrel: primitives/selector/config/steps/scenes/transform |
-| `src/runner/`             | Playwright step execution barrel: cursor/camera/steps/scene-tracking |
-| `src/video-handler.ts`    | Browser launch, auth, recording orchestration                      |
-| `src/config-loader.ts`    | Load `.ts`/`.json` config files                                    |
-| `src/narration-sync.ts`   | Audio-first step timing sync                                       |
-| `src/audio-processor.ts`  | FFmpeg audio/video merging                                         |
-| `src/voice/chatterbox.ts` | Chatterbox provider: Python worker lifecycle + JSON-lines protocol |
-| `src/script/`             | AI script generation pipeline (crawler, generator, TTS, assembler) |
-| `src/commands/`           | Command pattern CLI implementation                                 |
+| `src/runner/`             | Playwright step execution barrel: cursor/camera/steps/scene-tracking  |
+| `src/video-handler.ts`    | Browser launch, auth, recording orchestration                         |
+| `src/config-loader.ts`    | Load `.ts`/`.json` config files                                       |
+| `src/narration-sync.ts`   | Audio-first step timing sync                                          |
+| `src/audio-processor.ts`  | FFmpeg audio/video merging                                            |
+| `src/voice/chatterbox.ts` | Chatterbox provider: Python worker lifecycle + JSON-lines protocol    |
+| `src/script/`             | AI script generation pipeline (crawler, generator, TTS, assembler)    |
+| `src/commands/`           | Command pattern CLI implementation                                    |
 
 ### TTS Provider Abstraction
 
