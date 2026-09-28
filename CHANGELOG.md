@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Weekly vulnerability scan with Renovate security bypass for timely fixes.
+- Safe automerge for dev and GitHub Actions updates gated on CI with 3-day minimum release age.
 
 ## [0.14.0] - 2026-08-30
 
