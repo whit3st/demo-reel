@@ -111,6 +111,8 @@ src/
 ├── runner/                # Step execution (extracted from runner.ts)
 │   ├── index.ts           # runDemo(), runSteps(), runScenarioForTest()
 │   ├── cursor.ts          # Cursor overlay DOM injection
+│   ├── camera.ts          # Virtual camera: zoom/pan engagement during recording
+│   ├── camera-math.ts     # Pure camera motion math (easing, pan caps)
 │   ├── motion.ts          # Bezier mouse movement
 │   ├── typing.ts          # Human-like typing
 │   ├── steps.ts           # runStep() — all 17 action types
@@ -118,6 +120,7 @@ src/
 │   ├── assertions.ts      # All assert* actions
 │   ├── selectors.ts       # resolveLocator, resolveLocatorAll
 │   ├── scene-tracking.ts  # Scene boundaries + timestamp building
+│   ├── utils.ts           # Shared step helpers (clamp, jitter, timeouts)
 │   └── types.ts           # MouseState, Point, SceneTimestamp
 │
 ├── voice/                 # TTS provider system (extracted from script/tts.ts)
@@ -125,6 +128,8 @@ src/
 │   ├── piper.ts           # Piper provider (moved from src/piper.ts)
 │   ├── openai.ts          # OpenAI provider
 │   ├── elevenlabs.ts      # ElevenLabs provider
+│   ├── chatterbox.ts      # Chatterbox providers (turbo + multilingual)
+│   ├── chatterbox_worker.py # Persistent Python inference worker (JSON-lines)
 │   ├── cache.ts           # Voice caching
 │   └── types.ts           # VoiceSegment, etc.
 │
@@ -143,7 +148,7 @@ src/
 │   ├── index.ts           # Re-exports
 │   ├── crawler.ts         # Web crawler for selector discovery
 │   ├── generator.ts       # AI-powered script generation
-│   ├── explorer.ts        # App exploration via Playwright
+│   ├── explore.ts         # App exploration via Playwright
 │   ├── timing.ts          # Step duration estimation
 │   ├── assembler.ts       # Build .demo.ts from script
 │   ├── tts.ts             # TTS generation (uses voice/ providers)
@@ -161,7 +166,6 @@ src/
 ├── voice-config.ts        # Voice config resolution
 ├── presets.ts             # Motion/typing/cursor/timing presets
 ├── random.ts              # Seeded random number generator
-├── run.ts                 # Programmatic API entry
 ├── interfaces.ts          # WriteFile interface
 └── types.ts               # Public type re-exports
 ```
@@ -206,7 +210,6 @@ src/
 flowchart LR
     subgraph Entry
         CLI[cli.ts]
-        RUN[run.ts]
     end
 
     subgraph Orchestration
@@ -234,7 +237,6 @@ flowchart LR
     end
 
     CLI --> GENERATE
-    RUN --> GENERATE
     GENERATE --> PIPELINE
     PIPELINE --> S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7
 

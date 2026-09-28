@@ -66,7 +66,7 @@ TTSStage → AuthStage → PreStepsStage → RecordingStage → AudioMixStage �
 
 **Dependencies:** `narration-sync.ts`
 
-### 2. AuthStage (`auth.ts`)
+### 3. AuthStage (`auth.ts`)
 
 | Property          | Value                                                           |
 | ----------------- | --------------------------------------------------------------- |
@@ -87,7 +87,7 @@ TTSStage → AuthStage → PreStepsStage → RecordingStage → AudioMixStage �
 
 **Dependencies:** `auth.ts`, `browser/*`, `runner/*`
 
-### 3. PreStepsStage (`pre-steps.ts`)
+### 4. PreStepsStage (`pre-steps.ts`)
 
 | Property          | Value                                           |
 | ----------------- | ----------------------------------------------- |
@@ -105,7 +105,7 @@ TTSStage → AuthStage → PreStepsStage → RecordingStage → AudioMixStage �
 
 **Dependencies:** `browser/*`, `runner/*`
 
-### 4. RecordingStage (`recording.ts`)
+### 5. RecordingStage (`recording.ts`)
 
 | Property          | Value                                                               |
 | ----------------- | ------------------------------------------------------------------- |
@@ -136,7 +136,7 @@ Absent on a dry run, which records nothing.
 
 **Dependencies:** `browser/*`, `runner/*`, `auth.ts`
 
-### 5. AudioMixStage (`audio-mix.ts`)
+### 6. AudioMixStage (`audio-mix.ts`)
 
 | Property          | Value                                                                            |
 | ----------------- | -------------------------------------------------------------------------------- |
@@ -170,7 +170,7 @@ the origin becomes 0.
 
 **Dependencies:** `ffmpeg/*`, `narration-manifest.ts`
 
-### 6. OutputStage (`output.ts`)
+### 7. OutputStage (`output.ts`)
 
 | Property          | Value                                                   |
 | ----------------- | ------------------------------------------------------- |
@@ -189,7 +189,7 @@ the origin becomes 0.
 
 **Dependencies:** `narration-manifest.ts`
 
-### 7. PostStepsStage (`post-steps.ts`)
+### 8. PostStepsStage (`post-steps.ts`)
 
 | Property          | Value                                              |
 | ----------------- | -------------------------------------------------- |

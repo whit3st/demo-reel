@@ -42,25 +42,25 @@
 
 ### Step Types (17 actions)
 
-| Action          | Description                                           | Cursor movement      |
-| --------------- | ----------------------------------------------------- | -------------------- |
-| `goto`          | Navigate to URL                                       | No                   |
-| `wait`          | Pause for ms                                          | No                   |
-| `waitFor`       | Wait for selector/url/state/request/response/function | No                   |
-| `click`         | Click element                                         | Yes (bezier)         |
-| `hover`         | Move cursor to element                                | Yes (bezier)         |
-| `type`          | Type text into element                                | Yes (click + type)   |
-| `press`         | Press keyboard key on element                         | No                   |
-| `scroll`        | Scroll element                                        | Yes (moveto + wheel) |
-| `select`        | Select option from dropdown                           | No                   |
-| `check`         | Check/uncheck checkbox                                | No                   |
-| `upload`        | Upload file to input                                  | No                   |
-| `drag`          | Drag source element to target                         | Yes (bezier)         |
-| `confirm`       | Accept/dismiss dialog                                 | No                   |
-| `assertText`    | Verify text content                                   | No                   |
-| `assertVisible` | Verify visibility                                     | No                   |
-| `assertUrl`     | Verify URL                                            | No                   |
-| `assertCount`   | Verify element count                                  | No                   |
+| Action          | Description                                           | Cursor movement                     |
+| --------------- | ----------------------------------------------------- | ----------------------------------- |
+| `goto`          | Navigate to URL                                       | No                                  |
+| `wait`          | Pause for ms                                          | No                                  |
+| `waitFor`       | Wait for selector/url/state/request/response/function | No                                  |
+| `click`         | Click element                                         | Yes (bezier)                        |
+| `hover`         | Move cursor to element                                | Yes (bezier)                        |
+| `type`          | Type text into element                                | Yes (click + type)                  |
+| `press`         | Press keyboard key on element                         | No                                  |
+| `scroll`        | Scroll element                                        | Yes (moveto + wheel)                |
+| `select`        | Select option from dropdown                           | Yes (click, value via selectOption) |
+| `check`         | Check/uncheck checkbox                                | No                                  |
+| `upload`        | Upload file to input                                  | No                                  |
+| `drag`          | Drag source element to target                         | Yes (bezier)                        |
+| `confirm`       | Accept/dismiss dialog                                 | No                                  |
+| `assertText`    | Verify text content                                   | No                                  |
+| `assertVisible` | Verify visibility                                     | No                                  |
+| `assertUrl`     | Verify URL                                            | No                                  |
+| `assertCount`   | Verify element count                                  | No                                  |
 
 ## Design Patterns
 
@@ -99,11 +99,13 @@ interface Command {
 
 ### 3. Strategy (Behavioral)
 
-**TTS Provider** — Three interchangeable TTS backends:
+**TTS Provider** — Five interchangeable TTS backends:
 
 - `PiperProvider` — local/free, no API key needed
 - `OpenAIProvider` — cloud, high-quality voices
 - `ElevenLabsProvider` — cloud, curated voice IDs
+- `ChatterboxProvider` — local/free, English-only (turbo checkpoint)
+- `ChatterboxMultilingualProvider` — local/free, 23 languages
 
 **Selector Strategy** — Six resolution strategies prioritized:
 
@@ -157,6 +159,11 @@ Three modes:
 - **`auto`** — pads step delays to prevent overlap, warns on overflow
 - **`strict`** — fails on any timing deficit (step durations can't cover narration)
 - **`off`** — skip sync entirely (passthrough)
+
+The default pipeline applies these modes as **post-recording auto-shift** in
+`AudioMixStage`: placements are corrected from real recorded timestamps rather
+than estimates. The estimate-based step-padding engine (`narration-sync.ts`)
+remains for custom compositions via the optional `NarrationSyncStage`.
 
 ```
 Example: scenes at [4, 6] with 10 total steps

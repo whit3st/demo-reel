@@ -99,7 +99,7 @@ await generate(
 ```
 
 ```bash
-pnpm build && pnpm demo-reel demos/my-feature
+pnpm build && pnpm exec demo-reel demos/my-feature
 ```
 
 Output: `output/signup.mp4` + `.srt` + `.vtt` + `.meta.json`
@@ -191,7 +191,7 @@ It still reflects your real flow, but it now collapses noisy low-level browser a
 - duplicate navigation bursts are reduced
 - obvious weak selectors like generic buttons are upgraded when possible
 
-See `TRACKING.md` for the raw file format and guidance for AI tools that consume `.track.json` files.
+See `docs/modules/commands.md` (`track` command) for guidance for AI tools that consume `.track.json` files.
 
 ## Configuration
 
@@ -236,7 +236,7 @@ Both do zero-shot voice cloning: point `voicePath` at a 7-15s reference clip, or
 ```typescript
 voice: {
   provider: "chatterbox-multilingual",
-  language: "nl",                         // required for multilingual; defaults to "en"
+  language: "nl",                         // required for multilingual
   voicePath: "./voices/brand-voice.wav",  // omit to use the built-in voice
   speed: 1.0,
 }
@@ -312,21 +312,28 @@ Generates `.srt`, `.vtt` (subtitles) and `.meta.json` (scene timestamps for inte
 
 ### Steps
 
-| Action    | Description                                                          |
-| --------- | -------------------------------------------------------------------- |
-| `goto`    | Navigate to URL                                                      |
-| `click`   | Click an element                                                     |
-| `hover`   | Hover over element                                                   |
-| `type`    | Type text into input                                                 |
-| `press`   | Press a key                                                          |
-| `scroll`  | Scroll element                                                       |
-| `select`  | Select dropdown option(s)                                            |
-| `check`   | Check/uncheck checkbox                                               |
-| `upload`  | Upload files                                                         |
-| `drag`    | Drag and drop                                                        |
-| `wait`    | Wait for duration                                                    |
-| `waitFor` | Wait for condition (selector, URL, load state, network, JS function) |
-| `cover`   | Wait for a ready locator and capture the deterministic cover image   |
+| Action          | Description                                                          |
+| --------------- | -------------------------------------------------------------------- |
+| `goto`          | Navigate to URL                                                      |
+| `click`         | Click an element                                                     |
+| `hover`         | Hover over element                                                   |
+| `type`          | Type text into input                                                 |
+| `fill`          | Set input value directly, without keystrokes                         |
+| `press`         | Press a key                                                          |
+| `scroll`        | Scroll element                                                       |
+| `select`        | Select dropdown option(s)                                            |
+| `check`         | Check/uncheck checkbox                                               |
+| `upload`        | Upload files                                                         |
+| `drag`          | Drag and drop                                                        |
+| `zoom`          | Ease camera to a zoom level, optionally on a target                  |
+| `wait`          | Wait for duration                                                    |
+| `waitFor`       | Wait for condition (selector, URL, load state, network, JS function) |
+| `cover`         | Wait for a ready locator and capture the deterministic cover image   |
+| `confirm`       | Handle the next browser dialog (accept or dismiss)                   |
+| `assertText`    | Assert element text matches expected                                 |
+| `assertVisible` | Assert element is visible (or hidden)                                |
+| `assertUrl`     | Assert the page URL matches expected                                 |
+| `assertCount`   | Assert the number of matching elements                               |
 
 ### Selectors
 

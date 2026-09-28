@@ -1,4 +1,4 @@
-# Auth Module
+# Auth & Utilities Modules
 
 ## Purpose
 
@@ -223,11 +223,13 @@ export function resolveVoiceConfig(overrides?: VoiceConfigOverrides): VoiceConfi
 export function getVoiceName(config: VoiceConfig): string
 ```
 
-**Three providers:**
+**Five providers:**
 
 1. **Piper** — `voice` (model name) or `voicePath` (custom .onnx)
-2. **OpenAI** — `voice` (alloy, echo, fable, onyx, nova, shimmer)
-3. **ElevenLabs** — `voice` (pre-curated voice ID)
+2. **OpenAI** — `voice` (any voice name string)
+3. **ElevenLabs** — `voice` (any voice ID string)
+4. **Chatterbox** — local turbo checkpoint (English)
+5. **Chatterbox Multilingual** — local checkpoint (23 languages)
 
 All support: `speed` (0.5-2.0), `pronunciation` (word replacements map).
 
