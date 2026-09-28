@@ -8,6 +8,11 @@
   "postUpdateOptions": ["pnpmDedupe"],
   "prConcurrentLimit": 5,
   "prHourlyLimit": 2,
+  "labels": ["dependencies"],
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "schedule": ["at any time"]
+  },
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": ["before 06:00 on the first day of the month"]
