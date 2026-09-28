@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Artifacts workflow now opens a PR instead of pushing to protected main.
 - Artifacts PRs now auto-merge once CI passes; no manual merge step.
+- Artifacts workflow uses a GitHub App token so bot PRs skip the approval gate and auto-merge.
 
 ## [0.14.0] - 2026-08-30
 

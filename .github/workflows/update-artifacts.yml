@@ -19,10 +19,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: Mint app token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: main
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
@@ -52,14 +60,22 @@ jobs:
         id: artifacts-pr
         uses: peter-evans/create-pull-request@v7
         with:
+          token: ${{ steps.app-token.outputs.token }}
           branch: chore/update-artifacts
           commit-message: "chore: update artifacts"
           title: "chore: update artifacts"
           labels: dependencies
           delete-branch: true
 
+      - name: Best-effort update artifacts branch
+        if: steps.artifacts-pr.outputs.pull-request-number != ''
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: gh api repos/${{ github.repository }}/pulls/${{ steps.artifacts-pr.outputs.pull-request-number }}/update-branch --method PUT
+
       - name: Enable auto-merge on artifacts PR
         if: steps.artifacts-pr.outputs.pull-request-number != ''
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: gh pr merge --auto --squash "${{ steps.artifacts-pr.outputs.pull-request-number }}"
