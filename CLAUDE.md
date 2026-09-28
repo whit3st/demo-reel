@@ -18,7 +18,7 @@ pnpm test:coverage    # test with v8 coverage
 pnpm test:watch       # test in watch mode
 pnpm lint             # lint with oxlint
 pnpm format           # format with oxfmt
-pnpm demo             # run CLI from source (via tsx)
+pnpm exec demo-reel   # run CLI from dist (via bin)
 ```
 
 ## Tech Stack
@@ -38,7 +38,7 @@ pnpm demo             # run CLI from source (via tsx)
 
 Every CLI operation is implemented as a class implementing the `Command` interface (`{ name, validate(), execute() }`). A `CommandRegistry` handles discovery. `CommandContext` provides dependency injection for filesystem and console, making commands testable.
 
-### Zod-First Validation (`src/schemas.ts`, 725 lines)
+### Zod-First Validation (`src/schemas/` barrel)
 
 All config flows through two Zod schema phases:
 
@@ -49,12 +49,12 @@ Scene-owned steps (`scenes[].steps[]`) are normalized into the runtime format (f
 
 ### Execution Flow (`src/index.ts`)
 
-`generate()` flow:
+`generate()` composes stages via `runPipeline()`:
 
 1. Validate and normalize config
 2. Generate voiceover via local TTS (Piper, Chatterbox, Chatterbox Multilingual, OpenAI, or ElevenLabs)
 3. Narration auto-sync to audio timing
-4. Serialize config → execute recording via Playwright locally
+4. Execute recording via Playwright locally
 
 ### Key Source Files
 
@@ -62,8 +62,8 @@ Scene-owned steps (`scenes[].steps[]`) are normalized into the runtime format (f
 | ------------------------- | ------------------------------------------------------------------ |
 | `src/index.ts`            | Main entry: `generate()`, `defineConfig()`                         |
 | `src/cli.ts`              | CLI parser and entry point                                         |
-| `src/schemas.ts`          | All Zod schemas (config, steps, scenes, voice, auth)               |
-| `src/runner.ts`           | Playwright step execution engine (1300 lines)                      |
+| `src/schemas/`            | Zod schemas barrel: primitives/selector/config/steps/scenes/transform |
+| `src/runner/`             | Playwright step execution barrel: cursor/camera/steps/scene-tracking |
 | `src/video-handler.ts`    | Browser launch, auth, recording orchestration                      |
 | `src/config-loader.ts`    | Load `.ts`/`.json` config files                                    |
 | `src/narration-sync.ts`   | Audio-first step timing sync                                       |
