@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
-  "serialNumber": "urn:uuid:255a95f1-fd87-44cc-a999-f73c36611117",
+  "serialNumber": "urn:uuid:68cffbb3-0f86-4d50-ba17-35a82a2b83d7",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-09-28T16:47:02.300Z",
+    "timestamp": "2026-09-28T18:23:39.663Z",
     "lifecycles": [
       {
         "phase": "build"
@@ -126,6 +126,78 @@
     },
     {
       "type": "library",
+      "name": "path-scurry",
+      "version": "2.0.2",
+      "purl": "pkg:npm/path-scurry@2.0.2",
+      "bom-ref": "pkg:npm/path-scurry@2.0.2",
+      "description": "walk paths fast and efficiently",
+      "authors": [
+        {
+          "name": "Isaac Z. Schlueter <i@izs.me> (https://blog.izs.me)"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BlueOak-1.0.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/path-scurry/-/path-scurry-2.0.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "dcefe2555b0900fb0e9e9c1621e0fe77acffecf9aa029c9078f52d0a77636ad8fff48e4bca51efb79aa5b856814f7239877af57a37d1d39e9cf850aff8d9cd5e"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/isaacs/path-scurry"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "lru-cache",
+      "version": "11.5.2",
+      "purl": "pkg:npm/lru-cache@11.5.2",
+      "bom-ref": "pkg:npm/lru-cache@11.5.2",
+      "description": "A cache object that deletes the least-recently-used items.",
+      "authors": [
+        {
+          "name": "Isaac Z. Schlueter <i@izs.me>"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BlueOak-1.0.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/lru-cache/-/lru-cache-11.5.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "e297ccd457f4c79d28d2d4306f9b9cc3f4733720f4fd824c13a215712b5a959b8c5b176ddec47786e4ad4edc73e0f526bd97d182ebc37a36acbd0da489f475d6"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git+ssh://git@github.com/isaacs/node-lru-cache.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "minimatch",
       "version": "10.2.6",
       "purl": "pkg:npm/minimatch@10.2.6",
@@ -224,124 +296,11 @@
     },
     {
       "type": "library",
-      "name": "path-scurry",
-      "version": "2.0.2",
-      "purl": "pkg:npm/path-scurry@2.0.2",
-      "bom-ref": "pkg:npm/path-scurry@2.0.2",
-      "description": "walk paths fast and efficiently",
-      "authors": [
-        {
-          "name": "Isaac Z. Schlueter <i@izs.me> (https://blog.izs.me)"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "BlueOak-1.0.0"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/path-scurry/-/path-scurry-2.0.2.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "dcefe2555b0900fb0e9e9c1621e0fe77acffecf9aa029c9078f52d0a77636ad8fff48e4bca51efb79aa5b856814f7239877af57a37d1d39e9cf850aff8d9cd5e"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/isaacs/path-scurry"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "lru-cache",
-      "version": "11.5.2",
-      "purl": "pkg:npm/lru-cache@11.5.2",
-      "bom-ref": "pkg:npm/lru-cache@11.5.2",
-      "description": "A cache object that deletes the least-recently-used items.",
-      "authors": [
-        {
-          "name": "Isaac Z. Schlueter <i@izs.me>"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "BlueOak-1.0.0"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/lru-cache/-/lru-cache-11.5.2.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "e297ccd457f4c79d28d2d4306f9b9cc3f4733720f4fd824c13a215712b5a959b8c5b176ddec47786e4ad4edc73e0f526bd97d182ebc37a36acbd0da489f475d6"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "git+ssh://git@github.com/isaacs/node-lru-cache.git"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "openai",
-      "version": "5.23.2",
-      "purl": "pkg:npm/openai@5.23.2",
-      "bom-ref": "pkg:npm/openai@5.23.2",
-      "description": "The official TypeScript library for the OpenAI API",
-      "authors": [
-        {
-          "name": "OpenAI <support@openai.com>"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "Apache-2.0"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/openai/-/openai-5.23.2.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "310073993ba58fe30ce4ef1228493f80bf1aeece6692d4bdcd4b40914db9ed68efa1b19cf6729c06e5708f210471bf5223c6bc6361bf9b39f7be6f67d499657a"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "github:openai/openai-node"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "zod",
-      "version": "4.4.3",
-      "purl": "pkg:npm/zod@4.4.3",
-      "bom-ref": "pkg:npm/zod@4.4.3",
-      "description": "TypeScript-first schema declaration and validation library with static type inference",
-      "authors": [
-        {
-          "name": "Colin McDonnell <zod@colinhacks.com>"
-        }
-      ],
+      "name": "citty",
+      "version": "0.2.2",
+      "purl": "pkg:npm/citty@0.2.2",
+      "bom-ref": "pkg:npm/citty@0.2.2",
+      "description": "Elegant CLI Builder",
       "licenses": [
         {
           "license": {
@@ -352,25 +311,17 @@
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/zod/-/zod-4.4.3.tgz",
+          "url": "https://registry.npmjs.org/citty/-/citty-0.2.2.tgz",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "cad10d163209165d94c1882575eda37215b61f09b818914b0e249759d4eb25004837d15cca9ee7e0387124489634024c575fc1a967d6fe4920ef55037072724d"
+              "content": "fbabc90372fdf32bfe21d7ca1991c1362196e4a1e7db67bf270203d12b6bb33f21e12fdcb00bbf3ae202c31ae0e389393118991d6228f175ee260413ae244fe3"
             }
           ]
         },
         {
-          "type": "website",
-          "url": "https://zod.dev"
-        },
-        {
           "type": "vcs",
-          "url": "git+https://github.com/colinhacks/zod.git"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/colinhacks/zod/issues"
+          "url": "unjs/citty"
         }
       ]
     },
@@ -456,6 +407,109 @@
     },
     {
       "type": "library",
+      "name": "tsx",
+      "version": "4.23.10",
+      "purl": "pkg:npm/tsx@4.23.10",
+      "bom-ref": "pkg:npm/tsx@4.23.10",
+      "description": "TypeScript Execute (tsx): Node.js enhanced with esbuild to run TypeScript & ESM files",
+      "authors": [
+        {
+          "name": "Hiroki Osame"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/tsx/-/tsx-4.23.10.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "d156fd78a538ee78e4c6fffa07c0916510ecc4d0d3fcfcfe04853e3398f0ef12f74ddcc08d2c65654c6ed3114bfe42e9686dec1d9d0b1f6c1b2b54f5ca8ec251"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://tsx.hirok.io"
+        },
+        {
+          "type": "vcs",
+          "url": "privatenumber/tsx"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "esbuild",
+      "version": "0.28.1",
+      "purl": "pkg:npm/esbuild@0.28.1",
+      "bom-ref": "pkg:npm/esbuild@0.28.1",
+      "description": "An extremely fast JavaScript and CSS bundler and minifier.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/esbuild/-/esbuild-0.28.1.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "1eb26bbd9bf96b2c41ccf7f0a613a837393338822589fce4d0a26b18ad9cf11e3e2caa4cb6960b41e51d8e7c235affcb665907da569993ee30efca62f7d0f857"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/evanw/esbuild.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "linux-x64",
+      "version": "0.28.1",
+      "purl": "pkg:npm/%40esbuild/linux-x64@0.28.1",
+      "bom-ref": "pkg:npm/%40esbuild/linux-x64@0.28.1",
+      "group": "@esbuild",
+      "description": "The Linux 64-bit binary for esbuild, a JavaScript bundler.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.28.1.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "bbf6a73581769a654e103c0bb67435c0eaf7119f6c4cd18b5abb18198c075b3180dd28bce083a41d795b5930f5341fbdff595c9f079828ee78ba1c59c9d3737c"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/evanw/esbuild.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "sdk",
       "version": "0.115.0",
       "purl": "pkg:npm/%40anthropic-ai/sdk@0.115.0",
@@ -488,6 +542,50 @@
         {
           "type": "vcs",
           "url": "github:anthropics/anthropic-sdk-typescript"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "zod",
+      "version": "4.4.3",
+      "purl": "pkg:npm/zod@4.4.3",
+      "bom-ref": "pkg:npm/zod@4.4.3",
+      "description": "TypeScript-first schema declaration and validation library with static type inference",
+      "authors": [
+        {
+          "name": "Colin McDonnell <zod@colinhacks.com>"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/zod/-/zod-4.4.3.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "cad10d163209165d94c1882575eda37215b61f09b818914b0e249759d4eb25004837d15cca9ee7e0387124489634024c575fc1a967d6fe4920ef55037072724d"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://zod.dev"
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/colinhacks/zod.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/colinhacks/zod/issues"
         }
       ]
     },
@@ -739,140 +837,6 @@
     },
     {
       "type": "library",
-      "name": "citty",
-      "version": "0.2.2",
-      "purl": "pkg:npm/citty@0.2.2",
-      "bom-ref": "pkg:npm/citty@0.2.2",
-      "description": "Elegant CLI Builder",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/citty/-/citty-0.2.2.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "fbabc90372fdf32bfe21d7ca1991c1362196e4a1e7db67bf270203d12b6bb33f21e12fdcb00bbf3ae202c31ae0e389393118991d6228f175ee260413ae244fe3"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "unjs/citty"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "tsx",
-      "version": "4.23.10",
-      "purl": "pkg:npm/tsx@4.23.10",
-      "bom-ref": "pkg:npm/tsx@4.23.10",
-      "description": "TypeScript Execute (tsx): Node.js enhanced with esbuild to run TypeScript & ESM files",
-      "authors": [
-        {
-          "name": "Hiroki Osame"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/tsx/-/tsx-4.23.10.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "d156fd78a538ee78e4c6fffa07c0916510ecc4d0d3fcfcfe04853e3398f0ef12f74ddcc08d2c65654c6ed3114bfe42e9686dec1d9d0b1f6c1b2b54f5ca8ec251"
-            }
-          ]
-        },
-        {
-          "type": "website",
-          "url": "https://tsx.hirok.io"
-        },
-        {
-          "type": "vcs",
-          "url": "privatenumber/tsx"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "esbuild",
-      "version": "0.28.1",
-      "purl": "pkg:npm/esbuild@0.28.1",
-      "bom-ref": "pkg:npm/esbuild@0.28.1",
-      "description": "An extremely fast JavaScript and CSS bundler and minifier.",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/esbuild/-/esbuild-0.28.1.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "1eb26bbd9bf96b2c41ccf7f0a613a837393338822589fce4d0a26b18ad9cf11e3e2caa4cb6960b41e51d8e7c235affcb665907da569993ee30efca62f7d0f857"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/evanw/esbuild.git"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "linux-x64",
-      "version": "0.28.1",
-      "purl": "pkg:npm/%40esbuild/linux-x64@0.28.1",
-      "bom-ref": "pkg:npm/%40esbuild/linux-x64@0.28.1",
-      "group": "@esbuild",
-      "description": "The Linux 64-bit binary for esbuild, a JavaScript bundler.",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.28.1.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "bbf6a73581769a654e103c0bb67435c0eaf7119f6c4cd18b5abb18198c075b3180dd28bce083a41d795b5930f5341fbdff595c9f079828ee78ba1c59c9d3737c"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/evanw/esbuild.git"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "ffmpeg-static",
       "version": "5.3.0",
       "purl": "pkg:npm/ffmpeg-static@5.3.0",
@@ -903,6 +867,42 @@
         {
           "type": "issue-tracker",
           "url": "https://github.com/eugeneware/ffmpeg-static/issues"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "env-paths",
+      "version": "2.2.1",
+      "purl": "pkg:npm/env-paths@2.2.1",
+      "bom-ref": "pkg:npm/env-paths@2.2.1",
+      "description": "Get paths for storing things like data, config, cache, etc",
+      "authors": [
+        {
+          "name": "Sindre Sorhus"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/env-paths/-/env-paths-2.2.1.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "fa1d6590b2a164c4d88e8835544a49346ecd64959cb9cd830e4feab2a49345108e5e22e3790d5dd7fb9dad41a1a8cc5480097028d67471fdaea9a9f918bb92d8"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "sindresorhus/env-paths"
         }
       ]
     },
@@ -945,25 +945,41 @@
     },
     {
       "type": "library",
-      "name": "parse-cache-control",
-      "version": "1.0.1",
-      "purl": "pkg:npm/parse-cache-control@1.0.1",
-      "bom-ref": "pkg:npm/parse-cache-control@1.0.1",
-      "description": "Parse Cache-Control headers.",
+      "name": "caseless",
+      "version": "0.12.0",
+      "purl": "pkg:npm/caseless@0.12.0",
+      "bom-ref": "pkg:npm/caseless@0.12.0",
+      "description": "Caseless object set/get/has, very useful when working with HTTP headers.",
+      "authors": [
+        {
+          "name": "Mikeal Rogers <mikeal.rogers@gmail.com>"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/parse-cache-control/-/parse-cache-control-1.0.1.tgz",
+          "url": "https://registry.npmjs.org/caseless/-/caseless-0.12.0.tgz",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "eb4cefb0945e40f5f9fd03f42b37ddfd5ae98d270843b487056e9b14261f10ff9fa74129a6bd521e120ee677753e366dbdc9734b3112f43fe9e67149babc1f5a"
+              "content": "e2d605ca27da15f19a72888e6e325e828964c12538c503466d581488d6155316d0db1da552c16f638855815cc68887ba58b38fab27165c0e3497e3d6b31b6153"
             }
           ]
         },
         {
           "type": "vcs",
-          "url": "https://github.com/roryf/parse-cache-control.git"
+          "url": "https://github.com/mikeal/caseless"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/mikeal/caseless/issues"
         }
       ]
     },
@@ -1044,6 +1060,67 @@
         {
           "type": "vcs",
           "url": "git://github.com/substack/typedarray.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "buffer-from",
+      "version": "1.1.2",
+      "purl": "pkg:npm/buffer-from@1.1.2",
+      "bom-ref": "pkg:npm/buffer-from@1.1.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/buffer-from/-/buffer-from-1.1.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "13e5d0091c126da6a20a1b6fea4e83c2073e6f1f81b3abee2891c7979928c7f05a29b8625f3a903b02b870edb6c84946a763829a3c15853dc79b18323c69c97d"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "LinusU/buffer-from"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "inherits",
+      "version": "2.0.4",
+      "purl": "pkg:npm/inherits@2.0.4",
+      "bom-ref": "pkg:npm/inherits@2.0.4",
+      "description": "Browser-friendly inheritance fully compatible with standard node.js inherits()",
+      "licenses": [
+        {
+          "license": {
+            "id": "ISC"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "93fbc6697e3f6256b75b3c8c0af4d039761e207bea38ab67a8176ecd31e9ce9419cc0b2428c859d8af849c189233dcc64a820578ca572b16b8758799210a9ec1"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git://github.com/isaacs/inherits"
         }
       ]
     },
@@ -1203,107 +1280,6 @@
     },
     {
       "type": "library",
-      "name": "inherits",
-      "version": "2.0.4",
-      "purl": "pkg:npm/inherits@2.0.4",
-      "bom-ref": "pkg:npm/inherits@2.0.4",
-      "description": "Browser-friendly inheritance fully compatible with standard node.js inherits()",
-      "licenses": [
-        {
-          "license": {
-            "id": "ISC"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "93fbc6697e3f6256b75b3c8c0af4d039761e207bea38ab67a8176ecd31e9ce9419cc0b2428c859d8af849c189233dcc64a820578ca572b16b8758799210a9ec1"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "git://github.com/isaacs/inherits"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "buffer-from",
-      "version": "1.1.2",
-      "purl": "pkg:npm/buffer-from@1.1.2",
-      "bom-ref": "pkg:npm/buffer-from@1.1.2",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/buffer-from/-/buffer-from-1.1.2.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "13e5d0091c126da6a20a1b6fea4e83c2073e6f1f81b3abee2891c7979928c7f05a29b8625f3a903b02b870edb6c84946a763829a3c15853dc79b18323c69c97d"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "LinusU/buffer-from"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "caseless",
-      "version": "0.12.0",
-      "purl": "pkg:npm/caseless@0.12.0",
-      "bom-ref": "pkg:npm/caseless@0.12.0",
-      "description": "Caseless object set/get/has, very useful when working with HTTP headers.",
-      "authors": [
-        {
-          "name": "Mikeal Rogers <mikeal.rogers@gmail.com>"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "Apache-2.0"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/caseless/-/caseless-0.12.0.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "e2d605ca27da15f19a72888e6e325e828964c12538c503466d581488d6155316d0db1da552c16f638855815cc68887ba58b38fab27165c0e3497e3d6b31b6153"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/mikeal/caseless"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/mikeal/caseless/issues"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "http-response-object",
       "version": "3.0.2",
       "purl": "pkg:npm/http-response-object@3.0.2",
@@ -1367,6 +1343,30 @@
         {
           "type": "vcs",
           "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "parse-cache-control",
+      "version": "1.0.1",
+      "purl": "pkg:npm/parse-cache-control@1.0.1",
+      "bom-ref": "pkg:npm/parse-cache-control@1.0.1",
+      "description": "Parse Cache-Control headers.",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/parse-cache-control/-/parse-cache-control-1.0.1.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "eb4cefb0945e40f5f9fd03f42b37ddfd5ae98d270843b487056e9b14261f10ff9fa74129a6bd521e120ee677753e366dbdc9734b3112f43fe9e67149babc1f5a"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/roryf/parse-cache-control.git"
         }
       ]
     },
@@ -1591,42 +1591,6 @@
     },
     {
       "type": "library",
-      "name": "env-paths",
-      "version": "2.2.1",
-      "purl": "pkg:npm/env-paths@2.2.1",
-      "bom-ref": "pkg:npm/env-paths@2.2.1",
-      "description": "Get paths for storing things like data, config, cache, etc",
-      "authors": [
-        {
-          "name": "Sindre Sorhus"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/env-paths/-/env-paths-2.2.1.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "fa1d6590b2a164c4d88e8835544a49346ecd64959cb9cd830e4feab2a49345108e5e22e3790d5dd7fb9dad41a1a8cc5480097028d67471fdaea9a9f918bb92d8"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "sindresorhus/env-paths"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "progress",
       "version": "2.0.3",
       "purl": "pkg:npm/progress@2.0.3",
@@ -1658,6 +1622,42 @@
         {
           "type": "vcs",
           "url": "git://github.com/visionmedia/node-progress"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "openai",
+      "version": "5.23.2",
+      "purl": "pkg:npm/openai@5.23.2",
+      "bom-ref": "pkg:npm/openai@5.23.2",
+      "description": "The official TypeScript library for the OpenAI API",
+      "authors": [
+        {
+          "name": "OpenAI <support@openai.com>"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/openai/-/openai-5.23.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "310073993ba58fe30ce4ef1228493f80bf1aeece6692d4bdcd4b40914db9ed68efa1b19cf6729c06e5708f210471bf5223c6bc6361bf9b39f7be6f67d499657a"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "github:openai/openai-node"
         }
       ]
     }
