@@ -49,6 +49,7 @@ jobs:
         run: pnpm test:coverage && pnpm run coverage:badge
 
       - name: Open artifacts PR
+        id: artifacts-pr
         uses: peter-evans/create-pull-request@v7
         with:
           branch: chore/update-artifacts
@@ -56,3 +57,9 @@ jobs:
           title: "chore: update artifacts"
           labels: dependencies
           delete-branch: true
+
+      - name: Enable auto-merge on artifacts PR
+        if: steps.artifacts-pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge --auto --squash "${{ steps.artifacts-pr.outputs.pull-request-number }}"
