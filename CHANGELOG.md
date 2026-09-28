@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Weekly vulnerability scan with Renovate security bypass for timely fixes.
 - Safe automerge for dev and GitHub Actions updates gated on CI with 3-day minimum release age.
 
+### Fixed
+
+- Artifacts workflow now opens a PR instead of pushing to protected main.
+
 ## [0.14.0] - 2026-08-30
 
 - **`cover` captures a deterministic PNG beside the video.** Place one `cover` action in the recorded demo flow to wait for a meaningful ready locator, optionally wait for the page to settle, and capture the browser state with animations disabled and the caret hidden. The image uses the video’s basename with a `.png` extension, while dry runs still validate the locator without writing an image. Cover actions are rejected in setup/auth/cleanup steps, and configs may contain at most one.
