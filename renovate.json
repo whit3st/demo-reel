@@ -9,6 +9,8 @@
   "prConcurrentLimit": 5,
   "prHourlyLimit": 2,
   "labels": ["dependencies"],
+  "minimumReleaseAge": "3 days",
+  "platformAutomerge": true,
   "vulnerabilityAlerts": {
     "labels": ["security"],
     "schedule": ["at any time"]
@@ -32,7 +34,7 @@
     },
     {
       "matchDepTypes": ["devDependencies"],
-      "matchUpdateTypes": ["patch"],
+      "matchUpdateTypes": ["minor", "patch"],
       "automerge": true,
       "platformAutomerge": true
     },
@@ -45,7 +47,8 @@
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "github actions",
-      "semanticCommitType": "ci"
+      "semanticCommitType": "ci",
+      "automerge": true
     },
     {
       "matchDepTypes": ["pnpm-workspace.overrides"],
