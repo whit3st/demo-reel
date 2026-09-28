@@ -83,7 +83,7 @@ flowchart TD
     A[main()] --> B[parseArgs()]
     B --> C{Command?}
 
-    C -->|--help| D[showHelp() → exit 0]
+    C -->|--help| D[showHelp() → renderUsage() → exit 0]
     C -->|init| E[InitCommand]
     C -->|track| F[TrackCommand]
     C -->|script| G[ScriptRouterCommand]
@@ -104,7 +104,7 @@ flowchart TD
 
     N --> T{shouldGenerateVoice?}
     T -->|yes| U[generate(config)]
-    T -->|no| V[runVideoScenario(config)]
+    T -->|no| V[runPipeline(stages, ctx)]
 ```
 
 ## Pipeline Stage Flow (New Architecture)
@@ -191,14 +191,18 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    A[DemonReelConfig with voice + narration] --> B{TTS Provider?}
+    A[DemoReelConfig with voice + narration] --> B{TTS Provider?}
     B -->|piper| C[ensurePiperBinary() + ensurePiperModel()]
     B -->|openai| D[OpenAI TTS API]
     B -->|elevenlabs| E[ElevenLabs TTS API]
+    B -->|chatterbox| CH[Chatterbox worker (turbo checkpoint)]
+    B -->|chatterbox-multilingual| CM[Chatterbox worker (multilingual checkpoint)]
 
     C --> F[Piper CLI: text → WAV]
     D --> G[OpenAI API: text → audio buffer]
     E --> H[ElevenLabs API: text → audio buffer]
+    CH --> I
+    CM --> I
 
     F --> I{Has pronunciation overrides?}
     G --> I

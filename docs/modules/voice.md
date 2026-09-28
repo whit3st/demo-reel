@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TTS (Text-to-Speech) provider abstraction for generating voiceover narration audio. Three interchangeable providers, caching by content hash, and text pre-processing with pronunciation overrides. Extracted from `script/tts.ts` (587 lines → 6 focused files).
+TTS (Text-to-Speech) provider abstraction for generating voiceover narration audio. Five interchangeable providers, caching by content hash, and text pre-processing with pronunciation overrides. Extracted from `script/tts.ts` (587 lines → 8 focused files).
 
 ## Location
 
@@ -16,6 +16,8 @@ TTS (Text-to-Speech) provider abstraction for generating voiceover narration aud
 | `piper.ts`      | Piper provider (local, free, no API key)       |
 | `openai.ts`     | OpenAI TTS provider (cloud, requires API key)  |
 | `elevenlabs.ts` | ElevenLabs provider (cloud, curated voices)    |
+| `chatterbox.ts` | Chatterbox providers (turbo + multilingual, persistent Python worker) |
+| `chatterbox_worker.py` | Python inference worker (JSON-lines stdin/stdout protocol) |
 | `cache.ts`      | Voice audio caching by content hash            |
 | `types.ts`      | `VoiceSegment`, `VoiceGenerationOptions`, etc. |
 
@@ -66,7 +68,7 @@ Providers are registered by name. The `voice-config.ts` resolves which provider 
 4. Reads WAV output → buffer
 
 **Binary path:** `~/.demo-reel/piper/piper`
-**Model path:** `~/.demo-reel/piper/models/<voice>.onnx`
+**Model path:** `$PIPER_VOICE_DIR/<voice>.onnx` (defaults to `~/.local/share/piper-voices`)
 
 ### OpenAI (`openai.ts`)
 
@@ -84,7 +86,7 @@ Providers are registered by name. The `voice-config.ts` resolves which provider 
 3. Model: `tts-1` or `tts-1-hd`
 4. Returns MP3/Opus audio buffer
 
-**Voices:** alloy, echo, fable, onyx, nova, shimmer
+**Voices:** any voice name string (e.g., alloy, echo, fable, onyx, nova, shimmer)
 
 ### ElevenLabs (`elevenlabs.ts`)
 
@@ -101,7 +103,7 @@ Providers are registered by name. The `voice-config.ts` resolves which provider 
 2. Calls ElevenLabs TTS API: `POST https://api.elevenlabs.io/v1/text-to-speech/{voice_id}`
 3. Returns MP3 audio buffer
 
-**Voice IDs:** Curated list of high-quality voice IDs (e.g., `21m00Tcm4TlvDq8ikWAM` for "Rachel")
+**Voice IDs:** any voice ID string (e.g., `21m00Tcm4TlvDq8ikWAM` for "Rachel")
 
 ## Voice Cache (`cache.ts`)
 
@@ -123,7 +125,7 @@ export function buildCacheKey(text: string, voice: string, provider: string): st
 **Cache mechanism:**
 
 1. Hash input: `SHA256(text + voice + provider + processing_version)`
-2. Store in `~/.demo-reel/cache/voice/<hash>.mp3`
+2. Store in `.demo-reel-cache/voice/<hash>.mp3`
 3. Check cache before generating new audio
 4. Cache versioned by `NARRATION_PROCESSING_VERSION`
 

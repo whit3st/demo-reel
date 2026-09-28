@@ -1,4 +1,4 @@
-# Auth Module
+# Auth & Utilities Modules
 
 ## Purpose
 
