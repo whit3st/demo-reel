@@ -16,13 +16,13 @@ vi.mock("../src/runner.js", () => ({
 }));
 
 const anthropicCreate = vi.fn();
-const anthropicConstructor = vi.fn(
-  function AnthropicMock(this: { messages: { create: typeof anthropicCreate } }) {
-    this.messages = {
-      create: anthropicCreate,
-    };
-  },
-);
+const anthropicConstructor = vi.fn(function AnthropicMock(this: {
+  messages: { create: typeof anthropicCreate };
+}) {
+  this.messages = {
+    create: anthropicCreate,
+  };
+});
 
 vi.mock("@anthropic-ai/sdk", () => ({
   default: anthropicConstructor,
