@@ -11,9 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Weekly vulnerability scan with Renovate security bypass for timely fixes.
 - Safe automerge for dev and GitHub Actions updates gated on CI with 3-day minimum release age.
+- Self-hosted Renovate runner on Monday mornings (plus manual dispatch) so dependency PRs no longer depend on the hosted app.
 
 ### Fixed
 
+- Closed 8 security advisories via dependency updates: vitest 4.1.11, oxfmt 0.72.0, oxlint 1.87.0, brace-expansion 5.0.12, source-map-js 1.2.2, tinypool 2.2.0.
 - Artifacts workflow now opens a PR instead of pushing to protected main.
 - Artifacts PRs now auto-merge once CI passes; no manual merge step.
 - Artifacts workflow uses a GitHub App token so bot PRs skip the approval gate and auto-merge.
