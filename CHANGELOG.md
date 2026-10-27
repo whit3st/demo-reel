@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Artifacts PRs now auto-merge once CI passes; no manual merge step.
 - Artifacts workflow uses a GitHub App token so bot PRs skip the approval gate and auto-merge.
 
+### Removed
+
+- Removed committed `audit.json` and vulnerabilities badge (always stale; live audit showed 1 high while badge said none). Security now relies on GitHub-native Dependabot alerts + PR dependency review (fails on high+) + Renovate `vulnerabilityAlerts` auto-fix PRs.
+
 ## [0.14.0] - 2026-08-30
 
 - **`cover` captures a deterministic PNG beside the video.** Place one `cover` action in the recorded demo flow to wait for a meaningful ready locator, optionally wait for the page to settle, and capture the browser state with animations disabled and the caret hidden. The image uses the video’s basename with a `.png` extension, while dry runs still validate the locator without writing an image. Cover actions are rejected in setup/auth/cleanup steps, and configs may contain at most one.

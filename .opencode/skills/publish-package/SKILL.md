@@ -77,4 +77,4 @@ If it fails, inspect: `gh run view <run-id> --log`
 npm view demo-reel version
 ```
 
-Then pull main to get auto-committed SBOM/audit/coverage updates from the `Update Artifacts` workflow.
+Then pull main to get auto-committed SBOM/coverage updates from the `Update Artifacts` workflow.
