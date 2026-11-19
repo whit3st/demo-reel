@@ -2,12 +2,15 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
   "timezone": "UTC",
-  "schedule": ["before 06:00 on monday"],
+  "dependencyDashboard": {
+    "enabled": false
+  },
+  "schedule": ["at any time"],
   "semanticCommits": "enabled",
   "rangeStrategy": "bump",
   "postUpdateOptions": ["pnpmDedupe"],
-  "prConcurrentLimit": 5,
-  "prHourlyLimit": 2,
+  "prConcurrentLimit": 0,
+  "prHourlyLimit": 0,
   "labels": ["dependencies"],
   "minimumReleaseAge": "3 days",
   "platformAutomerge": true,
@@ -16,22 +19,9 @@
     "schedule": ["at any time"]
   },
   "lockFileMaintenance": {
-    "enabled": true,
-    "schedule": ["before 06:00 on the first day of the month"]
+    "enabled": true
   },
   "packageRules": [
-    {
-      "matchDepTypes": ["dependencies"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "production dependencies",
-      "semanticCommitType": "chore"
-    },
-    {
-      "matchDepTypes": ["devDependencies"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "dev dependencies",
-      "semanticCommitType": "chore"
-    },
     {
       "matchDepTypes": ["devDependencies"],
       "matchUpdateTypes": ["minor", "patch"],
@@ -40,25 +30,21 @@
     },
     {
       "matchDepTypes": ["peerDependencies"],
-      "rangeStrategy": "widen",
-      "semanticCommitType": "chore"
+      "rangeStrategy": "widen"
     },
     {
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "github actions",
       "semanticCommitType": "ci",
       "automerge": true
     },
     {
       "matchDepTypes": ["pnpm-workspace.overrides"],
-      "semanticCommitType": "chore",
       "semanticCommitScope": "overrides"
     },
     {
       "matchPackageNames": ["@typescript/native-preview"],
-      "groupName": "tsgo preview",
-      "schedule": ["before 06:00 on the first day of the month"]
+      "groupName": "tsgo preview"
     },
     {
       "matchPackageNames": ["@types/node"],
