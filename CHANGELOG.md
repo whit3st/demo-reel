@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `pnpm publish` now waits up to 10 minutes for npm to expose the new version and tarball before the publish workflow reports success, covering npm's publish-time malware scan.
+
 ## [0.15.0] - 2026-11-20
 
 ### Added
