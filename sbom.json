@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
-  "serialNumber": "urn:uuid:699beb7c-6fd1-4541-80ca-8347de9dbc8f",
+  "serialNumber": "urn:uuid:5b7b28e5-a34f-4e27-a780-fed078f12047",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-11-20T05:55:35.690Z",
+    "timestamp": "2026-11-20T06:08:32.587Z",
     "lifecycles": [
       {
         "phase": "build"
@@ -54,6 +54,37 @@
   "components": [
     {
       "type": "library",
+      "name": "citty",
+      "version": "0.2.2",
+      "purl": "pkg:npm/citty@0.2.2",
+      "bom-ref": "pkg:npm/citty@0.2.2",
+      "description": "Elegant CLI Builder",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/citty/-/citty-0.2.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "fbabc90372fdf32bfe21d7ca1991c1362196e4a1e7db67bf270203d12b6bb33f21e12fdcb00bbf3ae202c31ae0e389393118991d6228f175ee260413ae244fe3"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "unjs/citty"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "glob",
       "version": "13.0.6",
       "purl": "pkg:npm/glob@13.0.6",
@@ -85,6 +116,42 @@
         {
           "type": "vcs",
           "url": "git@github.com:isaacs/node-glob.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "minipass",
+      "version": "7.1.3",
+      "purl": "pkg:npm/minipass@7.1.3",
+      "bom-ref": "pkg:npm/minipass@7.1.3",
+      "description": "minimal implementation of a PassThrough stream",
+      "authors": [
+        {
+          "name": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BlueOak-1.0.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/minipass/-/minipass-7.1.3.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "b44047a839c8a0cff5ad7304d738246bd83a43695ca029311cbb9cece0c9e41c5b3f977873667970682d5c092ee7ddb4d02c7b762b874ce61f4810fc9fa9a6f0"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/isaacs/minipass"
         }
       ]
     },
@@ -157,42 +224,6 @@
         {
           "type": "vcs",
           "url": "git+ssh://git@github.com/isaacs/node-lru-cache.git"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "minipass",
-      "version": "7.1.3",
-      "purl": "pkg:npm/minipass@7.1.3",
-      "bom-ref": "pkg:npm/minipass@7.1.3",
-      "description": "minimal implementation of a PassThrough stream",
-      "authors": [
-        {
-          "name": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "BlueOak-1.0.0"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/minipass/-/minipass-7.1.3.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "b44047a839c8a0cff5ad7304d738246bd83a43695ca029311cbb9cece0c9e41c5b3f977873667970682d5c092ee7ddb4d02c7b762b874ce61f4810fc9fa9a6f0"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/isaacs/minipass"
         }
       ]
     },
@@ -296,86 +327,6 @@
     },
     {
       "type": "library",
-      "name": "playwright",
-      "version": "1.62.0",
-      "purl": "pkg:npm/playwright@1.62.0",
-      "bom-ref": "pkg:npm/playwright@1.62.0",
-      "description": "A high-level API to automate web browsers",
-      "authors": [
-        {
-          "name": "Microsoft Corporation"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "Apache-2.0"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/playwright/-/playwright-1.62.0.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "675e1d1b7d3976068bbba7e80754d741a805896f097d250851a52e3da290e8db413ca1753ffa9772a7e1e9ce8afe270fa9dcb7ec99a36e20577fa24d83a4b297"
-            }
-          ]
-        },
-        {
-          "type": "website",
-          "url": "https://playwright.dev"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/microsoft/playwright.git"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "playwright-core",
-      "version": "1.62.0",
-      "purl": "pkg:npm/playwright-core@1.62.0",
-      "bom-ref": "pkg:npm/playwright-core@1.62.0",
-      "description": "A high-level API to automate web browsers",
-      "authors": [
-        {
-          "name": "Microsoft Corporation"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "Apache-2.0"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.62.0.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "9ec351caad2bdb3b06f007111d692773d4110395c2b9e0bb81632bb3e1b1dad9599fd85c97ccee75f874d258493d8d4313b36667a6c3b13f60db27b2f265e58c"
-            }
-          ]
-        },
-        {
-          "type": "website",
-          "url": "https://playwright.dev"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/microsoft/playwright.git"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "ffmpeg-static",
       "version": "5.3.0",
       "purl": "pkg:npm/ffmpeg-static@5.3.0",
@@ -447,506 +398,6 @@
     },
     {
       "type": "library",
-      "name": "env-paths",
-      "version": "2.2.1",
-      "purl": "pkg:npm/env-paths@2.2.1",
-      "bom-ref": "pkg:npm/env-paths@2.2.1",
-      "description": "Get paths for storing things like data, config, cache, etc",
-      "authors": [
-        {
-          "name": "Sindre Sorhus"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/env-paths/-/env-paths-2.2.1.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "fa1d6590b2a164c4d88e8835544a49346ecd64959cb9cd830e4feab2a49345108e5e22e3790d5dd7fb9dad41a1a8cc5480097028d67471fdaea9a9f918bb92d8"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "sindresorhus/env-paths"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "http-basic",
-      "version": "8.2.4",
-      "purl": "pkg:npm/%40derhuerst/http-basic@8.2.4",
-      "bom-ref": "pkg:npm/%40derhuerst/http-basic@8.2.4",
-      "group": "@derhuerst",
-      "description": "Very low level wrapper arround http.request/https.request",
-      "authors": [
-        {
-          "name": "ForbesLindesay"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/@derhuerst/http-basic/-/http-basic-8.2.4.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "17dacbf64f578dfe5b942cfc1ec2513b8762cb5d7571ac8bdaf918d97138af8b779f4c8f5d5632dca0f79c9d6a6eb4a7f7be375164971f8230b826bf1d694617"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/derhuerst/http-basic.git"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "parse-cache-control",
-      "version": "1.0.1",
-      "purl": "pkg:npm/parse-cache-control@1.0.1",
-      "bom-ref": "pkg:npm/parse-cache-control@1.0.1",
-      "description": "Parse Cache-Control headers.",
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/parse-cache-control/-/parse-cache-control-1.0.1.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "eb4cefb0945e40f5f9fd03f42b37ddfd5ae98d270843b487056e9b14261f10ff9fa74129a6bd521e120ee677753e366dbdc9734b3112f43fe9e67149babc1f5a"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/roryf/parse-cache-control.git"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "http-response-object",
-      "version": "3.0.2",
-      "purl": "pkg:npm/http-response-object@3.0.2",
-      "bom-ref": "pkg:npm/http-response-object@3.0.2",
-      "description": "A simple object to represent an http response",
-      "authors": [
-        {
-          "name": "ForbesLindesay"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/http-response-object/-/http-response-object-3.0.2.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "6ea5f45d317a7e75d241c109d88bb2afbe7255a9328c80c2aaba0943f6877d276533be370b0aa88b69c360cccb19651cb935865b2f0002f38a5d37e2bfaabd44"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/ForbesLindesay/http-response-object.git"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "node",
-      "version": "10.17.60",
-      "purl": "pkg:npm/%40types/node@10.17.60",
-      "bom-ref": "pkg:npm/%40types/node@10.17.60",
-      "group": "@types",
-      "description": "TypeScript definitions for Node.js",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/@types/node/-/node-10.17.60.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "17428880325fcb69c0df330b99618ac5c1f665512d0995c71dd390b36812690dbbfa535e11f1b1ce4230f74697b300135fb019df7b5a84f6f3cba2807d4ade57"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "concat-stream",
-      "version": "2.0.0",
-      "purl": "pkg:npm/concat-stream@2.0.0",
-      "bom-ref": "pkg:npm/concat-stream@2.0.0",
-      "description": "writable stream that concatenates strings or binary data and calls a callback with the result",
-      "authors": [
-        {
-          "name": "Max Ogden <max@maxogden.com>"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/concat-stream/-/concat-stream-2.0.0.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "316b9f61d170e7771c1a3080f8e97b5c96290255bafe9ad2333b8f393467246706cee84b9f849caf3eea7faa3c6d1399e75e25b5acdc2052597af71f6e8d31ec"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "http://github.com/maxogden/concat-stream.git"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "http://github.com/maxogden/concat-stream/issues"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "typedarray",
-      "version": "0.0.6",
-      "purl": "pkg:npm/typedarray@0.0.6",
-      "bom-ref": "pkg:npm/typedarray@0.0.6",
-      "description": "TypedArray polyfill for old browsers",
-      "authors": [
-        {
-          "name": "James Halliday"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/typedarray/-/typedarray-0.0.6.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "fda0831066ad1af67604893e1e62dfe227c2245c2f28535bf7f25e64f32e95f805ada727f5015c01fe463bc07f9b07948d2a1b952e489f471686aa5fb3fe4f40"
-            }
-          ]
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/substack/typedarray"
-        },
-        {
-          "type": "vcs",
-          "url": "git://github.com/substack/typedarray.git"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "readable-stream",
-      "version": "3.6.2",
-      "purl": "pkg:npm/readable-stream@3.6.2",
-      "bom-ref": "pkg:npm/readable-stream@3.6.2",
-      "description": "Streams3, a user-land copy of the stream library from Node.js",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/readable-stream/-/readable-stream-3.6.2.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "f6efec9e20ab6370f959db04447cc71381b66025eaa06e454c7522082e1221bafa5dc2d9058d39c9af442a361e93d3b9c4e0308c6abed497460404bb43d49ca0"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "git://github.com/nodejs/readable-stream"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "string_decoder",
-      "version": "1.3.0",
-      "purl": "pkg:npm/string_decoder@1.3.0",
-      "bom-ref": "pkg:npm/string_decoder@1.3.0",
-      "description": "The string_decoder module from Node core",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/string_decoder/-/string_decoder-1.3.0.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "864457f14d568c915df0bb03276c90ff0596c5aa2912c0015355df90cf00fa3d3ef392401a9a6dd7a72bd56860e8a21b6f8a2453a32a97a04e8febaea7fc0a78"
-            }
-          ]
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/nodejs/string_decoder"
-        },
-        {
-          "type": "vcs",
-          "url": "git://github.com/nodejs/string_decoder.git"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "safe-buffer",
-      "version": "5.2.1",
-      "purl": "pkg:npm/safe-buffer@5.2.1",
-      "bom-ref": "pkg:npm/safe-buffer@5.2.1",
-      "description": "Safer Node.js Buffer API",
-      "authors": [
-        {
-          "name": "Feross Aboukhadijeh"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.2.1.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "ae9dd2a34eca71d9a629b1af81a37141226bedb1954959394bd12ad45fa9a5b468ef4f9879a0f1930e4377c34f37e183e9b8e7626d95b8fb825e6a6e62f9825d"
-            }
-          ]
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/feross/safe-buffer"
-        },
-        {
-          "type": "vcs",
-          "url": "git://github.com/feross/safe-buffer.git"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/feross/safe-buffer/issues"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "inherits",
-      "version": "2.0.4",
-      "purl": "pkg:npm/inherits@2.0.4",
-      "bom-ref": "pkg:npm/inherits@2.0.4",
-      "description": "Browser-friendly inheritance fully compatible with standard node.js inherits()",
-      "licenses": [
-        {
-          "license": {
-            "id": "ISC"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "93fbc6697e3f6256b75b3c8c0af4d039761e207bea38ab67a8176ecd31e9ce9419cc0b2428c859d8af849c189233dcc64a820578ca572b16b8758799210a9ec1"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "git://github.com/isaacs/inherits"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "util-deprecate",
-      "version": "1.0.2",
-      "purl": "pkg:npm/util-deprecate@1.0.2",
-      "bom-ref": "pkg:npm/util-deprecate@1.0.2",
-      "description": "The Node.js `util.deprecate()` function with browser support",
-      "authors": [
-        {
-          "name": "Nathan Rajlich <nathan@tootallnate.net> (http://n8.io/)"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/util-deprecate/-/util-deprecate-1.0.2.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "10f0f9ab5b97c85c49a42acb9c27359c79eade039ae83641a1c008888d93692080ed5089d5424331a802cc891736c5187c3d5d68afff2d3110f318886eb1ed73"
-            }
-          ]
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/TooTallNate/util-deprecate"
-        },
-        {
-          "type": "vcs",
-          "url": "git://github.com/TooTallNate/util-deprecate.git"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/TooTallNate/util-deprecate/issues"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "buffer-from",
-      "version": "1.1.2",
-      "purl": "pkg:npm/buffer-from@1.1.2",
-      "bom-ref": "pkg:npm/buffer-from@1.1.2",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/buffer-from/-/buffer-from-1.1.2.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "13e5d0091c126da6a20a1b6fea4e83c2073e6f1f81b3abee2891c7979928c7f05a29b8625f3a903b02b870edb6c84946a763829a3c15853dc79b18323c69c97d"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "LinusU/buffer-from"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "caseless",
-      "version": "0.12.0",
-      "purl": "pkg:npm/caseless@0.12.0",
-      "bom-ref": "pkg:npm/caseless@0.12.0",
-      "description": "Caseless object set/get/has, very useful when working with HTTP headers.",
-      "authors": [
-        {
-          "name": "Mikeal Rogers <mikeal.rogers@gmail.com>"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "Apache-2.0"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/caseless/-/caseless-0.12.0.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "e2d605ca27da15f19a72888e6e325e828964c12538c503466d581488d6155316d0db1da552c16f638855815cc68887ba58b38fab27165c0e3497e3d6b31b6153"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/mikeal/caseless"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/mikeal/caseless/issues"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "https-proxy-agent",
       "version": "5.0.1",
       "purl": "pkg:npm/https-proxy-agent@5.0.1",
@@ -982,46 +433,6 @@
         {
           "type": "issue-tracker",
           "url": "https://github.com/TooTallNate/node-https-proxy-agent/issues"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "agent-base",
-      "version": "6.0.2",
-      "purl": "pkg:npm/agent-base@6.0.2",
-      "bom-ref": "pkg:npm/agent-base@6.0.2",
-      "description": "Turn a function into an `http.Agent` instance",
-      "authors": [
-        {
-          "name": "Nathan Rajlich <nathan@tootallnate.net> (http://n8.io/)"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/agent-base/-/agent-base-6.0.2.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "45937035c945efe312ffc6c383bd1a9a0df6772799199c620ee42667128b025423af78c6c8bc7ee0a924e7c50eec3d90760148402a2fb92b991129dee911ba5d"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "git://github.com/TooTallNate/node-agent-base.git"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/TooTallNate/node-agent-base/issues"
         }
       ]
     },
@@ -1161,6 +572,582 @@
         {
           "type": "vcs",
           "url": "vercel/ms"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "agent-base",
+      "version": "6.0.2",
+      "purl": "pkg:npm/agent-base@6.0.2",
+      "bom-ref": "pkg:npm/agent-base@6.0.2",
+      "description": "Turn a function into an `http.Agent` instance",
+      "authors": [
+        {
+          "name": "Nathan Rajlich <nathan@tootallnate.net> (http://n8.io/)"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/agent-base/-/agent-base-6.0.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "45937035c945efe312ffc6c383bd1a9a0df6772799199c620ee42667128b025423af78c6c8bc7ee0a924e7c50eec3d90760148402a2fb92b991129dee911ba5d"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git://github.com/TooTallNate/node-agent-base.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/TooTallNate/node-agent-base/issues"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "http-basic",
+      "version": "8.2.4",
+      "purl": "pkg:npm/%40derhuerst/http-basic@8.2.4",
+      "bom-ref": "pkg:npm/%40derhuerst/http-basic@8.2.4",
+      "group": "@derhuerst",
+      "description": "Very low level wrapper arround http.request/https.request",
+      "authors": [
+        {
+          "name": "ForbesLindesay"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@derhuerst/http-basic/-/http-basic-8.2.4.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "17dacbf64f578dfe5b942cfc1ec2513b8762cb5d7571ac8bdaf918d97138af8b779f4c8f5d5632dca0f79c9d6a6eb4a7f7be375164971f8230b826bf1d694617"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/derhuerst/http-basic.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "parse-cache-control",
+      "version": "1.0.1",
+      "purl": "pkg:npm/parse-cache-control@1.0.1",
+      "bom-ref": "pkg:npm/parse-cache-control@1.0.1",
+      "description": "Parse Cache-Control headers.",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/parse-cache-control/-/parse-cache-control-1.0.1.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "eb4cefb0945e40f5f9fd03f42b37ddfd5ae98d270843b487056e9b14261f10ff9fa74129a6bd521e120ee677753e366dbdc9734b3112f43fe9e67149babc1f5a"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/roryf/parse-cache-control.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "http-response-object",
+      "version": "3.0.2",
+      "purl": "pkg:npm/http-response-object@3.0.2",
+      "bom-ref": "pkg:npm/http-response-object@3.0.2",
+      "description": "A simple object to represent an http response",
+      "authors": [
+        {
+          "name": "ForbesLindesay"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/http-response-object/-/http-response-object-3.0.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "6ea5f45d317a7e75d241c109d88bb2afbe7255a9328c80c2aaba0943f6877d276533be370b0aa88b69c360cccb19651cb935865b2f0002f38a5d37e2bfaabd44"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/ForbesLindesay/http-response-object.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "node",
+      "version": "10.17.60",
+      "purl": "pkg:npm/%40types/node@10.17.60",
+      "bom-ref": "pkg:npm/%40types/node@10.17.60",
+      "group": "@types",
+      "description": "TypeScript definitions for Node.js",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/node/-/node-10.17.60.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "17428880325fcb69c0df330b99618ac5c1f665512d0995c71dd390b36812690dbbfa535e11f1b1ce4230f74697b300135fb019df7b5a84f6f3cba2807d4ade57"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "caseless",
+      "version": "0.12.0",
+      "purl": "pkg:npm/caseless@0.12.0",
+      "bom-ref": "pkg:npm/caseless@0.12.0",
+      "description": "Caseless object set/get/has, very useful when working with HTTP headers.",
+      "authors": [
+        {
+          "name": "Mikeal Rogers <mikeal.rogers@gmail.com>"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/caseless/-/caseless-0.12.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "e2d605ca27da15f19a72888e6e325e828964c12538c503466d581488d6155316d0db1da552c16f638855815cc68887ba58b38fab27165c0e3497e3d6b31b6153"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/mikeal/caseless"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/mikeal/caseless/issues"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "concat-stream",
+      "version": "2.0.0",
+      "purl": "pkg:npm/concat-stream@2.0.0",
+      "bom-ref": "pkg:npm/concat-stream@2.0.0",
+      "description": "writable stream that concatenates strings or binary data and calls a callback with the result",
+      "authors": [
+        {
+          "name": "Max Ogden <max@maxogden.com>"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/concat-stream/-/concat-stream-2.0.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "316b9f61d170e7771c1a3080f8e97b5c96290255bafe9ad2333b8f393467246706cee84b9f849caf3eea7faa3c6d1399e75e25b5acdc2052597af71f6e8d31ec"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "http://github.com/maxogden/concat-stream.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "http://github.com/maxogden/concat-stream/issues"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "typedarray",
+      "version": "0.0.6",
+      "purl": "pkg:npm/typedarray@0.0.6",
+      "bom-ref": "pkg:npm/typedarray@0.0.6",
+      "description": "TypedArray polyfill for old browsers",
+      "authors": [
+        {
+          "name": "James Halliday"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/typedarray/-/typedarray-0.0.6.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "fda0831066ad1af67604893e1e62dfe227c2245c2f28535bf7f25e64f32e95f805ada727f5015c01fe463bc07f9b07948d2a1b952e489f471686aa5fb3fe4f40"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://github.com/substack/typedarray"
+        },
+        {
+          "type": "vcs",
+          "url": "git://github.com/substack/typedarray.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "buffer-from",
+      "version": "1.1.2",
+      "purl": "pkg:npm/buffer-from@1.1.2",
+      "bom-ref": "pkg:npm/buffer-from@1.1.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/buffer-from/-/buffer-from-1.1.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "13e5d0091c126da6a20a1b6fea4e83c2073e6f1f81b3abee2891c7979928c7f05a29b8625f3a903b02b870edb6c84946a763829a3c15853dc79b18323c69c97d"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "LinusU/buffer-from"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "inherits",
+      "version": "2.0.4",
+      "purl": "pkg:npm/inherits@2.0.4",
+      "bom-ref": "pkg:npm/inherits@2.0.4",
+      "description": "Browser-friendly inheritance fully compatible with standard node.js inherits()",
+      "licenses": [
+        {
+          "license": {
+            "id": "ISC"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "93fbc6697e3f6256b75b3c8c0af4d039761e207bea38ab67a8176ecd31e9ce9419cc0b2428c859d8af849c189233dcc64a820578ca572b16b8758799210a9ec1"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git://github.com/isaacs/inherits"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "readable-stream",
+      "version": "3.6.2",
+      "purl": "pkg:npm/readable-stream@3.6.2",
+      "bom-ref": "pkg:npm/readable-stream@3.6.2",
+      "description": "Streams3, a user-land copy of the stream library from Node.js",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/readable-stream/-/readable-stream-3.6.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "f6efec9e20ab6370f959db04447cc71381b66025eaa06e454c7522082e1221bafa5dc2d9058d39c9af442a361e93d3b9c4e0308c6abed497460404bb43d49ca0"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git://github.com/nodejs/readable-stream"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "util-deprecate",
+      "version": "1.0.2",
+      "purl": "pkg:npm/util-deprecate@1.0.2",
+      "bom-ref": "pkg:npm/util-deprecate@1.0.2",
+      "description": "The Node.js `util.deprecate()` function with browser support",
+      "authors": [
+        {
+          "name": "Nathan Rajlich <nathan@tootallnate.net> (http://n8.io/)"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/util-deprecate/-/util-deprecate-1.0.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "10f0f9ab5b97c85c49a42acb9c27359c79eade039ae83641a1c008888d93692080ed5089d5424331a802cc891736c5187c3d5d68afff2d3110f318886eb1ed73"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://github.com/TooTallNate/util-deprecate"
+        },
+        {
+          "type": "vcs",
+          "url": "git://github.com/TooTallNate/util-deprecate.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/TooTallNate/util-deprecate/issues"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "string_decoder",
+      "version": "1.3.0",
+      "purl": "pkg:npm/string_decoder@1.3.0",
+      "bom-ref": "pkg:npm/string_decoder@1.3.0",
+      "description": "The string_decoder module from Node core",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/string_decoder/-/string_decoder-1.3.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "864457f14d568c915df0bb03276c90ff0596c5aa2912c0015355df90cf00fa3d3ef392401a9a6dd7a72bd56860e8a21b6f8a2453a32a97a04e8febaea7fc0a78"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://github.com/nodejs/string_decoder"
+        },
+        {
+          "type": "vcs",
+          "url": "git://github.com/nodejs/string_decoder.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "safe-buffer",
+      "version": "5.2.1",
+      "purl": "pkg:npm/safe-buffer@5.2.1",
+      "bom-ref": "pkg:npm/safe-buffer@5.2.1",
+      "description": "Safer Node.js Buffer API",
+      "authors": [
+        {
+          "name": "Feross Aboukhadijeh"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.2.1.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "ae9dd2a34eca71d9a629b1af81a37141226bedb1954959394bd12ad45fa9a5b468ef4f9879a0f1930e4377c34f37e183e9b8e7626d95b8fb825e6a6e62f9825d"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://github.com/feross/safe-buffer"
+        },
+        {
+          "type": "vcs",
+          "url": "git://github.com/feross/safe-buffer.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/feross/safe-buffer/issues"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "env-paths",
+      "version": "2.2.1",
+      "purl": "pkg:npm/env-paths@2.2.1",
+      "bom-ref": "pkg:npm/env-paths@2.2.1",
+      "description": "Get paths for storing things like data, config, cache, etc",
+      "authors": [
+        {
+          "name": "Sindre Sorhus"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/env-paths/-/env-paths-2.2.1.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "fa1d6590b2a164c4d88e8835544a49346ecd64959cb9cd830e4feab2a49345108e5e22e3790d5dd7fb9dad41a1a8cc5480097028d67471fdaea9a9f918bb92d8"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "sindresorhus/env-paths"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "openai",
+      "version": "5.23.2",
+      "purl": "pkg:npm/openai@5.23.2",
+      "bom-ref": "pkg:npm/openai@5.23.2",
+      "description": "The official TypeScript library for the OpenAI API",
+      "authors": [
+        {
+          "name": "OpenAI <support@openai.com>"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/openai/-/openai-5.23.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "310073993ba58fe30ce4ef1228493f80bf1aeece6692d4bdcd4b40914db9ed68efa1b19cf6729c06e5708f210471bf5223c6bc6361bf9b39f7be6f67d499657a"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "github:openai/openai-node"
         }
       ]
     },
@@ -1313,73 +1300,6 @@
     },
     {
       "type": "library",
-      "name": "openai",
-      "version": "5.23.2",
-      "purl": "pkg:npm/openai@5.23.2",
-      "bom-ref": "pkg:npm/openai@5.23.2",
-      "description": "The official TypeScript library for the OpenAI API",
-      "authors": [
-        {
-          "name": "OpenAI <support@openai.com>"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "Apache-2.0"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/openai/-/openai-5.23.2.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "310073993ba58fe30ce4ef1228493f80bf1aeece6692d4bdcd4b40914db9ed68efa1b19cf6729c06e5708f210471bf5223c6bc6361bf9b39f7be6f67d499657a"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "github:openai/openai-node"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "citty",
-      "version": "0.2.2",
-      "purl": "pkg:npm/citty@0.2.2",
-      "bom-ref": "pkg:npm/citty@0.2.2",
-      "description": "Elegant CLI Builder",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/citty/-/citty-0.2.2.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "fbabc90372fdf32bfe21d7ca1991c1362196e4a1e7db67bf270203d12b6bb33f21e12fdcb00bbf3ae202c31ae0e389393118991d6228f175ee260413ae244fe3"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "unjs/citty"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "sdk",
       "version": "0.115.0",
       "purl": "pkg:npm/%40anthropic-ai/sdk@0.115.0",
@@ -1412,6 +1332,123 @@
         {
           "type": "vcs",
           "url": "github:anthropics/anthropic-sdk-typescript"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "standardwebhooks",
+      "version": "1.0.0",
+      "purl": "pkg:npm/standardwebhooks@1.0.0",
+      "bom-ref": "pkg:npm/standardwebhooks@1.0.0",
+      "description": "Standard Webhooks for TypeScript",
+      "authors": [
+        {
+          "name": "Standard Webhooks"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/standardwebhooks/-/standardwebhooks-1.0.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "05b1c63902bda251cf32f40d1d6ba5e8c625ad14c038a9f4deb39ee00f0edc22d684d7f860706aab61c928a0beb1faa9c62058e76a4d79eb03ea32222c3cfc8e"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://github.com/standard-webhooks/standard-webhooks/tree/main/libraries/javascript"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/standard-webhooks/standard-webhooks"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "base64",
+      "version": "1.0.1",
+      "purl": "pkg:npm/%40stablelib/base64@1.0.1",
+      "bom-ref": "pkg:npm/%40stablelib/base64@1.0.1",
+      "group": "@stablelib",
+      "description": "Base64 encoding and decoding",
+      "authors": [
+        {
+          "name": "Dmitry Chestnykh"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@stablelib/base64/-/base64-1.0.1.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "d5b9cf42a4b14ae737222e8c841caca160a0e7c8fdeda523b82499ac64a60f136ab72b488b493cbad51e9c0c1364de15e665d7606b15508f73781ab2fa304e49"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://github.com/StableLib/stablelib/tree/master/packages/base64"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/StableLib/stablelib"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "fast-sha256",
+      "version": "1.3.0",
+      "purl": "pkg:npm/fast-sha256@1.3.0",
+      "bom-ref": "pkg:npm/fast-sha256@1.3.0",
+      "description": "SHA-256, HMAC and PBKDF2 implementation with typed arrays for modern browsers and Node.js",
+      "authors": [
+        {
+          "name": "Dmitry Chestnykh"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Unlicense"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fast-sha256/-/fast-sha256-1.3.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "9f5d5118ffe5ad610523f6d677280bc6123ea557a8d59608570bef3e45bb6b397facecbe1771d8459d8ae73784f669a4850a69caff6c405c7424cf5469b9e93d"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/dchest/fast-sha256-js"
         }
       ]
     },
@@ -1546,118 +1583,81 @@
     },
     {
       "type": "library",
-      "name": "standardwebhooks",
-      "version": "1.0.0",
-      "purl": "pkg:npm/standardwebhooks@1.0.0",
-      "bom-ref": "pkg:npm/standardwebhooks@1.0.0",
-      "description": "Standard Webhooks for TypeScript",
+      "name": "playwright",
+      "version": "1.62.0",
+      "purl": "pkg:npm/playwright@1.62.0",
+      "bom-ref": "pkg:npm/playwright@1.62.0",
+      "description": "A high-level API to automate web browsers",
       "authors": [
         {
-          "name": "Standard Webhooks"
+          "name": "Microsoft Corporation"
         }
       ],
       "licenses": [
         {
           "license": {
-            "id": "MIT"
+            "id": "Apache-2.0"
           }
         }
       ],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/standardwebhooks/-/standardwebhooks-1.0.0.tgz",
+          "url": "https://registry.npmjs.org/playwright/-/playwright-1.62.0.tgz",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "05b1c63902bda251cf32f40d1d6ba5e8c625ad14c038a9f4deb39ee00f0edc22d684d7f860706aab61c928a0beb1faa9c62058e76a4d79eb03ea32222c3cfc8e"
+              "content": "675e1d1b7d3976068bbba7e80754d741a805896f097d250851a52e3da290e8db413ca1753ffa9772a7e1e9ce8afe270fa9dcb7ec99a36e20577fa24d83a4b297"
             }
           ]
         },
         {
           "type": "website",
-          "url": "https://github.com/standard-webhooks/standard-webhooks/tree/main/libraries/javascript"
+          "url": "https://playwright.dev"
         },
         {
           "type": "vcs",
-          "url": "https://github.com/standard-webhooks/standard-webhooks"
+          "url": "git+https://github.com/microsoft/playwright.git"
         }
       ]
     },
     {
       "type": "library",
-      "name": "fast-sha256",
-      "version": "1.3.0",
-      "purl": "pkg:npm/fast-sha256@1.3.0",
-      "bom-ref": "pkg:npm/fast-sha256@1.3.0",
-      "description": "SHA-256, HMAC and PBKDF2 implementation with typed arrays for modern browsers and Node.js",
+      "name": "playwright-core",
+      "version": "1.62.0",
+      "purl": "pkg:npm/playwright-core@1.62.0",
+      "bom-ref": "pkg:npm/playwright-core@1.62.0",
+      "description": "A high-level API to automate web browsers",
       "authors": [
         {
-          "name": "Dmitry Chestnykh"
+          "name": "Microsoft Corporation"
         }
       ],
       "licenses": [
         {
           "license": {
-            "id": "Unlicense"
+            "id": "Apache-2.0"
           }
         }
       ],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/fast-sha256/-/fast-sha256-1.3.0.tgz",
+          "url": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.62.0.tgz",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "9f5d5118ffe5ad610523f6d677280bc6123ea557a8d59608570bef3e45bb6b397facecbe1771d8459d8ae73784f669a4850a69caff6c405c7424cf5469b9e93d"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/dchest/fast-sha256-js"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "base64",
-      "version": "1.0.1",
-      "purl": "pkg:npm/%40stablelib/base64@1.0.1",
-      "bom-ref": "pkg:npm/%40stablelib/base64@1.0.1",
-      "group": "@stablelib",
-      "description": "Base64 encoding and decoding",
-      "authors": [
-        {
-          "name": "Dmitry Chestnykh"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/@stablelib/base64/-/base64-1.0.1.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "d5b9cf42a4b14ae737222e8c841caca160a0e7c8fdeda523b82499ac64a60f136ab72b488b493cbad51e9c0c1364de15e665d7606b15508f73781ab2fa304e49"
+              "content": "9ec351caad2bdb3b06f007111d692773d4110395c2b9e0bb81632bb3e1b1dad9599fd85c97ccee75f874d258493d8d4313b36667a6c3b13f60db27b2f265e58c"
             }
           ]
         },
         {
           "type": "website",
-          "url": "https://github.com/StableLib/stablelib/tree/master/packages/base64"
+          "url": "https://playwright.dev"
         },
         {
           "type": "vcs",
-          "url": "https://github.com/StableLib/stablelib"
+          "url": "git+https://github.com/microsoft/playwright.git"
         }
       ]
     }
