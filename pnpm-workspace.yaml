@@ -4,5 +4,5 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - nanoid@3.3.18
 overrides:
-  vite: 8.0.16
-  nanoid: ^3.3.18
+  vite: 8.1.6
+  nanoid: ^6.0.2
