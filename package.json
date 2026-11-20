@@ -64,7 +64,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/node": "^26.1.2",
+    "@types/node": "^26.6.6",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@vitest/coverage-v8": "^4.1.12",
     "@vitest/ui": "^4.1.12",
@@ -88,7 +88,7 @@
     }
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=26.13.1"
   },
   "packageManager": "pnpm@12.1.0+sha512.d9b8276d97f6ec86e49815877f91ee9f63cee61f2063b304e43b6dab8fa07ce8a9afd46d2facd39f921e6a9d06b3c75a81349c7b888c2d22886bae0229901037"
 }
