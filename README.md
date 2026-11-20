@@ -1,7 +1,5 @@
 # Demo Reel
 
-![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/whit3st/demo-reel/main/.github/badges/coverage.json)
-
 Create professional demo videos from web apps. Code your demos in TypeScript, with automatic voiceover and subtitles.
 
 ## Quick Start

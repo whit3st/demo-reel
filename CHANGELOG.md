@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Removed the committed SBOM, README coverage badge, and `update-artifacts` workflow/app automation. Coverage remains available locally via `pnpm test:coverage`.
 - Removed committed `audit.json` and vulnerabilities badge (always stale; live audit showed 1 high while badge said none). Security now relies on GitHub-native Dependabot alerts + PR dependency review (fails on high+) + Renovate `vulnerabilityAlerts` auto-fix PRs.
 
 ## [0.14.0] - 2026-08-30
