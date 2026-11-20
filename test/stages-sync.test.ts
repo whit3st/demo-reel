@@ -7,6 +7,15 @@ import { NarrationSyncStage } from "../src/stages/sync.js";
 import { TTSStage, narrationInputsHash } from "../src/stages/tts.js";
 import { buildStages } from "../src/index.js";
 import { NARRATION_PROCESSING_VERSION } from "../src/narration-manifest.js";
+import { generateVoiceSegments } from "../src/script/tts.js";
+
+// The dry-run test below only needs TTSStage to get as far as calling the TTS
+// provider. Mock the provider so the test never downloads a Piper voice, which
+// made it depend on network speed and time out under parallel CI load.
+vi.mock("../src/script/tts.js", () => ({
+  generateVoiceSegments: vi.fn(),
+  generateNarrationAudio: vi.fn(),
+}));
 
 let dir: string;
 
@@ -195,8 +204,9 @@ describe("TTSStage on dry runs", () => {
       warnings: [],
     } as any;
 
-    // Fails at the TTS import rather than returning early — proving the stage
-    // now proceeds past the dryRun check instead of bailing at the top.
+    // Fails at the mocked TTS call rather than returning early — proving the
+    // stage proceeds past the dryRun check instead of bailing at the top.
+    vi.mocked(generateVoiceSegments).mockRejectedValue(new Error("TTS disabled in this test"));
     await new TTSStage().run(ctx).catch(() => {});
 
     expect(ctx.audioPath).toBeDefined();
