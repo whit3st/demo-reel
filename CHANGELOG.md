@@ -9,16 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Weekly vulnerability scan with Renovate security bypass for timely fixes.
-- Safe automerge for dev and GitHub Actions updates gated on CI with 3-day minimum release age.
-- Self-hosted Renovate runner on Monday mornings (plus manual dispatch) so dependency PRs no longer depend on the hosted app.
+- Dependency updates now use the hosted Renovate app, with one PR per dependency and no Dependency Dashboard.
+- Safe automerge for dev and GitHub Actions minor/patch updates, gated on CI with a 3-day minimum release age.
+
+### Changed
+
+- Minimum Node.js version is now 22 (from 18), matching the maintained LTS lines.
+- Widened the optional peer ranges for `@anthropic-ai/sdk` (`<2`) and `openai` (`^7`).
+- Refreshed tooling: pnpm 12.21.0, Node 26.13.1 in CI, and current GitHub Actions majors pinned to commit digests.
+- Updated runtime dependencies: `glob` 14, `tsx` 4.23.15, `zod` 4.6.7; and dev tooling including vitest 5, dotenv 18, and oxlint 1.94.
 
 ### Fixed
 
-- Closed 8 security advisories via dependency updates: vitest 4.1.11, oxfmt 0.72.0, oxlint 1.87.0, brace-expansion 5.0.12, source-map-js 1.2.2, tinypool 2.2.0.
-- Artifacts workflow now opens a PR instead of pushing to protected main.
-- Artifacts PRs now auto-merge once CI passes; no manual merge step.
-- Artifacts workflow uses a GitHub App token so bot PRs skip the approval gate and auto-merge.
+- Closed security advisories in `glob`, `vite`, `zod`, and transitive packages.
+- The dry-run TTS test no longer downloads a Piper voice, removing a CI timeout flake.
 
 ### Removed
 
