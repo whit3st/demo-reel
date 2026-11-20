@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
-  "serialNumber": "urn:uuid:5b7b28e5-a34f-4e27-a780-fed078f12047",
+  "serialNumber": "urn:uuid:bf44d2ea-9983-4d54-ac51-046187f07852",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-11-20T06:08:32.587Z",
+    "timestamp": "2026-11-20T06:46:46.889Z",
     "lifecycles": [
       {
         "phase": "build"
@@ -16,7 +16,7 @@
         {
           "type": "application",
           "name": "pnpm",
-          "version": "12.1.0"
+          "version": "12.21.0"
         }
       ]
     },
@@ -27,11 +27,6 @@
       "purl": "pkg:npm/demo-reel@0.14.0",
       "bom-ref": "pkg:npm/demo-reel@0.14.0",
       "description": "Create demo videos from web apps using Playwright",
-      "authors": [
-        {
-          "name": ""
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -52,279 +47,6 @@
     }
   },
   "components": [
-    {
-      "type": "library",
-      "name": "citty",
-      "version": "0.2.2",
-      "purl": "pkg:npm/citty@0.2.2",
-      "bom-ref": "pkg:npm/citty@0.2.2",
-      "description": "Elegant CLI Builder",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/citty/-/citty-0.2.2.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "fbabc90372fdf32bfe21d7ca1991c1362196e4a1e7db67bf270203d12b6bb33f21e12fdcb00bbf3ae202c31ae0e389393118991d6228f175ee260413ae244fe3"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "unjs/citty"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "glob",
-      "version": "13.0.6",
-      "purl": "pkg:npm/glob@13.0.6",
-      "bom-ref": "pkg:npm/glob@13.0.6",
-      "description": "the most correct and second fastest glob implementation in JavaScript",
-      "authors": [
-        {
-          "name": "Isaac Z. Schlueter <i@izs.me> (https://blog.izs.me/)"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "BlueOak-1.0.0"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/glob/-/glob-13.0.6.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "5a3972ae89669bcb83a66fe8806c976576f567e09ad81f0d6c9c2a0558346b12bd19b05ea12ef2195eaf8d79d87469ba5f9de27a112ec716f288aa7c42637857"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "git@github.com:isaacs/node-glob.git"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "minipass",
-      "version": "7.1.3",
-      "purl": "pkg:npm/minipass@7.1.3",
-      "bom-ref": "pkg:npm/minipass@7.1.3",
-      "description": "minimal implementation of a PassThrough stream",
-      "authors": [
-        {
-          "name": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "BlueOak-1.0.0"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/minipass/-/minipass-7.1.3.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "b44047a839c8a0cff5ad7304d738246bd83a43695ca029311cbb9cece0c9e41c5b3f977873667970682d5c092ee7ddb4d02c7b762b874ce61f4810fc9fa9a6f0"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/isaacs/minipass"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "path-scurry",
-      "version": "2.0.2",
-      "purl": "pkg:npm/path-scurry@2.0.2",
-      "bom-ref": "pkg:npm/path-scurry@2.0.2",
-      "description": "walk paths fast and efficiently",
-      "authors": [
-        {
-          "name": "Isaac Z. Schlueter <i@izs.me> (https://blog.izs.me)"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "BlueOak-1.0.0"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/path-scurry/-/path-scurry-2.0.2.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "dcefe2555b0900fb0e9e9c1621e0fe77acffecf9aa029c9078f52d0a77636ad8fff48e4bca51efb79aa5b856814f7239877af57a37d1d39e9cf850aff8d9cd5e"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/isaacs/path-scurry"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "lru-cache",
-      "version": "11.5.2",
-      "purl": "pkg:npm/lru-cache@11.5.2",
-      "bom-ref": "pkg:npm/lru-cache@11.5.2",
-      "description": "A cache object that deletes the least-recently-used items.",
-      "authors": [
-        {
-          "name": "Isaac Z. Schlueter <i@izs.me>"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "BlueOak-1.0.0"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/lru-cache/-/lru-cache-11.5.2.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "e297ccd457f4c79d28d2d4306f9b9cc3f4733720f4fd824c13a215712b5a959b8c5b176ddec47786e4ad4edc73e0f526bd97d182ebc37a36acbd0da489f475d6"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "git+ssh://git@github.com/isaacs/node-lru-cache.git"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "minimatch",
-      "version": "10.2.6",
-      "purl": "pkg:npm/minimatch@10.2.6",
-      "bom-ref": "pkg:npm/minimatch@10.2.6",
-      "description": "a glob matcher in javascript",
-      "authors": [
-        {
-          "name": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me)"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "BlueOak-1.0.0"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/minimatch/-/minimatch-10.2.6.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "be92d012cf952c2af59d4d015d2d3b99a628170943007d209e042ebadb71230bad0c510c1ead9b957fbcbe98310dd2b72753f08c22627a9efb3a2b536782e5d4"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "git@github.com:isaacs/minimatch"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "brace-expansion",
-      "version": "5.0.12",
-      "purl": "pkg:npm/brace-expansion@5.0.12",
-      "bom-ref": "pkg:npm/brace-expansion@5.0.12",
-      "description": "Brace expansion as known from sh/bash",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.12.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "628bd0debce168b308ac38cd0cc90d4b4d6d79af77aa11211b9c72f1febe47497e770dca8bee6c0a822823de368ae2d94c75a881692d830543854d3d88d12299"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/juliangruber/brace-expansion.git"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "balanced-match",
-      "version": "4.0.4",
-      "purl": "pkg:npm/balanced-match@4.0.4",
-      "bom-ref": "pkg:npm/balanced-match@4.0.4",
-      "description": "Match balanced character pairs, like \"{\" and \"}\"",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/balanced-match/-/balanced-match-4.0.4.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "04bae011c453c17da8ea01b118e08dc8cbc64a9df96287ee633c3d87520c4d198aaadb40659554ebb6dd6fd3ebdaf50703cfa3de2dad25f8cee82ebee26c864c"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "git://github.com/juliangruber/balanced-match.git"
-        }
-      ]
-    },
     {
       "type": "library",
       "name": "ffmpeg-static",
@@ -393,225 +115,6 @@
         {
           "type": "vcs",
           "url": "git://github.com/visionmedia/node-progress"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "https-proxy-agent",
-      "version": "5.0.1",
-      "purl": "pkg:npm/https-proxy-agent@5.0.1",
-      "bom-ref": "pkg:npm/https-proxy-agent@5.0.1",
-      "description": "An HTTP(s) proxy `http.Agent` implementation for HTTPS",
-      "authors": [
-        {
-          "name": "Nathan Rajlich <nathan@tootallnate.net> (http://n8.io/)"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/https-proxy-agent/-/https-proxy-agent-5.0.1.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "7457008e94d0160a0b3330b657053e0bf09b4bbb912f49569b10c84e6aa6ec2fbb17439d9a3eacf65e9a95973a0042d786b9e080cd827964971c639d5f662dc0"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "git://github.com/TooTallNate/node-https-proxy-agent.git"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/TooTallNate/node-https-proxy-agent/issues"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "debug",
-      "version": "4.4.3",
-      "purl": "pkg:npm/debug@4.4.3",
-      "bom-ref": "pkg:npm/debug@4.4.3",
-      "description": "Lightweight debugging utility for Node.js and the browser",
-      "authors": [
-        {
-          "name": "Josh Junon (https://github.com/qix-)"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "446c305a7c10be455f6af295b76d8518bc3ec5849dcc04709b4aeee83853540dee994e6165cdbc57790ee2cb6062bcab4e52e9baf808f468a28e5b408cd6dca8"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "git://github.com/debug-js/debug.git"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "supports-color",
-      "version": "7.2.0",
-      "purl": "pkg:npm/supports-color@7.2.0",
-      "bom-ref": "pkg:npm/supports-color@7.2.0",
-      "description": "Detect whether a terminal supports color",
-      "authors": [
-        {
-          "name": "Sindre Sorhus"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/supports-color/-/supports-color-7.2.0.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "aa9080bd197db2db8e1ef78ab27ec79dc251befe74d6a21a70acd094effe2f0c5cf7ed2adb02f2bf80dfbedf34fc33e7da9a8e06c25d0e2a205c647df8ebf047"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "chalk/supports-color"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "has-flag",
-      "version": "4.0.0",
-      "purl": "pkg:npm/has-flag@4.0.0",
-      "bom-ref": "pkg:npm/has-flag@4.0.0",
-      "description": "Check if argv has a specific flag",
-      "authors": [
-        {
-          "name": "Sindre Sorhus"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/has-flag/-/has-flag-4.0.0.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "1329094ff4352a34d672da698080207d23b4b4a56e6548e180caf5ee4a93ba6325e807efdc421295e53ba99533a170c54c01d30c2e0d3a81bf67153712f94c3d"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "sindresorhus/has-flag"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "ms",
-      "version": "2.1.3",
-      "purl": "pkg:npm/ms@2.1.3",
-      "bom-ref": "pkg:npm/ms@2.1.3",
-      "description": "Tiny millisecond conversion utility",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "e85973b9b4cb646dc9d9afcd542025784863ceae68c601f268253dc985ef70bb2fa1568726afece715c8ebf5d73fab73ed1f7100eb479d23bfb57b45dd645394"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "vercel/ms"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "agent-base",
-      "version": "6.0.2",
-      "purl": "pkg:npm/agent-base@6.0.2",
-      "bom-ref": "pkg:npm/agent-base@6.0.2",
-      "description": "Turn a function into an `http.Agent` instance",
-      "authors": [
-        {
-          "name": "Nathan Rajlich <nathan@tootallnate.net> (http://n8.io/)"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/agent-base/-/agent-base-6.0.2.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "45937035c945efe312ffc6c383bd1a9a0df6772799199c620ee42667128b025423af78c6c8bc7ee0a924e7c50eec3d90760148402a2fb92b991129dee911ba5d"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "git://github.com/TooTallNate/node-agent-base.git"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/TooTallNate/node-agent-base/issues"
         }
       ]
     },
@@ -746,46 +249,6 @@
     },
     {
       "type": "library",
-      "name": "caseless",
-      "version": "0.12.0",
-      "purl": "pkg:npm/caseless@0.12.0",
-      "bom-ref": "pkg:npm/caseless@0.12.0",
-      "description": "Caseless object set/get/has, very useful when working with HTTP headers.",
-      "authors": [
-        {
-          "name": "Mikeal Rogers <mikeal.rogers@gmail.com>"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "Apache-2.0"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/caseless/-/caseless-0.12.0.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "e2d605ca27da15f19a72888e6e325e828964c12538c503466d581488d6155316d0db1da552c16f638855815cc68887ba58b38fab27165c0e3497e3d6b31b6153"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/mikeal/caseless"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/mikeal/caseless/issues"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "concat-stream",
       "version": "2.0.0",
       "purl": "pkg:npm/concat-stream@2.0.0",
@@ -890,7 +353,7 @@
         },
         {
           "type": "vcs",
-          "url": "LinusU/buffer-from"
+          "url": "git+https://github.com/LinusU/buffer-from.git"
         }
       ]
     },
@@ -1081,6 +544,265 @@
     },
     {
       "type": "library",
+      "name": "caseless",
+      "version": "0.12.0",
+      "purl": "pkg:npm/caseless@0.12.0",
+      "bom-ref": "pkg:npm/caseless@0.12.0",
+      "description": "Caseless object set/get/has, very useful when working with HTTP headers.",
+      "authors": [
+        {
+          "name": "Mikeal Rogers <mikeal.rogers@gmail.com>"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/caseless/-/caseless-0.12.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "e2d605ca27da15f19a72888e6e325e828964c12538c503466d581488d6155316d0db1da552c16f638855815cc68887ba58b38fab27165c0e3497e3d6b31b6153"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/mikeal/caseless"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/mikeal/caseless/issues"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "https-proxy-agent",
+      "version": "5.0.1",
+      "purl": "pkg:npm/https-proxy-agent@5.0.1",
+      "bom-ref": "pkg:npm/https-proxy-agent@5.0.1",
+      "description": "An HTTP(s) proxy `http.Agent` implementation for HTTPS",
+      "authors": [
+        {
+          "name": "Nathan Rajlich <nathan@tootallnate.net> (http://n8.io/)"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/https-proxy-agent/-/https-proxy-agent-5.0.1.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "7457008e94d0160a0b3330b657053e0bf09b4bbb912f49569b10c84e6aa6ec2fbb17439d9a3eacf65e9a95973a0042d786b9e080cd827964971c639d5f662dc0"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git://github.com/TooTallNate/node-https-proxy-agent.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/TooTallNate/node-https-proxy-agent/issues"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "debug",
+      "version": "4.4.3",
+      "purl": "pkg:npm/debug@4.4.3",
+      "bom-ref": "pkg:npm/debug@4.4.3",
+      "description": "Lightweight debugging utility for Node.js and the browser",
+      "authors": [
+        {
+          "name": "Josh Junon (https://github.com/qix-)"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "446c305a7c10be455f6af295b76d8518bc3ec5849dcc04709b4aeee83853540dee994e6165cdbc57790ee2cb6062bcab4e52e9baf808f468a28e5b408cd6dca8"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git://github.com/debug-js/debug.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "supports-color",
+      "version": "7.2.0",
+      "purl": "pkg:npm/supports-color@7.2.0",
+      "bom-ref": "pkg:npm/supports-color@7.2.0",
+      "description": "Detect whether a terminal supports color",
+      "authors": [
+        {
+          "name": "Sindre Sorhus"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/supports-color/-/supports-color-7.2.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "aa9080bd197db2db8e1ef78ab27ec79dc251befe74d6a21a70acd094effe2f0c5cf7ed2adb02f2bf80dfbedf34fc33e7da9a8e06c25d0e2a205c647df8ebf047"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/chalk/supports-color.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "has-flag",
+      "version": "4.0.0",
+      "purl": "pkg:npm/has-flag@4.0.0",
+      "bom-ref": "pkg:npm/has-flag@4.0.0",
+      "description": "Check if argv has a specific flag",
+      "authors": [
+        {
+          "name": "Sindre Sorhus"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/has-flag/-/has-flag-4.0.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "1329094ff4352a34d672da698080207d23b4b4a56e6548e180caf5ee4a93ba6325e807efdc421295e53ba99533a170c54c01d30c2e0d3a81bf67153712f94c3d"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/sindresorhus/has-flag.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "ms",
+      "version": "2.1.3",
+      "purl": "pkg:npm/ms@2.1.3",
+      "bom-ref": "pkg:npm/ms@2.1.3",
+      "description": "Tiny millisecond conversion utility",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "e85973b9b4cb646dc9d9afcd542025784863ceae68c601f268253dc985ef70bb2fa1568726afece715c8ebf5d73fab73ed1f7100eb479d23bfb57b45dd645394"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/vercel/ms.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "agent-base",
+      "version": "6.0.2",
+      "purl": "pkg:npm/agent-base@6.0.2",
+      "bom-ref": "pkg:npm/agent-base@6.0.2",
+      "description": "Turn a function into an `http.Agent` instance",
+      "authors": [
+        {
+          "name": "Nathan Rajlich <nathan@tootallnate.net> (http://n8.io/)"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/agent-base/-/agent-base-6.0.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "45937035c945efe312ffc6c383bd1a9a0df6772799199c620ee42667128b025423af78c6c8bc7ee0a924e7c50eec3d90760148402a2fb92b991129dee911ba5d"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git://github.com/TooTallNate/node-agent-base.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/TooTallNate/node-agent-base/issues"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "env-paths",
       "version": "2.2.1",
       "purl": "pkg:npm/env-paths@2.2.1",
@@ -1111,96 +833,16 @@
         },
         {
           "type": "vcs",
-          "url": "sindresorhus/env-paths"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "openai",
-      "version": "5.23.2",
-      "purl": "pkg:npm/openai@5.23.2",
-      "bom-ref": "pkg:npm/openai@5.23.2",
-      "description": "The official TypeScript library for the OpenAI API",
-      "authors": [
-        {
-          "name": "OpenAI <support@openai.com>"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "Apache-2.0"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/openai/-/openai-5.23.2.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "310073993ba58fe30ce4ef1228493f80bf1aeece6692d4bdcd4b40914db9ed68efa1b19cf6729c06e5708f210471bf5223c6bc6361bf9b39f7be6f67d499657a"
-            }
-          ]
-        },
-        {
-          "type": "vcs",
-          "url": "github:openai/openai-node"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "zod",
-      "version": "4.4.3",
-      "purl": "pkg:npm/zod@4.4.3",
-      "bom-ref": "pkg:npm/zod@4.4.3",
-      "description": "TypeScript-first schema declaration and validation library with static type inference",
-      "authors": [
-        {
-          "name": "Colin McDonnell <zod@colinhacks.com>"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/zod/-/zod-4.4.3.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "cad10d163209165d94c1882575eda37215b61f09b818914b0e249759d4eb25004837d15cca9ee7e0387124489634024c575fc1a967d6fe4920ef55037072724d"
-            }
-          ]
-        },
-        {
-          "type": "website",
-          "url": "https://zod.dev"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/colinhacks/zod.git"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/colinhacks/zod/issues"
+          "url": "git+https://github.com/sindresorhus/env-paths.git"
         }
       ]
     },
     {
       "type": "library",
       "name": "tsx",
-      "version": "4.23.10",
-      "purl": "pkg:npm/tsx@4.23.10",
-      "bom-ref": "pkg:npm/tsx@4.23.10",
+      "version": "4.23.15",
+      "purl": "pkg:npm/tsx@4.23.15",
+      "bom-ref": "pkg:npm/tsx@4.23.15",
       "description": "TypeScript Execute (tsx): Node.js enhanced with esbuild to run TypeScript & ESM files",
       "authors": [
         {
@@ -1217,11 +859,11 @@
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/tsx/-/tsx-4.23.10.tgz",
+          "url": "https://registry.npmjs.org/tsx/-/tsx-4.23.15.tgz",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "d156fd78a538ee78e4c6fffa07c0916510ecc4d0d3fcfcfe04853e3398f0ef12f74ddcc08d2c65654c6ed3114bfe42e9686dec1d9d0b1f6c1b2b54f5ca8ec251"
+              "content": "6227b1d4ebe7f33db13e9396724222cac575492c91318f4190b17efaad322a20f10aa461a2c29f320de36a72a488b07067973f62bca5a0ac0665cac49adc312b"
             }
           ]
         },
@@ -1231,7 +873,7 @@
         },
         {
           "type": "vcs",
-          "url": "privatenumber/tsx"
+          "url": "git+https://github.com/privatenumber/tsx.git"
         }
       ]
     },
@@ -1300,6 +942,356 @@
     },
     {
       "type": "library",
+      "name": "playwright",
+      "version": "1.62.0",
+      "purl": "pkg:npm/playwright@1.62.0",
+      "bom-ref": "pkg:npm/playwright@1.62.0",
+      "description": "A high-level API to automate web browsers",
+      "authors": [
+        {
+          "name": "Microsoft Corporation"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/playwright/-/playwright-1.62.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "675e1d1b7d3976068bbba7e80754d741a805896f097d250851a52e3da290e8db413ca1753ffa9772a7e1e9ce8afe270fa9dcb7ec99a36e20577fa24d83a4b297"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://playwright.dev"
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/microsoft/playwright.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "playwright-core",
+      "version": "1.62.0",
+      "purl": "pkg:npm/playwright-core@1.62.0",
+      "bom-ref": "pkg:npm/playwright-core@1.62.0",
+      "description": "A high-level API to automate web browsers",
+      "authors": [
+        {
+          "name": "Microsoft Corporation"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.62.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "9ec351caad2bdb3b06f007111d692773d4110395c2b9e0bb81632bb3e1b1dad9599fd85c97ccee75f874d258493d8d4313b36667a6c3b13f60db27b2f265e58c"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://playwright.dev"
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/microsoft/playwright.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "glob",
+      "version": "14.0.6",
+      "purl": "pkg:npm/glob@14.0.6",
+      "bom-ref": "pkg:npm/glob@14.0.6",
+      "description": "the most correct and second fastest glob implementation in JavaScript",
+      "authors": [
+        {
+          "name": "Isaac Z. Schlueter <i@izs.me> (https://blog.izs.me/)"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BlueOak-1.0.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/glob/-/glob-14.0.6.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "3b05e354fdacbd8e44c8b63be557a4f7a0bca8ae3782aaede31b19faa4882dd9da12224f5e477ada671f512371fd3404ad045dbb9b8ce6417aeec7ce36b6a02b"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/isaacs/node-glob.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "path-scurry",
+      "version": "3.0.0",
+      "purl": "pkg:npm/path-scurry@3.0.0",
+      "bom-ref": "pkg:npm/path-scurry@3.0.0",
+      "description": "walk paths fast and efficiently",
+      "authors": [
+        {
+          "name": "Isaac Z. Schlueter <i@izs.me> (https://blog.izs.me)"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BlueOak-1.0.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/path-scurry/-/path-scurry-3.0.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "d694db42a1f5c08c0c8bf7a5790e657854d30a4cc5b0f7205cd8f0380f181865bf5b8fe41d3dddb2c13b67a347fb3baa34b3b3381d2e683eb5ca5edc01c56182"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/isaacs/path-scurry"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "minipass",
+      "version": "7.1.3",
+      "purl": "pkg:npm/minipass@7.1.3",
+      "bom-ref": "pkg:npm/minipass@7.1.3",
+      "description": "minimal implementation of a PassThrough stream",
+      "authors": [
+        {
+          "name": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BlueOak-1.0.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/minipass/-/minipass-7.1.3.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "b44047a839c8a0cff5ad7304d738246bd83a43695ca029311cbb9cece0c9e41c5b3f977873667970682d5c092ee7ddb4d02c7b762b874ce61f4810fc9fa9a6f0"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/isaacs/minipass"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "lru-cache",
+      "version": "11.5.2",
+      "purl": "pkg:npm/lru-cache@11.5.2",
+      "bom-ref": "pkg:npm/lru-cache@11.5.2",
+      "description": "A cache object that deletes the least-recently-used items.",
+      "authors": [
+        {
+          "name": "Isaac Z. Schlueter <i@izs.me>"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BlueOak-1.0.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/lru-cache/-/lru-cache-11.5.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "e297ccd457f4c79d28d2d4306f9b9cc3f4733720f4fd824c13a215712b5a959b8c5b176ddec47786e4ad4edc73e0f526bd97d182ebc37a36acbd0da489f475d6"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git+ssh://git@github.com/isaacs/node-lru-cache.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "minimatch",
+      "version": "11.0.9",
+      "purl": "pkg:npm/minimatch@11.0.9",
+      "bom-ref": "pkg:npm/minimatch@11.0.9",
+      "description": "a glob matcher in javascript",
+      "authors": [
+        {
+          "name": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me)"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BlueOak-1.0.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/minimatch/-/minimatch-11.0.9.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "2821647f28ea7ab3654acb6396120635720a64603fe8ee15e1196167e0ecafadb548f3f0d26ce5ca913d0fd64ea0f89579f1c80fe8fbfd7b8c325a9f0ff17ad1"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git+ssh://git@github.com/isaacs/minimatch.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "nonrecursive-glob-match",
+      "version": "1.1.0",
+      "purl": "pkg:npm/%40isaacs/nonrecursive-glob-match@1.1.0",
+      "bom-ref": "pkg:npm/%40isaacs/nonrecursive-glob-match@1.1.0",
+      "group": "@isaacs",
+      "description": "a single-path-portion glob matcher not subject to recursive backtracking ReDoS",
+      "licenses": [
+        {
+          "license": {
+            "id": "BlueOak-1.0.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@isaacs/nonrecursive-glob-match/-/nonrecursive-glob-match-1.1.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "18f9bf0dbbe4e512e68519f15c86bb9d3a4ad31b65e04d308f432c96cb8d889d45211394fb6fbd960502fdd805ec4cb84025a17c4b20c6294c44c09d1cf7c37f"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "brace-expansion",
+      "version": "5.0.12",
+      "purl": "pkg:npm/brace-expansion@5.0.12",
+      "bom-ref": "pkg:npm/brace-expansion@5.0.12",
+      "description": "Brace expansion as known from sh/bash",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.12.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "628bd0debce168b308ac38cd0cc90d4b4d6d79af77aa11211b9c72f1febe47497e770dca8bee6c0a822823de368ae2d94c75a881692d830543854d3d88d12299"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/juliangruber/brace-expansion.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "balanced-match",
+      "version": "4.0.4",
+      "purl": "pkg:npm/balanced-match@4.0.4",
+      "bom-ref": "pkg:npm/balanced-match@4.0.4",
+      "description": "Match balanced character pairs, like \"{\" and \"}\"",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/balanced-match/-/balanced-match-4.0.4.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "04bae011c453c17da8ea01b118e08dc8cbc64a9df96287ee633c3d87520c4d198aaadb40659554ebb6dd6fd3ebdaf50703cfa3de2dad25f8cee82ebee26c864c"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git://github.com/juliangruber/balanced-match.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "sdk",
       "version": "0.115.0",
       "purl": "pkg:npm/%40anthropic-ai/sdk@0.115.0",
@@ -1331,7 +1323,7 @@
         },
         {
           "type": "vcs",
-          "url": "github:anthropics/anthropic-sdk-typescript"
+          "url": "git+https://github.com/anthropics/anthropic-sdk-typescript.git"
         }
       ]
     },
@@ -1498,6 +1490,47 @@
     },
     {
       "type": "library",
+      "name": "runtime",
+      "version": "7.29.7",
+      "purl": "pkg:npm/%40babel/runtime@7.29.7",
+      "bom-ref": "pkg:npm/%40babel/runtime@7.29.7",
+      "group": "@babel",
+      "description": "babel's modular runtime helpers",
+      "authors": [
+        {
+          "name": "The Babel Team (https://babel.dev/team)"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/runtime/-/runtime-7.29.7.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "36af0e8465a264864657a84b1e8c8028b2dc26284fff115e04c189a14af14d7da9b08f1d0a27f32e16484856fe5564b7c053110e6086c3947e74ec920aa3cb87"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://babel.dev/docs/en/next/babel-runtime"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/babel/babel.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "ts-algebra",
       "version": "2.0.0",
       "purl": "pkg:npm/ts-algebra@2.0.0",
@@ -1542,15 +1575,50 @@
     },
     {
       "type": "library",
-      "name": "runtime",
-      "version": "7.29.7",
-      "purl": "pkg:npm/%40babel/runtime@7.29.7",
-      "bom-ref": "pkg:npm/%40babel/runtime@7.29.7",
-      "group": "@babel",
-      "description": "babel's modular runtime helpers",
+      "name": "openai",
+      "version": "5.23.2",
+      "purl": "pkg:npm/openai@5.23.2",
+      "bom-ref": "pkg:npm/openai@5.23.2",
+      "description": "The official TypeScript library for the OpenAI API",
       "authors": [
         {
-          "name": "The Babel Team (https://babel.dev/team)"
+          "name": "OpenAI <support@openai.com>"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/openai/-/openai-5.23.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "310073993ba58fe30ce4ef1228493f80bf1aeece6692d4bdcd4b40914db9ed68efa1b19cf6729c06e5708f210471bf5223c6bc6361bf9b39f7be6f67d499657a"
+            }
+          ]
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/openai/openai-node.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "zod",
+      "version": "4.6.6",
+      "purl": "pkg:npm/zod@4.6.6",
+      "bom-ref": "pkg:npm/zod@4.6.6",
+      "description": "TypeScript-first schema declaration and validation library with static type inference",
+      "authors": [
+        {
+          "name": "Colin McDonnell <zod@colinhacks.com>"
         }
       ],
       "licenses": [
@@ -1563,101 +1631,56 @@
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/@babel/runtime/-/runtime-7.29.7.tgz",
+          "url": "https://registry.npmjs.org/zod/-/zod-4.6.6.tgz",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "36af0e8465a264864657a84b1e8c8028b2dc26284fff115e04c189a14af14d7da9b08f1d0a27f32e16484856fe5564b7c053110e6086c3947e74ec920aa3cb87"
+              "content": "e149b34141797f1bdf7181e56e30667a353ec3e85b0e7585c78692f24071ee73c11dc3b64aa3dba401bcb276dd83e5ec7b8a5179f47df2182316020c088fd484"
             }
           ]
         },
         {
           "type": "website",
-          "url": "https://babel.dev/docs/en/next/babel-runtime"
+          "url": "https://zod.dev"
         },
         {
           "type": "vcs",
-          "url": "https://github.com/babel/babel.git"
+          "url": "git+https://github.com/colinhacks/zod.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/colinhacks/zod/issues"
         }
       ]
     },
     {
       "type": "library",
-      "name": "playwright",
-      "version": "1.62.0",
-      "purl": "pkg:npm/playwright@1.62.0",
-      "bom-ref": "pkg:npm/playwright@1.62.0",
-      "description": "A high-level API to automate web browsers",
-      "authors": [
-        {
-          "name": "Microsoft Corporation"
-        }
-      ],
+      "name": "citty",
+      "version": "0.2.2",
+      "purl": "pkg:npm/citty@0.2.2",
+      "bom-ref": "pkg:npm/citty@0.2.2",
+      "description": "Elegant CLI Builder",
       "licenses": [
         {
           "license": {
-            "id": "Apache-2.0"
+            "id": "MIT"
           }
         }
       ],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/playwright/-/playwright-1.62.0.tgz",
+          "url": "https://registry.npmjs.org/citty/-/citty-0.2.2.tgz",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "675e1d1b7d3976068bbba7e80754d741a805896f097d250851a52e3da290e8db413ca1753ffa9772a7e1e9ce8afe270fa9dcb7ec99a36e20577fa24d83a4b297"
+              "content": "fbabc90372fdf32bfe21d7ca1991c1362196e4a1e7db67bf270203d12b6bb33f21e12fdcb00bbf3ae202c31ae0e389393118991d6228f175ee260413ae244fe3"
             }
           ]
         },
         {
-          "type": "website",
-          "url": "https://playwright.dev"
-        },
-        {
           "type": "vcs",
-          "url": "git+https://github.com/microsoft/playwright.git"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "playwright-core",
-      "version": "1.62.0",
-      "purl": "pkg:npm/playwright-core@1.62.0",
-      "bom-ref": "pkg:npm/playwright-core@1.62.0",
-      "description": "A high-level API to automate web browsers",
-      "authors": [
-        {
-          "name": "Microsoft Corporation"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "Apache-2.0"
-          }
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.62.0.tgz",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "9ec351caad2bdb3b06f007111d692773d4110395c2b9e0bb81632bb3e1b1dad9599fd85c97ccee75f874d258493d8d4313b36667a6c3b13f60db27b2f265e58c"
-            }
-          ]
-        },
-        {
-          "type": "website",
-          "url": "https://playwright.dev"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/microsoft/playwright.git"
+          "url": "git+https://github.com/unjs/citty.git"
         }
       ]
     }
@@ -1667,8 +1690,7 @@
       "ref": "pkg:npm/%40anthropic-ai/sdk@0.115.0",
       "dependsOn": [
         "pkg:npm/json-schema-to-ts@3.1.1",
-        "pkg:npm/standardwebhooks@1.0.0",
-        "pkg:npm/zod@4.4.3"
+        "pkg:npm/standardwebhooks@1.0.0"
       ]
     },
     {
@@ -1686,6 +1708,10 @@
     },
     {
       "ref": "pkg:npm/%40esbuild/linux-x64@0.28.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40isaacs/nonrecursive-glob-match@1.1.0",
       "dependsOn": []
     },
     {
@@ -1746,11 +1772,11 @@
         "pkg:npm/%40anthropic-ai/sdk@0.115.0",
         "pkg:npm/citty@0.2.2",
         "pkg:npm/ffmpeg-static@5.3.0",
-        "pkg:npm/glob@13.0.6",
+        "pkg:npm/glob@14.0.6",
         "pkg:npm/openai@5.23.2",
         "pkg:npm/playwright@1.62.0",
-        "pkg:npm/tsx@4.23.10",
-        "pkg:npm/zod@4.4.3"
+        "pkg:npm/tsx@4.23.15",
+        "pkg:npm/zod@4.6.6"
       ]
     },
     {
@@ -1777,11 +1803,11 @@
       ]
     },
     {
-      "ref": "pkg:npm/glob@13.0.6",
+      "ref": "pkg:npm/glob@14.0.6",
       "dependsOn": [
-        "pkg:npm/minimatch@10.2.6",
+        "pkg:npm/minimatch@11.0.9",
         "pkg:npm/minipass@7.1.3",
-        "pkg:npm/path-scurry@2.0.2"
+        "pkg:npm/path-scurry@3.0.0"
       ]
     },
     {
@@ -1817,8 +1843,9 @@
       "dependsOn": []
     },
     {
-      "ref": "pkg:npm/minimatch@10.2.6",
+      "ref": "pkg:npm/minimatch@11.0.9",
       "dependsOn": [
+        "pkg:npm/%40isaacs/nonrecursive-glob-match@1.1.0",
         "pkg:npm/brace-expansion@5.0.12"
       ]
     },
@@ -1832,16 +1859,14 @@
     },
     {
       "ref": "pkg:npm/openai@5.23.2",
-      "dependsOn": [
-        "pkg:npm/zod@4.4.3"
-      ]
+      "dependsOn": []
     },
     {
       "ref": "pkg:npm/parse-cache-control@1.0.1",
       "dependsOn": []
     },
     {
-      "ref": "pkg:npm/path-scurry@2.0.2",
+      "ref": "pkg:npm/path-scurry@3.0.0",
       "dependsOn": [
         "pkg:npm/lru-cache@11.5.2",
         "pkg:npm/minipass@7.1.3"
@@ -1897,7 +1922,7 @@
       "dependsOn": []
     },
     {
-      "ref": "pkg:npm/tsx@4.23.10",
+      "ref": "pkg:npm/tsx@4.23.15",
       "dependsOn": [
         "pkg:npm/esbuild@0.28.1"
       ]
@@ -1911,7 +1936,7 @@
       "dependsOn": []
     },
     {
-      "ref": "pkg:npm/zod@4.4.3",
+      "ref": "pkg:npm/zod@4.6.6",
       "dependsOn": []
     }
   ]
