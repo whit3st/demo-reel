@@ -189,7 +189,7 @@ importers:
         specifier: ^5.3.0
         version: 5.3.0(supports-color@7.2.0)
       glob:
-        specifier: ^14.0.0
+        specifier: ^14.0.6
         version: 14.0.6
       openai:
         specifier: ^4.0.0 || ^5.0.0 || ^7.0.0
