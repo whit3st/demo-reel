@@ -181,7 +181,7 @@ importers:
     dependencies:
       '@anthropic-ai/sdk':
         specifier: '>=0.91.1 <2.0.0'
-        version: 0.115.0(zod@4.6.6)
+        version: 0.115.0(zod@4.6.7)
       citty:
         specifier: ^0.2.2
         version: 0.2.2
@@ -193,7 +193,7 @@ importers:
         version: 14.0.6
       openai:
         specifier: ^4.0.0 || ^5.0.0 || ^7.0.0
-        version: 5.23.2(zod@4.6.6)
+        version: 5.23.2(zod@4.6.7)
       playwright:
         specifier: ^1.58.0
         version: 1.62.0
@@ -201,8 +201,8 @@ importers:
         specifier: ^4.23.15
         version: 4.23.15
       zod:
-        specifier: ^4.4.3
-        version: 4.6.6
+        specifier: ^4.6.7
+        version: 4.6.7
     devDependencies:
       '@types/node':
         specifier: ^26.6.6
@@ -1521,17 +1521,17 @@ packages:
     engines: {node: '>=20.11'}
     hasBin: true
 
-  zod@4.6.6:
-    resolution: {integrity: sha512-4UmzQUF5fxvfcYHlbjBmejU+w+hbDnWFx4aS8kBx7nPBHcO2SqPbpAG8snbdg+Xse4pRefR98hgjFgIMCI/UhA==}
+  zod@4.6.7:
+    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
 snapshots:
 
-  '@anthropic-ai/sdk@0.115.0(zod@4.6.6)':
+  '@anthropic-ai/sdk@0.115.0(zod@4.6.7)':
     dependencies:
       json-schema-to-ts: 3.1.1
       standardwebhooks: 1.0.0
     optionalDependencies:
-      zod: 4.6.6
+      zod: 4.6.7
 
   '@babel/helper-string-parser@7.29.7': {}
 
@@ -2216,9 +2216,9 @@ snapshots:
 
   obug@3.0.0: {}
 
-  openai@5.23.2(zod@4.6.6):
+  openai@5.23.2(zod@4.6.7):
     optionalDependencies:
-      zod: 4.6.6
+      zod: 4.6.7
 
   oxfmt@0.79.0:
     dependencies:
@@ -2441,4 +2441,4 @@ snapshots:
 
   why-is-node-running@3.2.1: {}
 
-  zod@4.6.6: {}
+  zod@4.6.7: {}
