@@ -31,38 +31,20 @@ Determine bump:
 
 Ask user for confirmation if ambiguous.
 
-## Step 2 — Update CHANGELOG
+## Step 2 — Run the release target
 
-Edit `CHANGELOG.md`:
-
-1. Replace `## [Unreleased]` with `## [X.Y.Z] - YYYY-MM-DD`
-2. Add a new empty `## [Unreleased]` section above it
-
-## Step 3 — Bump version
-
-Update `"version"` in `package.json` to the new version.
-
-## Step 4 — Verify quality
-
-Before committing, ensure the changes pass:
+From the repo root, on a clean, up-to-date `main`:
 
 ```bash
-pnpm format
-pnpm build
+make patch   # or make minor / make major
 ```
 
-Stop if either fails.
+The Makefile verifies, bumps `package.json`, dates the `[Unreleased]`
+section, opens a release PR, waits for CI, merges it, then tags the merged
+commit and pushes the tag. `SKIP_CONFIRM=1` skips the prompt;
+`SKIP_VERIFY=1` skips the local checks (CI still gates the publish).
 
-## Step 5 — Commit, tag, push
-
-```bash
-git add CHANGELOG.md package.json
-git commit -m "chore: bump version to X.Y.Z"
-git tag vX.Y.Z
-git push origin main --tags
-```
-
-## Step 6 — Wait for publish CI
+## Step 3 — Wait for publish CI
 
 ```bash
 gh run list --workflow=publish.yml --limit 3
@@ -71,7 +53,7 @@ gh run watch <run-id>
 
 If it fails, inspect: `gh run view <run-id> --log`
 
-## Step 7 — Verify
+## Step 4 — Verify
 
 ```bash
 npm view demo-reel version
