@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `pnpm publish` now waits up to 10 minutes for npm to expose the new version and tarball before the publish workflow reports success, covering npm's publish-time malware scan.
+- `make patch/minor/major` now releases through a PR, waits for CI, merges, then tags the merged commit, so it works with protected `main`.
 
 ## [0.15.0] - 2026-11-20
 
