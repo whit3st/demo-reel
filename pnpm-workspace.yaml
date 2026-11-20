@@ -6,3 +6,4 @@ minimumReleaseAgeExclude:
 overrides:
   vite: 8.3.8
   nanoid: ^6.0.2
+publishWaitTimeout: 600000
