@@ -160,7 +160,11 @@ src/
 ├── schemas/               # Zod validation schemas (split from monolithic schemas.ts)
 ├── config-loader.ts       # Config loading (.ts/.json)
 ├── narration-manifest.ts  # Narration manifest data format
+├── narration-plan.ts      # One owner of the “generate narration?” predicate
+├── narration-placement.ts # Pure video-clock mapping + clip placement/overlap rules
 ├── narration-sync.ts      # Audio-first step timing sync
+├── process-cleanup.ts     # SIGINT/SIGTERM teardown registry
+├── step-duration.ts       # One pure step-duration estimator for all engines
 ├── auth.ts                # Session capture/restore/validate
 ├── audio-processor.ts     # FFmpeg audio/video merging (→ ffmpeg/)
 ├── voice-config.ts        # Voice config resolution
@@ -281,3 +285,11 @@ Both `audio-processor.ts` and `script/tts.ts` had their own `getFfmpegPath()` / 
 ### 5. Runner split by concern
 
 The 1392-line `runner.ts` splits into focused files: cursor overlay, bezier motion, typing simulation, step execution (with and without cursor), assertions, selectors, and scene tracking. Each file has one clear responsibility.
+
+### 6. Pure narration core and one lifecycle owner
+
+Timing and placement arithmetic — step-duration estimates, video-clock mapping, clip ordering, overlap shifting, scene-boundary bookkeeping — is pure and lives in `step-duration.ts`, `narration-placement.ts`, `narration-sync.ts` and `runner/scene-tracking.ts`. The stages and `processVideoWithAudio` only measure, read files and call those functions.
+
+Process teardown has one owner too: `process-cleanup.ts`. The CLI installs the signal handlers once, `BrowserPool` registers each session, and the legacy launcher path registers through the same API. Nothing else holds a module-level browser reference.
+
+CI enforces the seams that prose used to: `scripts/check-architecture.mjs` rejects `any`, shell imports in pure modules, duplicated duration constants and `process.exit` outside the CLI/registry. `formal/ChatterboxWorker.tla` model-checks the persistent voice worker lifecycle, including a negative config that must fail.

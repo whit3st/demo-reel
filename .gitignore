@@ -6,6 +6,11 @@ test-videos
 .demo-reel-sessions
 coverage
 
+# Formal verification downloads and TLC artifacts
+.tla/
+formal/states/
+formal/*_TTrace_*
+
 # Demo output (generated artifacts)
 **/output/
 
