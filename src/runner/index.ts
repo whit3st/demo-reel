@@ -13,7 +13,7 @@ import { installCursorOverlay, ensureCursorOverlay } from "./cursor.js";
 import { CameraController } from "./camera.js";
 import { handleDialogForConfirmStep, runWithConfirmSimple, runStepSimple } from "./step-simple.js";
 import { runStep, runWithConfirm, type CameraRunContext } from "./steps.js";
-import { buildSceneBoundaries } from "./scene-tracking.js";
+import { buildSceneBoundaries, SceneTracker } from "./scene-tracking.js";
 
 export const formatStepForLog = (step: Step): string => {
   if (step.action === "goto") return `goto ${step.url}`;
@@ -184,10 +184,10 @@ export const runDemo = async (
   const rng = config.randomization ? createRandom(config.randomization.seed) : undefined;
 
   const sceneBoundaries = buildSceneBoundaries(config.scenes);
+  const tracker = new SceneTracker(config.scenes, sceneBoundaries);
 
   const timestamps: SceneTimestamp[] = [];
   const recordingStart = Date.now();
-  let currentScene: { index: number; startMs: number } | null = null;
 
   for (let stepIdx = 0; stepIdx < config.steps.length; stepIdx++) {
     const step = config.steps[stepIdx];
@@ -195,21 +195,11 @@ export const runDemo = async (
 
     await ensureCursorOverlay(page, resolvedCursor);
 
-    const sceneIdx = sceneBoundaries.get(stepIdx);
-    if (sceneIdx !== undefined && config.scenes) {
-      const now = Date.now() - recordingStart;
-      const scene = config.scenes[sceneIdx];
+    const boundary = tracker.enter(stepIdx, Date.now() - recordingStart);
+    if (boundary && config.scenes) {
+      if (boundary.closed) timestamps.push(boundary.closed);
 
-      if (currentScene !== null) {
-        const prevScene = config.scenes[currentScene.index];
-        timestamps.push({
-          sceneIndex: currentScene.index,
-          narration: prevScene.narration,
-          isIntro: prevScene.isIntro ?? false,
-          startMs: currentScene.startMs,
-          endMs: now,
-        });
-      }
+      const scene = config.scenes[boundary.sceneIndex];
 
       // Resolve at every boundary, not only when an override exists — a
       // scene without zoom must reset the camera to the global layer rather
@@ -223,8 +213,6 @@ export const runDemo = async (
         await camera.disengage();
       }
       prevCameraEnabled = camera.enabled;
-
-      currentScene = { index: sceneIdx, startMs: now };
     }
 
     try {
@@ -281,16 +269,8 @@ export const runDemo = async (
     await page.waitForTimeout(config.timing.endDelayMs);
   }
 
-  if (currentScene !== null && config.scenes) {
-    const finalScene = config.scenes[currentScene.index];
-    timestamps.push({
-      sceneIndex: currentScene.index,
-      narration: finalScene.narration,
-      isIntro: finalScene.isIntro ?? false,
-      startMs: currentScene.startMs,
-      endMs: Date.now() - recordingStart,
-    });
-  }
+  const finalScene = tracker.finish(Date.now() - recordingStart);
+  if (finalScene) timestamps.push(finalScene);
 
   return timestamps;
 };

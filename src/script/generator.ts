@@ -68,6 +68,26 @@ Return ONLY the JSON object, no markdown fences or explanation.`;
   return prompt;
 }
 
+/**
+ * Concatenate the text blocks of an Anthropic message.
+ *
+ * The SDK is an optional peer, so its content union is not available here;
+ * narrow the unknown instead of casting the whole array to `any`.
+ */
+function extractTextContent(content: unknown): string {
+  if (!Array.isArray(content)) return "";
+  return content
+    .filter(
+      (block): block is { type: "text"; text: string } =>
+        typeof block === "object" &&
+        block !== null &&
+        (block as { type?: unknown }).type === "text" &&
+        typeof (block as { text?: unknown }).text === "string",
+    )
+    .map((block) => block.text)
+    .join("");
+}
+
 function parseScriptResponse(text: string): { title: string; scenes: ScriptScene[] } {
   // Strip markdown code fences if present
   let cleaned = text.trim();
@@ -125,10 +145,7 @@ export async function generateScript(options: GenerateOptions): Promise<DemoScri
     ],
   });
 
-  const responseText = (message.content as any[])
-    .filter((block: any) => block.type === "text")
-    .map((block: any) => block.text)
-    .join("");
+  const responseText = extractTextContent(message.content);
 
   if (!responseText) {
     throw new Error("Empty response from Claude API");
@@ -241,10 +258,7 @@ Return the full corrected JSON script (same format as before). Fix only the brok
     ],
   });
 
-  const responseText = (message.content as any[])
-    .filter((block: any) => block.type === "text")
-    .map((block: any) => block.text)
-    .join("");
+  const responseText = extractTextContent(message.content);
 
   const { title, scenes } = parseScriptResponse(responseText);
 
