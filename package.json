@@ -65,13 +65,13 @@
   "devDependencies": {
     "@types/node": "^26.6.6",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
-    "@vitest/coverage-v8": "^5.1.1",
-    "@vitest/ui": "^5.1.1",
+    "@vitest/coverage-v8": "^5.1.2",
+    "@vitest/ui": "^5.1.2",
     "dotenv": "^18.0.10",
     "oxfmt": "^0.80.0",
     "oxlint": "^1.95.0",
     "typescript": "^7.0.2",
-    "vitest": "^5.1.1"
+    "vitest": "^5.1.2"
   },
   "peerDependencies": {
     "@anthropic-ai/sdk": ">=0.91.1 <2.0.0",
