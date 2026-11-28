@@ -229,6 +229,9 @@ importers:
       dotenv:
         specifier: ^18.0.10
         version: 18.0.10
+      fast-check:
+        specifier: ^4.11.0
+        version: 4.11.0
       oxfmt:
         specifier: ^0.80.0
         version: 0.80.0
@@ -1126,6 +1129,10 @@ packages:
     resolution: {integrity: sha512-KfYbmpRm0VbLjEvVa9yGwCi9GI34xvi7A/HXYWQO65CSD2u3MczUJSuwXKFIxlGsgBQizV9q5J9NHj4VG0n+pA==}
     engines: {node: '>=12.0.0'}
 
+  fast-check@4.11.0:
+    resolution: {integrity: sha512-V4Uc238rhQOdQlc+Gz7JG6SGBtrWnWL8d/6RyiBeCMcNKMhF6DZ0KkAVHJSyNV5r4lA0PmIpZ6iRpTVoz4qjoA==}
+    engines: {node: '>=12.17.0'}
+
   fast-sha256@1.3.0:
     resolution: {integrity: sha512-n11RGP/lrWEFI/bWdygLxhI+pVeo1ZYIVwvvPkW7azl/rOy+F3HYRZ2K5zeE9mmkhQppyv9sQFx0JM9UabnpPQ==}
 
@@ -1366,6 +1373,9 @@ packages:
   progress@2.0.3:
     resolution: {integrity: sha512-7PiHtLll5LdnKIMw100I+8xJXR5gW2QwWYkT6iJva0bXitZKa/XMrSbdmg3r2Xnaidz9Qumd0VPaMrZlF9V9sA==}
     engines: {node: '>=0.4.0'}
+
+  pure-rand@8.4.2:
+    resolution: {integrity: sha512-vvuOGgcuPJAirlHvuQw1TrOiw7ptaIXXmIbNuiNOY6lNGJJH49PQ1Kj4nd783nPdQhQdicgOjVI2yI/9BD6/Ng==}
 
   readable-stream@3.6.2:
     resolution: {integrity: sha512-9u/sniCrY3D5WdsERHzHE4G2YCXqoG5FTHUiCC4SIbr6XcLZBY05ya9EKjYek9O5xOAwjGq+1JdGBAS7Q9ScoA==}
@@ -2106,6 +2116,10 @@ snapshots:
 
   expect-type@1.4.0: {}
 
+  fast-check@4.11.0:
+    dependencies:
+      pure-rand: 8.4.2
+
   fast-sha256@1.3.0: {}
 
   fdir@6.5.0(picomatch@4.0.7):
@@ -2314,6 +2328,8 @@ snapshots:
       source-map-js: 1.2.2
 
   progress@2.0.3: {}
+
+  pure-rand@8.4.2: {}
 
   readable-stream@3.6.2:
     dependencies:

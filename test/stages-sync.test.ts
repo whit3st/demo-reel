@@ -184,6 +184,73 @@ describe("NarrationSyncStage", () => {
 
     expect(JSON.stringify(ctx.config.steps)).toBe(before);
   });
+
+  // Scenes without narration own no narration window, but padding inserted by
+  // an earlier narrated scene still moves the steps they point at. The stage
+  // used to index every scene into the windows-only array, corrupting those
+  // indices (and every narrated scene after the first insertion).
+  it("remaps scenes without narration when padding inserts steps", async () => {
+    const manifestPath = join(dir, "mixed.manifest.json");
+    await writeFile(
+      manifestPath,
+      JSON.stringify({
+        version: 1,
+        processingVersion: NARRATION_PROCESSING_VERSION,
+        clips: [
+          {
+            sceneIndex: 1,
+            narration: "long",
+            filePath: join(dir, "clip-1.mp3"),
+            audioDurationMs: 4500,
+          },
+          {
+            sceneIndex: 2,
+            narration: "short",
+            filePath: join(dir, "clip-2.mp3"),
+            audioDurationMs: 1000,
+          },
+        ],
+      }),
+    );
+
+    const ctx = makeCtx({
+      narrationManifestPath: manifestPath,
+      config: {
+        timing: { narrationSyncMode: "auto", narrationGapMs: 0, maxAutoPadMs: 5000 },
+        steps: [
+          { action: "goto", url: "https://example.com" },
+          { action: "wait", ms: 1000 },
+          { action: "goto", url: "https://example.com" },
+          { action: "wait", ms: 2000 },
+          { action: "wait", ms: 1000 },
+          { action: "wait", ms: 500 },
+        ],
+        scenes: [
+          { narration: "", stepIndex: 0 },
+          { narration: "long", stepIndex: 1 },
+          { narration: "short", stepIndex: 3 },
+          { narration: "", stepIndex: 5 },
+        ],
+      },
+    });
+
+    await new NarrationSyncStage().run(ctx);
+
+    // Scene 1 needs 1500ms more; its last step is a goto, which cannot grow a
+    // delay, so one wait is inserted after original step 2.
+    expect(ctx.config.steps).toHaveLength(7);
+    expect(ctx.config.steps[3]).toEqual({ action: "wait", ms: 1500 });
+    expect(ctx.config.steps.map((step: any) => step.action)).toEqual([
+      "goto",
+      "wait",
+      "goto",
+      "wait",
+      "wait",
+      "wait",
+      "wait",
+    ]);
+    expect(ctx.config.scenes.map((scene: any) => scene.stepIndex)).toEqual([0, 1, 4, 6]);
+  });
 });
 
 describe("TTSStage on dry runs", () => {

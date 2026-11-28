@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { readFileSync } from "fs";
 import { buildSceneWindows, logSyncReport, type SyncReport } from "../src/narration-sync.js";
+import { estimateStepDuration, STEP_DURATION_MS } from "../src/step-duration.js";
 import type { Step } from "../src/schemas.js";
 
 /**
@@ -65,20 +65,28 @@ describe("step duration estimation", () => {
   });
 
   /**
-   * The constants are duplicated from script/timing.ts, with only a comment
-   * ("mirrors script/timing.ts") holding the two in sync. If they drift, the
-   * script generator and the sync engine predict different scene lengths and
-   * padding silently stops matching the generated script.
+   * The script timing engine and the narration sync engine used to keep
+   * byte-identical copies of this table, with only a comment holding them in
+   * sync. They now call one pure module, so this asserts the table's values and
+   * that the sync engine really routes through it.
    */
-  it("keeps its duration constants identical to script/timing.ts", () => {
-    const source = readFileSync(new URL("../src/script/timing.ts", import.meta.url), "utf8");
-    const constant = (name: string) =>
-      Number(source.match(new RegExp(`const ${name} = (\\d+)`))?.[1]);
+  it("exposes one shared duration table for every engine", () => {
+    expect(STEP_DURATION_MS).toEqual({
+      typingPerChar: 100,
+      click: 700,
+      goto: 2000,
+      press: 200,
+      scroll: 400,
+      selectCheckUpload: 300,
+      drag: 1000,
+      default: 500,
+    });
+  });
 
-    expect(constant("TYPING_MS_PER_CHAR")).toBe(100);
-    expect(constant("CLICK_DURATION_MS")).toBe(700);
-    expect(constant("GOTO_DURATION_MS")).toBe(2000);
-    expect(constant("DEFAULT_STEP_DURATION_MS")).toBe(500);
+  it("builds scene estimates from the shared estimator", () => {
+    const step = { action: "click", selector: sel, delayAfterMs: 125 } as Step;
+
+    expect(durationOf(step)).toBe(estimateStepDuration(step));
   });
 });
 

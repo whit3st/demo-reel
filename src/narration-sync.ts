@@ -10,6 +10,7 @@
  *   Scene 1 window: steps 6..9  (stepIndex 6, endStep 10)
  */
 import type { Step } from "./schemas.js";
+import { estimateStepsDuration } from "./step-duration.js";
 
 // --- Types ---
 
@@ -44,49 +45,6 @@ export interface SyncConfig {
   narrationGapMs: number;
   maxAutoPadMs: number;
   maxSyncPasses: number;
-}
-
-// --- Step duration estimation (mirrors script/timing.ts) ---
-
-const TYPING_MS_PER_CHAR = 100;
-const CLICK_DURATION_MS = 700;
-const GOTO_DURATION_MS = 2000;
-const DEFAULT_STEP_DURATION_MS = 500;
-
-function estimateStepDuration(step: Step): number {
-  const delayBefore = ("delayBeforeMs" in step && step.delayBeforeMs) || 0;
-  const delayAfter = ("delayAfterMs" in step && step.delayAfterMs) || 0;
-  const base = delayBefore + delayAfter;
-
-  switch (step.action) {
-    case "goto":
-      return base + GOTO_DURATION_MS;
-    case "click":
-    case "hover":
-      return base + CLICK_DURATION_MS;
-    case "type":
-      return base + step.text.length * TYPING_MS_PER_CHAR;
-    case "press":
-      return base + 200;
-    case "scroll":
-      return base + 400;
-    case "select":
-    case "check":
-    case "upload":
-      return base + 300;
-    case "drag":
-      return base + 1000;
-    case "wait":
-      return base + step.ms;
-    case "waitFor":
-      return base + DEFAULT_STEP_DURATION_MS;
-    default:
-      return base + DEFAULT_STEP_DURATION_MS;
-  }
-}
-
-function estimateStepsDuration(steps: Step[]): number {
-  return steps.reduce((total, step) => total + estimateStepDuration(step), 0);
 }
 
 // --- Scene window building ---
@@ -180,8 +138,41 @@ function padLastStep(steps: Step[], padMs: number): Step[] {
 }
 
 /**
+ * A window whose padding added whole steps rather than growing an existing
+ * one. `afterStep` is in ORIGINAL step coordinates: every scene that starts
+ * after it must move by `insertedSteps`.
+ */
+export interface PaddingAdjustment {
+  afterStep: number;
+  insertedSteps: number;
+}
+
+/**
+ * Map every scene's original stepIndex onto the padded steps array.
+ *
+ * Scenes are not one-per-window: a scene with no narration owns no narration
+ * window, yet padding inserted earlier still moves the steps it points at.
+ * Deriving the mapping from every original scene (not from the windows) is what
+ * keeps those scenes correctly aligned.
+ */
+export function adjustedSceneStepIndices(
+  scenes: ReadonlyArray<{ stepIndex: number }>,
+  adjustments: readonly PaddingAdjustment[],
+): number[] {
+  return scenes.map((scene) => {
+    const insertedBefore = adjustments.reduce(
+      (total, adjustment) =>
+        scene.stepIndex > adjustment.afterStep ? total + adjustment.insertedSteps : total,
+      0,
+    );
+    return scene.stepIndex + insertedBefore;
+  });
+}
+
+/**
  * Inject padding into steps and shift downstream scene stepIndex values.
- * Returns the full adjusted steps array and new scene stepIndex values.
+ * Returns the full adjusted steps array, the adjusted start of each narration
+ * window, and the insertions needed to remap scenes outside those windows.
  */
 export function injectPadding(
   allSteps: Step[],
@@ -189,10 +180,12 @@ export function injectPadding(
 ): {
   steps: Step[];
   sceneStepIndices: number[];
+  adjustments: PaddingAdjustment[];
 } {
   const steps = [...allSteps];
   let cumulativeShift = 0;
   const sceneStepIndices: number[] = [];
+  const adjustments: PaddingAdjustment[] = [];
 
   for (let i = 0; i < windows.length; i++) {
     const window = windows[i];
@@ -213,10 +206,17 @@ export function injectPadding(
     steps.splice(adjustedStartStep, window.steps.length, ...paddedSteps);
 
     // Track cumulative shift for downstream scenes
-    cumulativeShift += paddedSteps.length - window.steps.length;
+    const insertedSteps = paddedSteps.length - window.steps.length;
+    if (insertedSteps > 0) {
+      adjustments.push({
+        afterStep: originalStartStep + window.steps.length - 1,
+        insertedSteps,
+      });
+    }
+    cumulativeShift += insertedSteps;
   }
 
-  return { steps, sceneStepIndices };
+  return { steps, sceneStepIndices, adjustments };
 }
 
 // --- Main sync engine ---
@@ -265,8 +265,12 @@ export function syncNarration(input: SyncInput): SyncOutput {
 
   // Off mode: return as-is with report only
   if (narrationSyncMode === "off") {
-    const sceneStepIndices = scenes.map((s) => s.stepIndex);
-    return { steps, sceneStepIndices, report, hasOverflow: totalDeficitMs > 0 };
+    return {
+      steps,
+      sceneStepIndices: scenes.map((s) => s.stepIndex),
+      report,
+      hasOverflow: totalDeficitMs > 0,
+    };
   }
 
   // Strict mode: fail if any deficit exists
@@ -284,15 +288,19 @@ export function syncNarration(input: SyncInput): SyncOutput {
   }
 
   // Auto mode: inject padding
-  const { steps: adjustedSteps, sceneStepIndices } = injectPadding(steps, windows);
+  const { steps: adjustedSteps, adjustments } = injectPadding(steps, windows);
 
   report.appliedPadMs = totalDeficitMs;
 
   const hasOverflow = overflowScenes.length > 0;
+  // Every window start moved by earlier insertions, so the window list is a
+  // complete shifted view of the narrated scenes only. Scenes without
+  // narration are remapped from the same insertions instead of being indexed
+  // into this shorter array.
 
   return {
     steps: adjustedSteps,
-    sceneStepIndices,
+    sceneStepIndices: adjustedSceneStepIndices(scenes, adjustments),
     report,
     hasOverflow,
   };

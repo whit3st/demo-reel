@@ -51,6 +51,9 @@
     "test:ui": "vitest --ui",
     "lint": "oxlint .",
     "lint:ci": "oxlint .",
+    "check:architecture": "node scripts/check-architecture.mjs",
+    "check:model-sync": "node scripts/check-model-sync.mjs",
+    "check:formal": "bash scripts/check-formal.sh",
     "format": "oxfmt . --write",
     "format:ci": "oxfmt . --check",
     "prepublishOnly": "pnpm run build"
@@ -68,6 +71,7 @@
     "@vitest/coverage-v8": "^5.1.2",
     "@vitest/ui": "^5.1.2",
     "dotenv": "^18.0.10",
+    "fast-check": "^4.11.0",
     "oxfmt": "^0.80.0",
     "oxlint": "^1.95.0",
     "typescript": "^7.0.2",
