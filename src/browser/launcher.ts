@@ -64,6 +64,24 @@ export async function closeSession(
   session: BrowserSession,
   saveSessionFn?: () => Promise<void>,
 ): Promise<string | null> {
+  if (session.closePromise) return session.closePromise;
+
+  session.closePromise = closeSessionOnce(session, saveSessionFn);
+  try {
+    return await session.closePromise;
+  } catch (error) {
+    // A failed close is retryable: releaseAll intentionally keeps the session
+    // tracked so it can try again. A successful close stays cached as the
+    // single answer for every later caller.
+    session.closePromise = undefined;
+    throw error;
+  }
+}
+
+async function closeSessionOnce(
+  session: BrowserSession,
+  saveSessionFn?: () => Promise<void>,
+): Promise<string | null> {
   const { page, context, browser, isRecording } = session;
 
   // Before the close, so the tail measures footage that was actually captured

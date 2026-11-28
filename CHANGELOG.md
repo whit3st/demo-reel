@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- CI now enforces an architecture ratchet: no `any` escapes in `src/`, a pure-core import barrier, one source for step-duration constants, and signal teardown only through the cleanup registry.
+- TLA+ model of the persistent Chatterbox worker lifecycle, with a negative config that reproduces the clean-exit hang and must fail TLC.
+
+### Changed
+
+- Step duration estimation now lives in one pure module shared by the script timing engine and narration auto-sync, instead of two copies kept in sync by comment.
+
+### Fixed
+
+- Narration sync no longer corrupts scene step indices when padding inserts a step and some scenes have no narration.
+- Ctrl-C / SIGTERM during a narration (pipeline) run now closes pooled browsers and rejects in-flight Chatterbox requests instead of leaving a browser running or a caller waiting forever.
+- The voice-generation CLI path now writes to the output path resolved from the config file (including `--output-dir`, timestamps and config subdirectories), matching the non-voice path.
+- `demo-reel --help` reports the actual package version instead of a hard-coded `0.7.7`.
+- Temporary audio probe/conversion files now use unique names, so two generations racing in the same process cannot overwrite each other's work.
+
 ## [0.15.1] - 2026-11-20
 
 ### Changed

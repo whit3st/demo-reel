@@ -22,18 +22,22 @@ import {
   captureSession,
   restoreSession,
 } from "./auth.js";
+import {
+  placeNarrationClips,
+  planVideoTime,
+  resolveNarrationOverlaps,
+  sceneToVideoMs,
+  type RecordingTimeline,
+  type VideoTimeMapping,
+} from "./narration-placement.js";
 
 export interface VideoResult {
   page: Page;
   context: BrowserContext;
   browser: Browser;
   tempVideoPath: string;
-}
-
-let onBrowserCreated: ((browser: Browser, context: BrowserContext) => void) | null = null;
-
-export function setOnBrowserCreated(cb: (browser: Browser, context: BrowserContext) => void): void {
-  onBrowserCreated = cb;
+  /** Detaches the SIGINT cleanup target opened with this browser. */
+  unregisterCleanup?: () => void;
 }
 
 // Default behavior settings
@@ -142,6 +146,7 @@ import {
   launchRecordingBrowser as _launchRecordingBrowser,
   closeSession as _closeSession,
 } from "./browser/launcher.js";
+import { registerSessionCleanup } from "./browser/cleanup.js";
 import type { BrowserSession } from "./browser/types.js";
 
 export async function startBrowser(
@@ -150,15 +155,12 @@ export async function startBrowser(
 ): Promise<VideoResult> {
   const session = await _launchBrowser(config, headed);
 
-  if (onBrowserCreated) {
-    onBrowserCreated(session.browser, session.context);
-  }
-
   return {
     page: session.page,
     context: session.context,
     browser: session.browser,
     tempVideoPath: "",
+    unregisterCleanup: registerSessionCleanup(session),
   };
 }
 
@@ -168,22 +170,29 @@ export async function startRecording(
 ): Promise<VideoResult> {
   const session = await _launchRecordingBrowser(config, headed);
 
-  if (onBrowserCreated) {
-    onBrowserCreated(session.browser, session.context);
-  }
-
   return {
     page: session.page,
     context: session.context,
     browser: session.browser,
     tempVideoPath: "",
+    unregisterCleanup: registerSessionCleanup(session),
   };
+}
+
+async function closeVideoResult(result: VideoResult): Promise<void> {
+  result.unregisterCleanup?.();
+  result.unregisterCleanup = undefined;
+  await result.context.close().catch(() => {});
+  await result.browser.close().catch(() => {});
 }
 
 export async function stopRecording(
   result: VideoResult,
   saveSessionFn?: () => Promise<void>,
 ): Promise<string> {
+  result.unregisterCleanup?.();
+  result.unregisterCleanup = undefined;
+
   const session: BrowserSession = {
     page: result.page,
     context: result.context,
@@ -200,27 +209,8 @@ export async function stopRecording(
   return tempVideoPath;
 }
 
-/**
- * Where the scene clock sits inside the recording.
- *
- * Both are wall-clock measurements taken by the pipeline: `preRollMs` between
- * the recording context opening and the first scene starting, `tailMs` between
- * the last scene ending and the recording stopping.
- */
-export interface RecordingTimeline {
-  preRollMs: number;
-  tailMs: number;
-}
-
-/** Maps a step-clock offset onto the finished video's timeline. */
-export interface VideoTimeMapping {
-  originMs: number;
-  scale: number;
-}
-
-export const sceneToVideoMs = (mapping: VideoTimeMapping, sceneMs: number): number =>
-  mapping.originMs + Math.round(sceneMs * mapping.scale);
-
+// Re-exported so pipeline context and callers keep one import site.
+export type { RecordingTimeline, VideoTimeMapping } from "./narration-placement.js";
 export async function processVideoWithAudio(
   tempVideoPath: string,
   outputPath: string,
@@ -270,10 +260,10 @@ export async function processVideoWithAudio(
   let trim: VideoTrim | undefined;
 
   if (resolvedAudio.narrationManifest) {
+    const manifestPath = resolvedAudio.narrationManifest;
     try {
-      const rawManifest = await readFile(resolvedAudio.narrationManifest, "utf-8");
+      const rawManifest = await readFile(manifestPath, "utf-8");
       const manifest = narrationManifestSchema.parse(JSON.parse(rawManifest));
-      const timestampsByScene = new Map(sceneTimestamps.map((scene) => [scene.sceneIndex, scene]));
 
       // Scene timestamps come off the STEP clock — elapsed time the runner
       // measured while driving the page, starting at zero with the first scene.
@@ -285,107 +275,54 @@ export async function processVideoWithAudio(
       // at `preRoll + sceneStart` and use what is left over as a genuine scale
       // check. Without it, fall back to the whole-recording ratio — which is
       // the best guess available, but treats a constant head offset as a
-      // stretch and so drags early cues ahead of the picture.
+      // stretch and so drags early cues ahead of the picture. The arithmetic
+      // itself lives in narration-placement.ts so it can be tested without I/O.
       const stepClockMs = sceneTimestamps.reduce((max, scene) => Math.max(max, scene.endMs), 0);
-      const { timeline } = options;
+      let recordedMs: number | undefined;
+      let measurementFailed = false;
+      let measurementError: unknown;
       try {
-        const recordedMs = await measureMediaDurationMs(tempVideoPath);
-        if (stepClockMs > 0 && recordedMs > 0) {
-          if (timeline) {
-            const sceneSpanMs = recordedMs - timeline.preRollMs - timeline.tailMs;
-            // A pre-roll and tail that swallow the whole recording means the
-            // measurement is wrong; scaling by it would place every cue at a
-            // negative offset. Fall back to real time and say nothing more than
-            // the scale warning below already says.
-            const scale = sceneSpanMs > 0 ? sceneSpanMs / stepClockMs : 1;
-            // When the pre-roll is being cut away the first scene lands at zero,
-            // so cues must not also be pushed forward by it — that would count
-            // the same offset twice.
-            if (trimming && sceneSpanMs > 0) {
-              trim = { startMs: timeline.preRollMs, durationMs: sceneSpanMs };
-              videoTime = { originMs: 0, scale };
-            } else {
-              videoTime = { originMs: Math.max(0, timeline.preRollMs), scale };
-            }
-            if (scale < 0.98 || scale > 1.02) {
-              warnings.push(
-                `Recorded scene span (${Math.round(sceneSpanMs)}ms) does not match the step clock ` +
-                  `(${stepClockMs}ms); narration scaled by ${scale.toFixed(4)}. The recording may ` +
-                  `have dropped frames or stalled.`,
-              );
-            }
-          } else {
-            const timeScale = recordedMs / stepClockMs;
-            videoTime = { originMs: 0, scale: timeScale };
-            const driftMs = Math.round(recordedMs - stepClockMs);
-            if (Math.abs(driftMs) > 250) {
-              warnings.push(
-                `Recording ran ${driftMs}ms ${driftMs > 0 ? "longer" : "shorter"} than the step clock ` +
-                  `(${stepClockMs}ms); narration rescaled by ${timeScale.toFixed(4)} to stay in sync.`,
-              );
-            }
-          }
-        } else if (timeline) {
-          videoTime = { originMs: Math.max(0, timeline.preRollMs), scale: 1 };
-        }
+        recordedMs = await measureMediaDurationMs(tempVideoPath);
       } catch (error) {
-        if (timeline) videoTime = { originMs: Math.max(0, timeline.preRollMs), scale: 1 };
-        warnings.push(
-          `Could not measure recorded video duration, narration placed on the step clock and may drift: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-        );
+        measurementFailed = true;
+        measurementError = error;
       }
 
-      narrationPlacements = manifest.clips
-        .map((clip) => {
-          const scene = timestampsByScene.get(clip.sceneIndex);
-          if (!scene) {
-            warnings.push(
-              `No recorded scene timestamp for narration clip ${clip.sceneIndex} (${clip.narration.slice(0, 60)})`,
-            );
-            return null;
-          }
+      const timePlan = planVideoTime({
+        recordedMs,
+        measurementFailed,
+        measurementError,
+        stepClockMs,
+        timeline: options.timeline,
+        trimming,
+      });
+      videoTime = timePlan.mapping;
+      trim = timePlan.trim;
+      warnings.push(...timePlan.warnings);
 
-          const startMs =
-            sceneToVideoMs(videoTime, scene.startMs) + (resolvedAudio.narrationDelay ?? 0);
-          return {
-            sceneIndex: clip.sceneIndex,
-            narration: clip.narration,
-            clipPath: resolve(dirname(resolvedAudio.narrationManifest!), clip.filePath),
-            startMs,
-            endMs: startMs + clip.audioDurationMs,
-          } satisfies NarrationPlacement;
-        })
-        .filter((placement): placement is NarrationPlacement => placement !== null)
-        .sort((left, right) => left.startMs - right.startMs || left.sceneIndex - right.sceneIndex);
+      const placed = placeNarrationClips(
+        manifest.clips.map((clip) => ({
+          sceneIndex: clip.sceneIndex,
+          narration: clip.narration,
+          clipPath: resolve(dirname(manifestPath), clip.filePath),
+          audioDurationMs: clip.audioDurationMs,
+        })),
+        sceneTimestamps,
+        videoTime,
+        resolvedAudio.narrationDelay ?? 0,
+      );
+      narrationPlacements = placed.placements;
+      warnings.push(...placed.warnings);
     } catch (error) {
       warnings.push(
         `Failed to load narration manifest: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
 
-    for (let i = 1; i < narrationPlacements.length; i++) {
-      const current = narrationPlacements[i];
-      const previous = narrationPlacements[i - 1];
-      if (current.startMs < previous.endMs) {
-        const overlapMs = previous.endMs - current.startMs;
-
-        if (narrationSyncMode === "off") continue;
-
-        if (narrationSyncMode === "strict") {
-          throw new Error(
-            `Narration overlap: scene ${current.sceneIndex} starts before scene ${previous.sceneIndex} narration ends (overlap: ${overlapMs}ms)`,
-          );
-        }
-
-        current.startMs = previous.endMs;
-        current.endMs += overlapMs;
-        warnings.push(
-          `Narration auto-shift: scene ${current.sceneIndex} pushed forward ${overlapMs}ms to avoid overlap with scene ${previous.sceneIndex}`,
-        );
-      }
-    }
+    // Outside the try: strict mode must reject the run, not become a warning.
+    const overlaps = resolveNarrationOverlaps(narrationPlacements, narrationSyncMode);
+    narrationPlacements = overlaps.placements;
+    warnings.push(...overlaps.warnings);
   }
 
   // Mix audio with video
@@ -555,7 +492,7 @@ export function generateMetadata(
 
 function stripDelaysForDryRun(steps: DemoReelConfig["steps"]): DemoReelConfig["steps"] {
   return steps
-    .filter((step) => (step as any).action !== "wait")
+    .filter((step) => step.action !== "wait")
     .map((step) => {
       const stripped = { ...step } as Record<string, unknown>;
       for (const key of ["delayAfterMs", "delayBeforeMs", "delayMs"]) {
@@ -666,14 +603,12 @@ export async function runVideoScenario(
         }
       }
 
-      await browser.context.close().catch(() => {});
-      await browser.browser.close().catch(() => {});
+      await closeVideoResult(browser);
 
       throw error;
     }
 
-    await browser.context.close().catch(() => {});
-    await browser.browser.close().catch(() => {});
+    await closeVideoResult(browser);
 
     return outputPath;
   }
@@ -705,8 +640,7 @@ export async function runVideoScenario(
         });
       }
     } finally {
-      await setupBrowser.context.close();
-      await setupBrowser.browser.close();
+      await closeVideoResult(setupBrowser);
     }
   }
 
@@ -853,16 +787,14 @@ export async function runVideoScenario(
           console.log("✓ Post-steps complete");
         }
       } finally {
-        await postBrowser.context.close().catch(() => {});
-        await postBrowser.browser.close().catch(() => {});
+        await closeVideoResult(postBrowser);
       }
     }
 
     return finalPath;
   } catch (error) {
     // Clean up on error — still try to run postSteps for cleanup
-    await recording.context.close().catch(() => {});
-    await recording.browser.close().catch(() => {});
+    await closeVideoResult(recording);
 
     if (config.postSteps && config.postSteps.length > 0) {
       try {
@@ -886,8 +818,7 @@ export async function runVideoScenario(
             label: "post",
           });
         } finally {
-          await postBrowser.context.close().catch(() => {});
-          await postBrowser.browser.close().catch(() => {});
+          await closeVideoResult(postBrowser);
         }
       } catch {
         // Ignore post-step errors during error cleanup

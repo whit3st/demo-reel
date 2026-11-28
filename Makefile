@@ -41,6 +41,7 @@ status:
 verify:
 	pnpm run format:ci
 	pnpm run lint:ci
+	pnpm run check:architecture
 	pnpm test
 	pnpm build
 

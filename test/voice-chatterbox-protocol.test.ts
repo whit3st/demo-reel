@@ -168,6 +168,17 @@ describe("chatterbox worker protocol", () => {
       await expect(promise).rejects.toThrow(/exited with code 1/);
     });
 
+    it("rejects pending requests when the worker is shut down mid-flight", async () => {
+      const { chatterboxProvider, shutdownChatterbox } = await loadChatterbox();
+
+      const promise = chatterboxProvider.generate("hello", options);
+      handshake();
+      await vi.waitFor(() => expect(child.requests.length).toBeGreaterThan(0));
+      shutdownChatterbox();
+
+      await expect(promise).rejects.toThrow(/shut down/);
+    });
+
     it("reports the interpreter path when the process cannot start", async () => {
       const { chatterboxProvider } = await loadChatterbox();
 

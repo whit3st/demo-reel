@@ -15,7 +15,7 @@ import { humanType } from "./typing.js";
 import { humanClick, humanMoveToLocator, humanScroll, moveMouseBezier } from "./motion.js";
 import { runAssertion } from "./assertions.js";
 import { prepareLocator, getLocatorCenter } from "./utils.js";
-import { handleDialogForConfirmStep, getWaitFor, getWaitForSelector } from "./step-simple.js";
+import { handleDialogForConfirmStep, getLegacyWaitTarget } from "./step-simple.js";
 
 /**
  * Auto-camera plumbing threaded through the complex runner. `nextStep` is
@@ -225,8 +225,9 @@ export const runStep = async (
     }
   }
 
-  if (getWaitFor(step)) {
-    const locator = resolveLocator(page, getWaitForSelector(step));
+  const waitTarget = getLegacyWaitTarget(step);
+  if (waitTarget) {
+    const locator = resolveLocator(page, waitTarget);
     await locator.waitFor({ state: "visible", timeout: 5000 });
     await ensureCursorOverlay(page, resolvedCursor);
   }

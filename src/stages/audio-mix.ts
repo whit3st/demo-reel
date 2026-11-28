@@ -4,6 +4,7 @@ import type { PipelineContext } from "../pipeline/context.js";
 import type { DemoReelConfig } from "../schemas.js";
 import type { AudioConfig } from "../audio-processor.js";
 import { getNarrationManifestPath } from "../narration-manifest.js";
+import { hasNarratedScenes } from "../narration-plan.js";
 
 export class AudioMixStage implements Stage {
   readonly name = "Audio Mix";
@@ -16,7 +17,7 @@ export class AudioMixStage implements Stage {
       return;
     }
 
-    const hasNarration = (ctx.config.scenes ?? []).some((s) => Boolean(s.narration));
+    const hasNarration = hasNarratedScenes(ctx.config.scenes);
     const configWithAudio = this.buildConfigWithAudio(ctx.config, hasNarration, ctx.audioPath);
 
     if (configWithAudio.audio?.narration && !existsSync(configWithAudio.audio.narration)) {

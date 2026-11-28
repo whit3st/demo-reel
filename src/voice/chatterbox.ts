@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from "child_process";
+import { randomUUID } from "crypto";
 import { mkdir, readFile, unlink } from "fs/promises";
 import { existsSync } from "fs";
 import { join, dirname } from "path";
@@ -20,6 +21,15 @@ const DEFAULT_VENV_PYTHON = join(
 interface PendingRequest {
   resolve: (path: string) => void;
   reject: (error: Error) => void;
+}
+
+/** One JSON line from the Python worker. */
+interface WorkerMessage {
+  ready?: boolean;
+  id?: string;
+  ok?: boolean;
+  path?: string;
+  error?: string;
 }
 
 interface Worker {
@@ -101,9 +111,9 @@ function startWorker(model: ChatterboxModel): Worker {
         newline = buffer.indexOf("\n");
         if (!line) continue;
 
-        let message: any;
+        let message: WorkerMessage;
         try {
-          message = JSON.parse(line);
+          message = JSON.parse(line) as WorkerMessage;
         } catch {
           continue;
         }
@@ -129,10 +139,14 @@ function startWorker(model: ChatterboxModel): Worker {
         const request = pending.get(message.id);
         if (!request) continue;
         pending.delete(message.id);
-        if (message.ok) {
+        if (message.ok && typeof message.path === "string") {
           request.resolve(message.path);
         } else {
-          request.reject(new Error(`Chatterbox generation failed: ${message.error}`));
+          request.reject(
+            new Error(
+              `Chatterbox generation failed: ${message.error ?? "worker returned no path"}`,
+            ),
+          );
         }
       }
     });
@@ -154,6 +168,12 @@ async function ensureWorker(model: ChatterboxModel): Promise<Worker> {
 
 export function shutdownChatterbox(): void {
   for (const [model, worker] of workers) {
+    // A worker stopped mid-request must reject in-flight callers; killing the
+    // process left their promises pending forever.
+    const error = new Error(`Chatterbox ${model} worker shut down`);
+    for (const [, request] of worker.pending) request.reject(error);
+    worker.pending.clear();
+
     try {
       worker.proc.stdin?.write(`${JSON.stringify({ cmd: "shutdown" })}\n`);
       worker.proc.kill();
@@ -209,7 +229,7 @@ function createChatterboxProvider(name: string, model: ChatterboxModel): TTSProv
 
       const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
       await mkdir(tempDir, { recursive: true });
-      const wavPath = join(tempDir, `${name}-${Date.now()}-${requestCounter}.wav`);
+      const wavPath = join(tempDir, `${name}-${process.pid}-${randomUUID()}.wav`);
 
       await synthesize(w, {
         text,

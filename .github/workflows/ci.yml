@@ -59,10 +59,44 @@ jobs:
       - name: Run lint
         run: pnpm run lint:ci
 
-  test:
-    name: 3. Test
+  formal:
+    name: 3. Formal & Architecture
     runs-on: ubuntu-latest
     needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 26.13.1
+
+      - name: Architecture ratchet
+        run: node scripts/check-architecture.mjs
+
+      - name: Cache TLA+ tools
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .tla
+          key: tla2tools-1.8.0-df7cef5d-37bcca87
+
+      - name: TLA+ models (fixed passes, buggy must fail)
+        run: bash scripts/check-formal.sh
+
+      - name: Model-sync check
+        env:
+          MODEL_SYNC_BASE: origin/${{ github.base_ref || 'main' }}
+        run: |
+          git fetch --no-tags origin "${{ github.base_ref || 'main' }}" --depth=1 || true
+          node scripts/check-model-sync.mjs
+
+  test:
+    name: 4. Test
+    runs-on: ubuntu-latest
+    needs: formal
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -86,7 +120,7 @@ jobs:
         run: pnpm test
 
   build:
-    name: 4. Build
+    name: 5. Build
     runs-on: ubuntu-latest
     needs: test
     steps:
@@ -115,6 +149,7 @@ jobs:
     needs:
       - format
       - lint
+      - formal
       - test
       - build
     steps:
@@ -128,12 +163,16 @@ jobs:
             echo "CI failed at step 2: lint"
             exit 1
           fi
+          if [ "${{ needs.formal.result }}" != "success" ]; then
+            echo "CI failed at step 3: formal & architecture"
+            exit 1
+          fi
           if [ "${{ needs.test.result }}" != "success" ]; then
-            echo "CI failed at step 3: test"
+            echo "CI failed at step 4: test"
             exit 1
           fi
           if [ "${{ needs.build.result }}" != "success" ]; then
-            echo "CI failed at step 4: build"
+            echo "CI failed at step 5: build"
             exit 1
           fi
           echo "CI passed: format, lint, test, and build completed in order"

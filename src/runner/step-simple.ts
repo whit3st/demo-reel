@@ -30,12 +30,14 @@ export const runWithConfirmSimple = async (
   ]);
 };
 
-export function getWaitFor(step: Step): boolean {
-  return (step as any).waitFor === true;
-}
-
-export function getWaitForSelector(step: Step): SelectorConfig {
-  return (step as any).selector ?? (step as any).source;
+/**
+ * The `waitFor: true` shorthand is only part of the click schema; it means
+ * "wait for this click target to be visible first". Return the target or
+ * nothing, so callers cannot accidentally read a selector off a step that
+ * cannot carry one.
+ */
+export function getLegacyWaitTarget(step: Step): SelectorConfig | undefined {
+  return step.action === "click" && step.waitFor === true ? step.selector : undefined;
 }
 
 export const runStepSimple = async (
@@ -116,8 +118,9 @@ export const runStepSimple = async (
     }
   }
 
-  if (getWaitFor(step)) {
-    const locator = resolveLocator(page, getWaitForSelector(step));
+  const waitTarget = getLegacyWaitTarget(step);
+  if (waitTarget) {
+    const locator = resolveLocator(page, waitTarget);
     await locator.waitFor({ state: "visible", timeout: 5000 });
   }
 

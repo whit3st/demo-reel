@@ -28,6 +28,13 @@ export interface GenerateOptions {
   headed?: boolean;
   noCache?: boolean;
   silent?: boolean;
+  /**
+   * Fully resolved destination. The CLI computes this from the config file's
+   * directory, timestamp and `--output-dir`; without it the pipeline would
+   * recompute a path against the working directory and disagree with the
+   * non-voice path for the same scenario.
+   */
+  outputPath?: string;
 }
 
 export function defineConfig<const T extends DemoConfig>(
@@ -120,6 +127,11 @@ export async function generate<const T extends DemoConfig>(
 
   const resolvedConfig = validateConfig(finalConfig);
 
+  let outputPath = options.outputPath ?? resolvedConfig.outputPath;
+  if (silent && outputPath?.endsWith(".mp4")) {
+    outputPath = outputPath.replace(/\.mp4$/, ".webm");
+  }
+
   // Dry run and real run share ONE engine: the pipeline below. A dry run runs
   // TTS and narration sync for real, then exercises the exact same auth,
   // pre-steps and scene steps — only the recording capture, audio mix and
@@ -134,7 +146,7 @@ export async function generate<const T extends DemoConfig>(
     config: resolvedConfig,
     configPath: process.cwd(),
     outputPath:
-      resolvedConfig.outputPath ??
+      outputPath ??
       join(
         resolve("./output"),
         `${getBaseName(resolvedConfig)}.${resolvedConfig.outputFormat === "webm" ? "webm" : "mp4"}`,

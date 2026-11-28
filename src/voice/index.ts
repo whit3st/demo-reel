@@ -15,7 +15,3 @@ export function getTTSProvider(name: string): TTSProvider {
   }
   return provider;
 }
-
-export function getAvailableProviders(): string[] {
-  return [...providers.keys()];
-}

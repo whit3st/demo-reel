@@ -1,60 +1,11 @@
 import type { Step } from "../schemas.js";
 import type { DemoScript, TimedScene, TimedScript } from "./types.js";
+import { estimateStepsDuration } from "../step-duration.js";
 
 // --- Step duration estimation ---
 
-// Average ms per character when typing with "humanlike" preset
-const TYPING_MS_PER_CHAR = 100;
-// Average movement + click duration
-const CLICK_DURATION_MS = 700;
-// Goto + page load
-const GOTO_DURATION_MS = 2000;
-// Default step duration for steps we can't estimate
-const DEFAULT_STEP_DURATION_MS = 500;
 // Minimum padding between narration end and next scene
 const SCENE_LEAD_IN_MS = 300;
-
-/**
- * Estimate how long a step takes to execute in milliseconds.
- */
-function estimateStepDuration(step: Step): number {
-  const delayBefore = ("delayBeforeMs" in step && step.delayBeforeMs) || 0;
-  const delayAfter = ("delayAfterMs" in step && step.delayAfterMs) || 0;
-  const base = delayBefore + delayAfter;
-
-  switch (step.action) {
-    case "goto":
-      return base + GOTO_DURATION_MS;
-    case "click":
-    case "hover":
-      return base + CLICK_DURATION_MS;
-    case "type":
-      return base + step.text.length * TYPING_MS_PER_CHAR;
-    case "press":
-      return base + 200;
-    case "scroll":
-      return base + 400;
-    case "select":
-    case "check":
-    case "upload":
-      return base + 300;
-    case "drag":
-      return base + 1000;
-    case "wait":
-      return base + step.ms;
-    case "waitFor":
-      return base + DEFAULT_STEP_DURATION_MS;
-    default:
-      return base + DEFAULT_STEP_DURATION_MS;
-  }
-}
-
-/**
- * Estimate total duration of a sequence of steps.
- */
-function estimateStepsDuration(steps: Step[]): number {
-  return steps.reduce((total, step) => total + estimateStepDuration(step), 0);
-}
 
 /**
  * Apply timing adjustments to steps so they fill a target duration.

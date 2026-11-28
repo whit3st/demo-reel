@@ -6,6 +6,7 @@ import type { PipelineContext } from "../pipeline/context.js";
 import type { DemoReelConfig } from "../schemas.js";
 import { getNarrationManifestPath } from "../narration-manifest.js";
 import { narrationManifestSchema, NARRATION_PROCESSING_VERSION } from "../narration-manifest.js";
+import { needsGeneratedNarration } from "../narration-plan.js";
 import type { VoiceConfigOverrides } from "../voice-config.js";
 
 function getAudioPath(config: DemoReelConfig): string {
@@ -88,12 +89,7 @@ export class TTSStage implements Stage {
     // half of what it is asked to predict. Clips are cached by content hash, so
     // a dry run pays for TTS once per narration edit and the real run that
     // follows reuses the same audio.
-    const hasVoice = Boolean(ctx.config.voice);
-    const hasNarration = (ctx.config.scenes ?? []).some((s) => Boolean(s.narration));
-    const hasNarrationAudio = Boolean(
-      ctx.config.audio?.narration || ctx.config.audio?.narrationManifest,
-    );
-    if (!hasVoice || !hasNarration || hasNarrationAudio) return;
+    if (!needsGeneratedNarration(ctx.config)) return;
 
     const name = ctx.config.name ?? "demo";
     const narratedScenes = getNarratedScenesInPlaybackOrder(ctx.config);

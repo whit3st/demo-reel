@@ -1,4 +1,5 @@
 import { spawn } from "child_process";
+import { randomUUID } from "crypto";
 import { mkdir, writeFile, readFile, stat, unlink } from "fs/promises";
 import { join, resolve as pathResolve } from "path";
 
@@ -46,6 +47,13 @@ export interface MergeOptions {
 const toSeconds = (ms: number): string => String(Number((ms / 1000).toFixed(3)));
 
 /**
+ * Unique name inside the shared temp directory. `Date.now()` alone collided
+ * when two generations probed or converted audio in the same millisecond.
+ */
+const tempName = (label: string, extension: string): string =>
+  `${label}-${process.pid}-${randomUUID()}${extension}`;
+
+/**
  * Re-encode a slice of a video, for runs that have no audio to mix and so would
  * otherwise copy the file through untouched.
  */
@@ -82,12 +90,17 @@ export async function trimVideo(
 
 export async function getFfmpegPath(): Promise<string> {
   try {
-    const mod: any = await import("ffmpeg-static");
-    const ffmpegPath = mod.default || mod;
-    if (ffmpegPath && typeof ffmpegPath === "string") {
+    const mod: unknown = await import("ffmpeg-static");
+    const candidate =
+      typeof mod === "string"
+        ? mod
+        : typeof mod === "object" && mod !== null
+          ? (mod as { default?: unknown }).default
+          : undefined;
+    if (candidate && typeof candidate === "string") {
       const { accessSync } = await import("fs");
-      accessSync(ffmpegPath);
-      return ffmpegPath;
+      accessSync(candidate);
+      return candidate;
     }
   } catch {}
   return "ffmpeg";
@@ -172,7 +185,7 @@ export async function measureAudioDuration(audioBuffer: Buffer): Promise<number>
 
   const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
   await mkdir(tempDir, { recursive: true });
-  const tempPath = join(tempDir, `probe-${Date.now()}.mp3`);
+  const tempPath = join(tempDir, tempName("probe", ".mp3"));
   await writeFile(tempPath, audioBuffer);
 
   try {
@@ -200,8 +213,9 @@ export async function wavToMp3(wavBuffer: Buffer): Promise<Buffer> {
   const tempDir = join(process.cwd(), ".demo-reel-cache", "temp");
   await mkdir(tempDir, { recursive: true });
 
-  const wavPath = join(tempDir, `convert-${Date.now()}.wav`);
-  const mp3Path = join(tempDir, `convert-${Date.now()}.mp3`);
+  const baseName = tempName("convert", "");
+  const wavPath = join(tempDir, `${baseName}.wav`);
+  const mp3Path = join(tempDir, `${baseName}.mp3`);
 
   await writeFile(wavPath, wavBuffer);
   await runFFmpeg(ffmpegPath, [
@@ -250,16 +264,17 @@ export async function concatenateAudio(
   const inputFiles: string[] = [];
   const filterParts: string[] = [];
   let inputIndex = 0;
+  const runId = randomUUID();
 
   for (let i = 0; i < segments.length; i++) {
-    const segPath = join(tempDir, `seg-${i}.mp3`);
+    const segPath = join(tempDir, `seg-${runId}-${i}.mp3`);
     await writeFile(segPath, segments[i].audio);
     inputFiles.push(segPath);
     filterParts.push(`[${inputIndex}:a]`);
     inputIndex++;
 
     if (segments[i].gapAfterMs > 0) {
-      const silencePath = join(tempDir, `silence-${i}.mp3`);
+      const silencePath = join(tempDir, `silence-${runId}-${i}.mp3`);
       await generateSilence(ffmpegPath, silencePath, segments[i].gapAfterMs);
       inputFiles.push(silencePath);
       filterParts.push(`[${inputIndex}:a]`);
@@ -267,7 +282,7 @@ export async function concatenateAudio(
     }
   }
 
-  const outputPath = join(tempDir, "concatenated.mp3");
+  const outputPath = join(tempDir, `concatenated-${runId}.mp3`);
   const args: string[] = [];
   for (const file of inputFiles) args.push("-i", file);
   const concatFilter = `${filterParts.join("")}concat=n=${filterParts.length}:v=0:a=1[out]`;
@@ -446,11 +461,6 @@ export function buildFfmpegArgs(
   );
 
   return args;
-}
-
-export async function isFfmpegAvailable(): Promise<boolean> {
-  const path = await getFfmpegPath();
-  return !!path;
 }
 
 export function resolveAudioPaths(

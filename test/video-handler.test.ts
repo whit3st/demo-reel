@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 // ── Pure utility functions (no mocks needed) ──────────────────────
 import {
@@ -8,7 +8,6 @@ import {
   buildSubtitleCues,
   buildSubtitleCuesWithNarrationPlacements,
   generateMetadata,
-  setOnBrowserCreated,
   type SubtitleCue,
 } from "../src/video-handler.js";
 
@@ -267,13 +266,5 @@ describe("generateMetadata", () => {
 
     expect(meta.scenes[0].visualStartMs).toBe(100);
     expect(meta.scenes[0].visualEndMs).toBe(200);
-  });
-});
-
-// ── setOnBrowserCreated ───────────────────────────────────────────
-describe("setOnBrowserCreated", () => {
-  it("sets callback without error", () => {
-    const cb = vi.fn();
-    expect(() => setOnBrowserCreated(cb)).not.toThrow();
   });
 });

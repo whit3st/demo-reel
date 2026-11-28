@@ -41,7 +41,6 @@ vi.mock("../src/video-handler.js", () => ({
   generateSRT: vi.fn().mockReturnValue(""),
   generateVTT: vi.fn().mockReturnValue(""),
   generateMetadata: vi.fn().mockReturnValue({}),
-  setOnBrowserCreated: vi.fn(),
 }));
 
 vi.mock("../src/voice/chatterbox.js", () => ({
@@ -136,6 +135,24 @@ describe("index runtime", () => {
       // Where the scenes sit inside the recording; undefined here because this
       // pipeline run never opened a real browser to stamp it.
       { timeline: undefined, span: "scenes" },
+    );
+  });
+
+  it("uses an explicit outputPath instead of recomputing one from cwd", async () => {
+    const { generate } = await import("../src/index.js");
+
+    await generate(createConfig(), {
+      outputPath: "/workspace/project/custom/demo.webm",
+    });
+
+    expect(processVideoWithAudio).toHaveBeenCalledWith(
+      expect.anything(),
+      "/workspace/project/custom/demo.webm",
+      undefined,
+      "/workspace/project",
+      [],
+      "auto",
+      expect.anything(),
     );
   });
 
