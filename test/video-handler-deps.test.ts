@@ -106,9 +106,9 @@ import {
   startBrowser,
   startRecording,
   stopRecording,
-  setOnBrowserCreated,
   runVideoScenario,
 } from "../src/video-handler.js";
+import { cleanupTargetCount } from "../src/process-cleanup.js";
 
 // ── handleAuth ────────────────────────────────────────────────────
 describe("handleAuth", () => {
@@ -454,7 +454,6 @@ describe("processVideoWithAudio", () => {
 describe("startBrowser", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    setOnBrowserCreated(null);
     browserMock.newContext.mockResolvedValue(contextMock);
     contextMock.newPage.mockResolvedValue(pageMock);
     launchMock.mockResolvedValue(browserMock);
@@ -482,13 +481,15 @@ describe("startBrowser", () => {
     expect(launchMock).toHaveBeenCalledWith({ headless: false });
   });
 
-  it("calls onBrowserCreated callback when set", async () => {
-    const cb = vi.fn();
-    setOnBrowserCreated(cb);
+  it("registers the session for process-interrupt cleanup", async () => {
+    const before = cleanupTargetCount();
     const config = { video: { resolution: { width: 1920, height: 1080 } } } as any;
-    await startBrowser(config, false);
 
-    expect(cb).toHaveBeenCalledWith(browserMock, contextMock);
+    const result = await startBrowser(config, false);
+
+    expect(cleanupTargetCount()).toBe(before + 1);
+    result.unregisterCleanup?.();
+    expect(cleanupTargetCount()).toBe(before);
   });
 });
 
@@ -496,7 +497,6 @@ describe("startBrowser", () => {
 describe("startRecording", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    setOnBrowserCreated(null);
     browserMock.newContext.mockResolvedValue(contextMock);
     contextMock.newPage.mockResolvedValue(pageMock);
     launchMock.mockResolvedValue(browserMock);
@@ -524,13 +524,15 @@ describe("startRecording", () => {
     expect(launchMock).toHaveBeenCalledWith({ headless: false });
   });
 
-  it("calls onBrowserCreated callback", async () => {
-    const cb = vi.fn();
-    setOnBrowserCreated(cb);
+  it("registers the recording for process-interrupt cleanup", async () => {
+    const before = cleanupTargetCount();
     const config = { video: { resolution: { width: 1920, height: 1080 } } } as any;
-    await startRecording(config, false);
 
-    expect(cb).toHaveBeenCalledWith(browserMock, contextMock);
+    const result = await startRecording(config, false);
+
+    expect(cleanupTargetCount()).toBe(before + 1);
+    result.unregisterCleanup?.();
+    expect(cleanupTargetCount()).toBe(before);
   });
 });
 
@@ -603,7 +605,6 @@ describe("stopRecording", () => {
 describe("runVideoScenario", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    setOnBrowserCreated(null);
   });
 
   it("runs all steps with instant timing in dry-run mode", async () => {

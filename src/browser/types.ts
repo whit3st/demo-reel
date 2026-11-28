@@ -15,4 +15,11 @@ export interface BrowserSession {
   recordingStartedAt?: number;
   /** Wall clock when the recording stopped, stamped before the page closes. */
   recordingEndedAt?: number;
+  /**
+   * Single-flight guard for `closeSession`. Two owners can race to close the
+   * same session (a stage's `finally` and a SIGINT drain); without this the
+   * page/context/browser are closed twice and `recordingEndedAt` is rewritten.
+   * Cleared on failure so `releaseAll` can retry a genuinely stuck session.
+   */
+  closePromise?: Promise<string | null>;
 }

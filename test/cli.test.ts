@@ -8,7 +8,6 @@ vi.mock("../src/config-loader.js", () => ({
 
 vi.mock("../src/video-handler.js", () => ({
   runVideoScenario: vi.fn(),
-  setOnBrowserCreated: vi.fn(),
 }));
 
 vi.mock("../src/index.js", () => ({
@@ -30,8 +29,9 @@ vi.mock("../src/script/cli.js", () => ({
 }));
 
 import { writeFile, access } from "fs/promises";
+import { readFileSync } from "fs";
 import { loadConfig, loadScenario, findScenarioFiles } from "../src/config-loader.js";
-import { runVideoScenario, setOnBrowserCreated } from "../src/video-handler.js";
+import { runVideoScenario } from "../src/video-handler.js";
 import { generate } from "../src/index.js";
 import {
   scriptGenerate,
@@ -414,66 +414,6 @@ describe("cli", () => {
     expect(console.error).toHaveBeenCalledWith("Error: boom");
   });
 
-  it("registers browser cleanup through the video handler hook", async () => {
-    process.argv = ["node", "cli", "demo"];
-
-    const { runCli } = await import("../src/cli.js");
-
-    await expect(runCli()).resolves.toBe(0);
-    expect(setOnBrowserCreated).toHaveBeenCalledWith(expect.any(Function));
-  });
-
-  it("invokes browser-created callback to register cleanup target", async () => {
-    process.argv = ["node", "cli", "demo"];
-
-    const { runCli } = await import("../src/cli.js");
-
-    await expect(runCli()).resolves.toBe(0);
-
-    const callback = vi.mocked(setOnBrowserCreated).mock.calls[0]?.[0];
-    expect(callback).toBeTypeOf("function");
-
-    const context = { close: vi.fn().mockResolvedValue(undefined) };
-    const browser = { close: vi.fn().mockResolvedValue(undefined) };
-    callback?.(browser as never, context as never);
-  });
-
-  it("executes registered SIGINT cleanup handler", async () => {
-    vi.resetModules();
-    process.argv = ["node", "cli", "demo"];
-
-    let sigintHandler: (() => void) | undefined;
-    vi.spyOn(process, "once").mockImplementation(((event: string, handler: () => void) => {
-      if (event === "SIGINT") {
-        sigintHandler = handler;
-      }
-      return process;
-    }) as never);
-    vi.spyOn(process, "exit").mockImplementation((() => undefined) as never);
-
-    const configLoader = await import("../src/config-loader.js");
-    const videoHandler = await import("../src/video-handler.js");
-    const { runCli } = await import("../src/cli.js");
-
-    vi.mocked(configLoader.loadConfig).mockResolvedValue(createLoadedConfig() as never);
-    vi.mocked(configLoader.loadScenario).mockResolvedValue("/tmp/example.demo.ts");
-    vi.mocked(configLoader.findScenarioFiles).mockResolvedValue(["/tmp/one.demo.ts"]);
-
-    await expect(runCli()).resolves.toBe(0);
-
-    const browserCreated = vi.mocked(videoHandler.setOnBrowserCreated).mock.calls[0]?.[0];
-    const context = { close: vi.fn().mockResolvedValue(undefined) };
-    const browser = { close: vi.fn().mockResolvedValue(undefined) };
-    browserCreated?.(browser as never, context as never);
-
-    sigintHandler?.();
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(context.close).toHaveBeenCalledTimes(1);
-    expect(browser.close).toHaveBeenCalledTimes(1);
-  });
-
   it("uses voice-generation path when config requires narration audio", async () => {
     vi.mocked(loadConfig).mockResolvedValueOnce({
       ...createLoadedConfig(),
@@ -490,6 +430,10 @@ describe("cli", () => {
 
     await expect(runCli()).resolves.toBe(0);
     expect(generate).toHaveBeenCalledTimes(1);
+    expect(generate).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ outputPath: "/tmp/output/demo.webm" }),
+    );
     expect(runVideoScenario).not.toHaveBeenCalled();
   });
 
@@ -512,6 +456,18 @@ describe("cli", () => {
       expect.anything(),
       expect.objectContaining({ headed: true }),
     );
+  });
+
+  it("reports the package version in help", async () => {
+    const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf-8")) as {
+      version: string;
+    };
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    const { showHelp } = await import("../src/cli.js");
+    await showHelp();
+
+    expect(log.mock.calls.map((call) => String(call[0])).join("\n")).toContain(pkg.version);
   });
 
   it("main exits process with runCli exit code", async () => {

@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 import { defineCommand, renderUsage } from "citty";
 import { loadConfig, loadScenario, findScenarioFiles } from "./config-loader.js";
-import { runVideoScenario, setOnBrowserCreated } from "./video-handler.js";
+import { runVideoScenario } from "./video-handler.js";
 import { generate } from "./index.js";
+import { needsGeneratedNarration } from "./narration-plan.js";
+import { installSignalCleanup } from "./process-cleanup.js";
 import { access, writeFile } from "fs/promises";
+import { readFileSync } from "fs";
 import { resolve as resolvePath } from "path";
 import { pathToFileURL } from "url";
 import { chromium } from "playwright";
-import type { DemoReelConfig } from "./schemas.js";
 import {
   InitCommand,
   ScriptRouterCommand,
@@ -87,49 +89,6 @@ function createCommandContext(): CommandContext {
   };
 }
 
-let currentBrowser: { browser: any; context: any } | null = null;
-let signalHandlersRegistered = false;
-
-function registerCleanup(browser: any, context: any): void {
-  currentBrowser = { browser, context };
-}
-
-async function cleanupBrowser(): Promise<void> {
-  if (currentBrowser) {
-    try {
-      if (currentBrowser.context) {
-        await currentBrowser.context.close();
-      }
-      if (currentBrowser.browser) {
-        await currentBrowser.browser.close();
-      }
-    } catch (e) {
-      console.log("Cleanup errors:", e);
-    }
-    currentBrowser = null;
-  }
-}
-
-function setupSignalHandlers(): void {
-  if (signalHandlersRegistered) {
-    return;
-  }
-
-  const cleanup = (signal: "SIGINT" | "SIGTERM") => {
-    const exitCode = signal === "SIGINT" ? 130 : 0;
-    const timeout = setTimeout(() => process.exit(exitCode), 2000);
-    cleanupBrowser()
-      .catch(() => {})
-      .finally(() => {
-        clearTimeout(timeout);
-        process.exit(exitCode);
-      });
-  };
-  process.once("SIGINT", () => cleanup("SIGINT"));
-  process.once("SIGTERM", () => cleanup("SIGTERM"));
-  signalHandlersRegistered = true;
-}
-
 const addTags = (existing: string[] | undefined, value: string | undefined) => {
   if (!value) {
     return existing;
@@ -147,13 +106,6 @@ const addTags = (existing: string[] | undefined, value: string | undefined) => {
   return [...(existing ?? []), ...tags];
 };
 
-function shouldGenerateVoice(config: DemoReelConfig): boolean {
-  const hasVoice = Boolean(config.voice);
-  const hasNarration = (config.scenes ?? []).some((scene) => Boolean(scene.narration));
-  const hasNarrationAudio = Boolean(config.audio?.narration || config.audio?.narrationManifest);
-  return hasVoice && hasNarration && !hasNarrationAudio;
-}
-
 async function runScenario(
   loaded: Awaited<ReturnType<typeof loadConfig>>,
   options: CliOptions,
@@ -163,7 +115,7 @@ async function runScenario(
     return;
   }
 
-  if (shouldGenerateVoice(loaded.config)) {
+  if (needsGeneratedNarration(loaded.config)) {
     const config = options.outputDir
       ? { ...loaded.config, outputDir: options.outputDir }
       : loaded.config;
@@ -172,6 +124,7 @@ async function runScenario(
       noCache: options.noCache,
       silent: options.silent,
       headed: options.headed,
+      outputPath: loaded.outputPath,
     });
     return;
   }
@@ -294,10 +247,22 @@ export function parseArgs(): { scenario?: string; options: CliOptions; unknownFl
   return { scenario, options, unknownFlags };
 }
 
+// The help header used to carry a hard-coded version that stopped at 0.7.7
+// while package.json moved on. Read the package that ships beside the build.
+function cliVersion(): string {
+  try {
+    const raw = readFileSync(new URL("../package.json", import.meta.url), "utf-8");
+    const version = (JSON.parse(raw) as { version?: unknown }).version;
+    return typeof version === "string" ? version : "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
 const cliDef = defineCommand({
   meta: {
     name: "demo-reel",
-    version: "0.7.7",
+    version: cliVersion(),
     description: "Create demo videos from web apps using Playwright",
   },
   args: {
@@ -363,10 +328,7 @@ export async function runCli(): Promise<number> {
     return 1;
   }
 
-  setupSignalHandlers();
-  setOnBrowserCreated((browser, context) => {
-    registerCleanup(browser, context);
-  });
+  installSignalCleanup();
 
   try {
     if (options.help) {

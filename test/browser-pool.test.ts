@@ -13,6 +13,7 @@ vi.mock("../src/browser/launcher.js", () => ({
 }));
 
 import { BrowserPool } from "../src/browser/pool.js";
+import { cleanupTargetCount } from "../src/process-cleanup.js";
 import type { DemoReelConfig } from "../src/schemas.js";
 
 const config = {} as DemoReelConfig;
@@ -81,6 +82,18 @@ describe("BrowserPool", () => {
 
       expect(pool.active).toBe(3);
     });
+
+    it("registers one process-cleanup target per session", async () => {
+      const before = cleanupTargetCount();
+      const pool = new BrowserPool();
+
+      await pool.acquire(config);
+      await pool.acquire(config);
+
+      expect(cleanupTargetCount()).toBe(before + 2);
+      await pool.releaseAll();
+      expect(cleanupTargetCount()).toBe(before);
+    });
   });
 
   describe("release", () => {
@@ -88,12 +101,14 @@ describe("BrowserPool", () => {
       closeSessionMock.mockResolvedValue("/tmp/video.webm");
       const pool = new BrowserPool();
       const session = await pool.acquire(config, { recording: true });
+      const before = cleanupTargetCount();
 
       const videoPath = await pool.release(session);
 
       expect(closeSessionMock).toHaveBeenCalledWith(session, undefined);
       expect(videoPath).toBe("/tmp/video.webm");
       expect(pool.active).toBe(0);
+      expect(cleanupTargetCount()).toBe(before - 1);
     });
 
     it("forwards the saveSession callback to closeSession", async () => {
